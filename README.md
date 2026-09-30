@@ -42,6 +42,7 @@ docs/
   Organization-Audit-v1.4.md
   Firebase-Master-Dataset-v0.1.md
   Firebase-Master-Dataset-v0.2.md
+  Seasonal-Operational-Dataset-v0.1.md
 
 scripts/
   seed-firestore.ts
@@ -91,3 +92,13 @@ seasons
 ```
 
 Client writes remain denied. All non-master collections remain closed by default.
+
+## Seasonal operational data
+
+Season-specific pricing, ticket sales and KP/track input are modelled separately from canonical master data. The architecture baseline is documented in:
+
+```text
+docs/Seasonal-Operational-Dataset-v0.1.md
+```
+
+The operational schema is exported from `src/seasonal-operational-data.ts`. It supports season-versioned prices, network/area/organization overrides, settlement values for complimentary tickets, raw ticket quantities, KP milestones and draft/submitted/verified workflows.
