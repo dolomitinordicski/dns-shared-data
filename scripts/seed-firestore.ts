@@ -10,6 +10,7 @@ import {
   REPORTING_AREAS,
   SEASONS,
 } from '../src/canonical-data.js';
+import type { OrganizationRelationship } from '../src/canonical-data.js';
 
 const TARGET_PROJECT_ID = 'dns-core';
 const APPLY = process.argv.includes('--apply');
@@ -119,7 +120,9 @@ function validateCanonicalData() {
   }
 
 
-  for (const relationship of ORGANIZATION_RELATIONSHIPS) {
+  for (const rawRelationship of ORGANIZATION_RELATIONSHIPS) {
+    const relationship = rawRelationship as OrganizationRelationship;
+
     if (!organizationIds.has(relationship.organizationId)) {
       throw new Error(
         `Relationship "${relationship.id}" references unknown organization "${relationship.organizationId}".`,
@@ -130,10 +133,16 @@ function validateCanonicalData() {
       (candidate) => candidate.id === relationship.organizationId,
     );
 
-    const declaredRelationshipTypes =
-      organization?.relationshipTypes as readonly string[] | undefined;
+    if (!organization) {
+      throw new Error(
+        `Relationship "${relationship.id}" cannot resolve organization "${relationship.organizationId}".`,
+      );
+    }
 
-    if (!declaredRelationshipTypes?.includes(relationship.relationshipType)) {
+    const declaredRelationshipTypes =
+      organization.relationshipTypes as readonly string[];
+
+    if (!declaredRelationshipTypes.includes(relationship.relationshipType)) {
       throw new Error(
         `Relationship "${relationship.id}" is not declared by organization "${relationship.organizationId}".`,
       );
