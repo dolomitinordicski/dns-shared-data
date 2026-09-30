@@ -1,5 +1,5 @@
 /**
- * DNS Canonical Dataset v1.5
+ * DNS Canonical Dataset v1.6
  *
  * Shared, application-agnostic master data for the Dolomiti NordicSki
  * digital ecosystem.
@@ -12,8 +12,8 @@
  * - This file contains no Firebase-specific code by design.
  */
 
-export const CANONICAL_DATASET_VERSION = '1.5' as const;
-export const CANONICAL_SCHEMA_VERSION = 1 as const;
+export const CANONICAL_DATASET_VERSION = '1.6' as const;
+export const CANONICAL_SCHEMA_VERSION = 2 as const;
 
 export type Language = 'de' | 'it' | 'en';
 
@@ -98,6 +98,15 @@ export interface Organization {
 }
 
 export const ORGANIZATION_LOGO_DIRECTORY = 'assets/organization-logos' as const;
+
+export interface OrganizationRelationship {
+  id: string;
+  organizationId: string;
+  relationshipType: RelationshipType;
+  scopeType: 'network' | 'reportingArea';
+  scopeId: string;
+  active: boolean;
+}
 
 export interface Season {
   id: string;
@@ -674,6 +683,40 @@ export const ORGANIZATIONS = [
 ] as const satisfies readonly Organization[];
 
 export type OrganizationId = (typeof ORGANIZATIONS)[number]['id'];
+
+export const ORGANIZATION_RELATIONSHIPS = ORGANIZATIONS.flatMap((organization) =>
+  organization.relationshipTypes.flatMap((relationshipType) => {
+    if (relationshipType === 'dns-member') {
+      return [
+        {
+          id: `${organization.id}--dns-member--dolomiti-nordicski`,
+          organizationId: organization.id,
+          relationshipType,
+          scopeType: 'network' as const,
+          scopeId: 'dolomiti-nordicski',
+          active: organization.active,
+        },
+      ];
+    }
+
+    if (relationshipType === 'fair-contributor') {
+      return organization.reportingAreaIds.map((reportingAreaId) => ({
+        id: `${organization.id}--fair-contributor--${reportingAreaId}`,
+        organizationId: organization.id,
+        relationshipType,
+        scopeType: 'reportingArea' as const,
+        scopeId: reportingAreaId,
+        active: organization.active,
+      }));
+    }
+
+    return [];
+  }),
+) satisfies readonly OrganizationRelationship[];
+
+export type OrganizationRelationshipId =
+  (typeof ORGANIZATION_RELATIONSHIPS)[number]['id'];
+
 
 export function getOrganizationLogoPath(
   organization: Pick<Organization, 'logoFile'>,
