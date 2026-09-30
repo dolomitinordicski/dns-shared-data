@@ -5,7 +5,7 @@
 **Data-tool reference:** DNS Analytics  
 **Target:** all DNS digital tools  
 **Runtime source:** DNS_Core / Firestore  
-**Current semantic version:** 1.1.0
+**Current semantic version:** 1.2.0
 
 ## Principle
 
@@ -121,3 +121,30 @@ Browser clients may read the design system but never write it.
 
 Publishing a new design-system version must happen through the controlled
 `dns-shared-data` repository and its administrative deployment process.
+
+
+## Shared responsive behavior
+
+Responsive behavior is part of the design system, not an application-by-application invention.
+
+### Tab navigation
+
+The canonical tool navigation follows DNS Analytics:
+
+- horizontal text tabs;
+- transparent tab background;
+- no pills and no boxed buttons;
+- active tab indicated by a 3 px bottom border;
+- uppercase compact labels;
+- sticky navigation where appropriate.
+
+Desktop keeps all tabs in one horizontal row. Tablet and mobile use horizontal scrolling without wrapping. Mobile does not replace tool tabs with a hamburger and does not stack tabs vertically.
+
+### Layout
+
+- Desktop: normal multi-column data layouts.
+- Tablet: reduce columns while preserving hierarchy.
+- Mobile: one-column cards and metrics.
+- Tables never collapse semantic columns; tablet/mobile use horizontal scrolling.
+- Header becomes progressively more compact; mobile hides secondary status/subtitle content before hiding core identity.
+- Footer switches from horizontal to stacked on mobile.
