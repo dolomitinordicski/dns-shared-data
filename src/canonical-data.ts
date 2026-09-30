@@ -480,6 +480,7 @@ export const ORGANIZATIONS = [
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'verified',
     logoFile: null,
+    aliases: ['TV Sexten'],
     active: true,
   },
   {
@@ -491,6 +492,7 @@ export const ORGANIZATIONS = [
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'verified',
     logoFile: null,
+    aliases: ['TV Innichen'],
     active: true,
   },
   {
@@ -502,6 +504,7 @@ export const ORGANIZATIONS = [
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'verified',
     logoFile: null,
+    aliases: ['TV Toblach'],
     active: true,
   },
   {
@@ -513,6 +516,7 @@ export const ORGANIZATIONS = [
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'verified',
     logoFile: null,
+    aliases: ['TV Niederdorf'],
     active: true,
   },
   {
@@ -524,6 +528,7 @@ export const ORGANIZATIONS = [
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'verified',
     logoFile: null,
+    aliases: ['TV Prags'],
     active: true,
   },
   {
@@ -569,6 +574,7 @@ export const ORGANIZATIONS = [
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'verified',
     logoFile: null,
+    aliases: ['Ahrntal'],
     active: true,
   },
   {
@@ -585,6 +591,7 @@ export const ORGANIZATIONS = [
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'verified',
     logoFile: null,
+    aliases: ['Sand in Taufers', 'Campo Tures'],
     active: true,
   },
   {
@@ -594,8 +601,9 @@ export const ORGANIZATIONS = [
     reportingAreaIds: ['seiser-alm-dolomites-val-gardena'],
     destinationIds: ['seiser-alm'],
     relationshipTypes: ['fair-contributor'],
-    identityStatus: 'verified',
+    identityStatus: 'provisional',
     logoFile: null,
+    aliases: ['Alpe di Siusi'],
     active: true,
   },
   {
@@ -612,6 +620,7 @@ export const ORGANIZATIONS = [
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'verified',
     logoFile: null,
+    aliases: ['Val Gardena', 'Dolomites Val Gardena S.c.a.r.l.'],
     active: true,
   },
   {
@@ -621,8 +630,9 @@ export const ORGANIZATIONS = [
     reportingAreaIds: ['cortina-d-ampezzo'],
     destinationIds: ['cortina-d-ampezzo'],
     relationshipTypes: ['fair-contributor'],
-    identityStatus: 'verified',
+    identityStatus: 'provisional',
     logoFile: null,
+    aliases: ['Cortina', 'Cortina Marketing'],
     active: true,
   },
   {
@@ -637,9 +647,9 @@ export const ORGANIZATIONS = [
     reportingAreaIds: ['val-comelico'],
     destinationIds: ['val-comelico'],
     relationshipTypes: ['fair-contributor'],
-    identityStatus: 'provisional',
+    identityStatus: 'verified',
     logoFile: null,
-    aliases: ['Comelico'],
+    aliases: ['Comelico', 'Val Comelico'],
     active: true,
   },
   {
@@ -654,8 +664,9 @@ export const ORGANIZATIONS = [
     reportingAreaIds: ['gsiesertal-welsberg-taisten'],
     destinationIds: ['gsiesertal', 'welsberg-taisten'],
     relationshipTypes: ['fair-contributor'],
-    identityStatus: 'provisional',
+    identityStatus: 'verified',
     logoFile: null,
+    aliases: ['Gsiesertal / Welsberg / Taisten', 'Gsiesertal'],
     active: true,
   },
 ] as const satisfies readonly Organization[];
