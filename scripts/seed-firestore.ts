@@ -69,12 +69,14 @@ function validateCanonicalData() {
       );
     }
 
-    if (
-      destination.parentDestinationId &&
-      !destinationIds.has(destination.parentDestinationId)
-    ) {
+    const parentDestinationId =
+      'parentDestinationId' in destination
+        ? destination.parentDestinationId
+        : undefined;
+
+    if (parentDestinationId && !destinationIds.has(parentDestinationId)) {
       throw new Error(
-        `Destination "${destination.id}" references unknown parent destination "${destination.parentDestinationId}".`,
+        `Destination "${destination.id}" references unknown parent destination "${parentDestinationId}".`,
       );
     }
   }
