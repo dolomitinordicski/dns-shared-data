@@ -11,7 +11,7 @@ This repository contains:
 ## Current versions
 
 - **DNS Foundation:** v1.2
-- **Canonical Dataset:** v1.2
+- **Canonical Dataset:** v1.3
 
 ## Source of truth
 
@@ -38,6 +38,7 @@ assets/
 
 docs/
   DNS-Foundation-v1.2.md
+  Organization-Audit-v1.3.md
 ```
 
 
