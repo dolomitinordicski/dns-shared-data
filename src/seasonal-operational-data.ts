@@ -348,6 +348,7 @@ export const PRICING_SCOPE_PRECEDENCE = [
 export const FIRESTORE_OPERATIONAL_COLLECTIONS = {
   pricingConfigs: 'pricingConfigs',
   orderCatalogItems: 'orderCatalogItems',
+  orderSetupImports: 'orderSetupImports',
   orderFormConfigs: 'orderFormConfigs',
   ticketOrders: 'ticketOrders',
   ticketOrderLines: 'ticketOrderLines',
