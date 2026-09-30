@@ -11,7 +11,7 @@ This repository contains:
 ## Current versions
 
 - **DNS Foundation:** v1.2
-- **Canonical Dataset:** v1.4
+- **Canonical Dataset:** v1.5
 
 ## Source of truth
 
@@ -40,9 +40,38 @@ docs/
   DNS-Foundation-v1.2.md
   Organization-Audit-v1.3.md
   Organization-Audit-v1.4.md
+  Firebase-Master-Dataset-v0.1.md
+
+scripts/
+  seed-firestore.ts
+
+firestore.rules
+firebase.json
+.firebaserc
 ```
 
 
 ## Organization logos
 
 Canonical organizations may reference one primary public logo through `logoFile`. Logo assets live in `assets/organization-logos/`; keep `logoFile: null` until the correct asset has been uploaded and verified.
+
+
+## Firebase Master Dataset
+
+DNS_Core uses Firebase project `dns-core` with Firestore database `(default)`.
+
+The first operational master seed is documented in:
+
+```text
+docs/Firebase-Master-Dataset-v0.1.md
+```
+
+Seed tooling:
+
+```bash
+npm install
+npm run seed:firebase
+npm run seed:firebase:apply
+```
+
+The default command is dry-run only. The apply command requires trusted administrator credentials and writes/merges canonical master data into DNS_Core.
