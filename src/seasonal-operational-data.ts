@@ -1,9 +1,12 @@
 /**
- * DNS Seasonal Operational Data v0.1
+ * DNS Seasonal Operational Data v0.2
  *
- * Application-agnostic types for season-specific pricing, ticket sales and
- * cross-country track/KP reporting. These interfaces intentionally model
- * raw operational facts separately from derived Analytics/FAIR outputs.
+ * Application-agnostic types for season-specific pricing, ticket orders,
+ * ticket sales and cross-country track/KP reporting.
+ *
+ * Raw operational facts remain separate from derived Analytics/FAIR outputs.
+ * Historical records are never destructively overwritten: provenance and
+ * append-only revisions make source/method changes explicit.
  */
 
 import type {
@@ -13,7 +16,7 @@ import type {
   DestinationId,
 } from './canonical-data.js';
 
-export const SEASONAL_OPERATIONAL_SCHEMA_VERSION = 1 as const;
+export const SEASONAL_OPERATIONAL_SCHEMA_VERSION = 2 as const;
 
 export type CurrencyCode = 'EUR';
 
@@ -36,38 +39,65 @@ export type TicketSalesPeriod = 'presale' | 'regular';
 
 export type PricingScopeType = 'network' | 'reportingArea' | 'organization';
 
+/**
+ * Source/method metadata travels with operational records so historical
+ * imports, manual Data Entry and future digital ticketing can coexist without
+ * rewriting the past.
+ */
+export type DataSourceSystem =
+  | 'legacy-sheet'
+  | 'manual-data-entry'
+  | 'digital-ticketing'
+  | 'import'
+  | 'other';
+
+export type DataStatus =
+  | 'draft'
+  | 'submitted'
+  | 'verified'
+  | 'verified-with-notes'
+  | 'corrected'
+  | 'superseded';
+
+export interface DataProvenance {
+  sourceSystem: DataSourceSystem;
+  /** Source-system identifier, spreadsheet row/cell reference, import key, etc. */
+  sourceRecordId?: string;
+  /** ISO timestamp when an external source was imported into DNS_Core. */
+  importedAt?: string;
+  /**
+   * Version of the collection/calculation method, independent of schema
+   * version. Example: legacy workbook = 1, digital ticketing = 2.
+   */
+  methodVersion: number;
+  dataStatus: DataStatus;
+}
+
 export interface TicketPricingConfig {
   id: string;
   seasonId: SeasonId;
   productCode: TicketProductCode;
   scopeType: PricingScopeType;
   /**
-   * network      -> "dolomiti-nordicski"
+   * network       -> "dolomiti-nordicski"
    * reportingArea -> canonical ReportingAreaId
-   * organization -> canonical OrganizationId
+   * organization  -> canonical OrganizationId
    */
   scopeId: string;
   salesChannel: TicketSalesChannel;
   salesPeriod?: TicketSalesPeriod;
   currency: CurrencyCode;
-  /**
-   * Price presented/charged to the customer.
-   * Zero is valid for press or complimentary tickets.
-   */
+  /** Price presented/charged to the customer. Zero is valid. */
   unitPrice: number;
   /**
-   * Optional accounting/settlement value used for revenue reporting when it
-   * differs from the customer price (e.g. region-funded complimentary passes).
+   * Accounting/settlement value used when it differs from customer price.
    * If omitted, unitPrice is used.
    */
   settlementUnitPrice?: number;
-  /**
-   * Optional validity window. Required whenever a price changes during the
-   * same season, e.g. presale vs regular sale periods.
-   */
   validFrom?: string;
   validTo?: string;
   active: boolean;
+  provenance?: DataProvenance;
   notes?: string;
 }
 
@@ -76,6 +106,59 @@ export interface TicketPricingSnapshot {
   unitPrice: number;
   settlementUnitPrice: number;
   currency: CurrencyCode;
+}
+
+/**
+ * Orders are operational distribution/billing-preparation facts.
+ * They must never be interpreted as actual sales.
+ */
+export type TicketOrderStatus =
+  | 'draft'
+  | 'submitted'
+  | 'confirmed'
+  | 'fulfilled'
+  | 'cancelled';
+
+export interface TicketOrder {
+  id: string;
+  seasonId: SeasonId;
+  organizationId: OrganizationId;
+  reportingAreaId: ReportingAreaId;
+  /** Human/business order number when one exists. */
+  orderNumber?: string;
+  orderDate: string;
+  status: TicketOrderStatus;
+  submittedAt?: string;
+  confirmedAt?: string;
+  fulfilledAt?: string;
+  cancelledAt?: string;
+  provenance: DataProvenance;
+  notes?: string;
+}
+
+export interface TicketOrderLine {
+  id: string;
+  ticketOrderId: string;
+  seasonId: SeasonId;
+  organizationId: OrganizationId;
+  reportingAreaId: ReportingAreaId;
+  productCode: TicketProductCode;
+  quantity: number;
+  /**
+   * Optional intended sales channel/period. Orders may be channel-agnostic;
+   * these fields are only populated when the business process actually
+   * distinguishes the ordered stock.
+   */
+  salesChannel?: TicketSalesChannel;
+  salesPeriod?: TicketSalesPeriod;
+  /**
+   * Snapshot used for operational Billing Prep. Official invoices remain in
+   * XGLA4; changing later prices must not rewrite an historical order line.
+   */
+  pricing: TicketPricingSnapshot;
+  calculatedAmount: number;
+  provenance: DataProvenance;
+  notes?: string;
 }
 
 export interface TicketSalesEntry {
@@ -89,22 +172,21 @@ export interface TicketSalesEntry {
   salesPeriod?: TicketSalesPeriod;
   quantity: number;
   pricing: TicketPricingSnapshot;
-  /**
-   * Computed as quantity * pricing.settlementUnitPrice.
-   * Persisting the snapshot makes historical results stable even if a future
-   * season's pricing changes.
-   */
   calculatedAmount: number;
-  /**
-   * Exceptional manual accounting correction. This must never silently replace
-   * the calculated amount: an explicit reason is mandatory.
-   */
   amountOverride?: number;
   amountOverrideReason?: string;
+  /**
+   * Optional traceability back to distributed stock. Historical/manual sales
+   * may have no reliable order link and must remain valid without it.
+   */
+  ticketOrderId?: string;
+  ticketOrderLineId?: string;
+  fulfillmentBatchId?: string;
+  provenance: DataProvenance;
   notes?: string;
 }
 
-export type SubmissionDomain = 'ticketSales' | 'kp';
+export type SubmissionDomain = 'ticketOrders' | 'ticketSales' | 'kp';
 
 export type SubmissionStatus = 'draft' | 'submitted' | 'verified';
 
@@ -130,13 +212,11 @@ export interface KpMilestone {
 export type KpEntityType = 'organization' | 'destination';
 
 export interface KpReferenceKm {
-  /**
-   * Physical/unique network kilometres reported by the source.
-   */
+  /** Physical/unique network kilometres reported by the source. */
   uniqueNetworkKm?: number;
   /**
    * Operational/potential kilometre base used for KPI denominators when it
-   * differs from the unique network kilometres.
+   * differs from unique network kilometres.
    */
   potentialOperationalKm?: number;
 }
@@ -155,19 +235,55 @@ export interface KpSeasonEntry {
   reportingAreaId: ReportingAreaId;
   referenceKm: KpReferenceKm;
   milestones: readonly KpMilestoneValue[];
-  /**
-   * Some entities can be intentionally excluded from a KPI while their raw
-   * values remain stored (e.g. event-reserved tracks).
-   */
   includeInKp: boolean;
   exclusionReason?: string;
+  provenance: DataProvenance;
   notes?: string;
 }
 
 /**
- * Price resolution must be deterministic:
+ * Corrections are append-only records. Verified historical source records are
+ * not silently updated in place.
+ */
+export type RevisableEntityType =
+  | 'ticketPricingConfig'
+  | 'ticketOrder'
+  | 'ticketOrderLine'
+  | 'ticketSale'
+  | 'kpEntry';
+
+export type RevisionValue =
+  | string
+  | number
+  | boolean
+  | null
+  | readonly RevisionValue[]
+  | { readonly [key: string]: RevisionValue };
+
+export interface OperationalRevision {
+  id: string;
+  seasonId: SeasonId;
+  entityType: RevisableEntityType;
+  entityId: string;
+  /**
+   * Dot path when correcting one field. Omit when the correction replaces a
+   * complete logical record/version.
+   */
+  fieldPath?: string;
+  originalValue: RevisionValue;
+  correctedValue: RevisionValue;
+  correctionReason: string;
+  correctedAt: string;
+  /** Future Auth UID or another stable administrator/reviewer principal ID. */
+  correctedBy: string;
+  correctionSource: DataSourceSystem;
+  supersedesRevisionId?: string;
+  notes?: string;
+}
+
+/**
+ * Price resolution remains deterministic:
  * organization override > reporting-area override > network default.
- * Within the selected scope, channel/period and validity window must match.
  */
 export const PRICING_SCOPE_PRECEDENCE = [
   'organization',
@@ -177,8 +293,11 @@ export const PRICING_SCOPE_PRECEDENCE = [
 
 export const FIRESTORE_OPERATIONAL_COLLECTIONS = {
   pricingConfigs: 'pricingConfigs',
+  ticketOrders: 'ticketOrders',
+  ticketOrderLines: 'ticketOrderLines',
   ticketSales: 'ticketSales',
   kpMilestones: 'kpMilestones',
   kpEntries: 'kpEntries',
   seasonalSubmissions: 'seasonalSubmissions',
+  operationalRevisions: 'operationalRevisions',
 } as const;
