@@ -689,7 +689,7 @@ export const ORGANIZATION_RELATIONSHIPS = ORGANIZATIONS.flatMap((organization) =
     if (relationshipType === 'dns-member') {
       return [
         {
-          id: `${organization.id}--dns-member--dolomiti-nordicski`,
+          id: `${organization.id}-dns-member-dolomiti-nordicski`,
           organizationId: organization.id,
           relationshipType,
           scopeType: 'network' as const,
@@ -701,7 +701,7 @@ export const ORGANIZATION_RELATIONSHIPS = ORGANIZATIONS.flatMap((organization) =
 
     if (relationshipType === 'fair-contributor') {
       return organization.reportingAreaIds.map((reportingAreaId) => ({
-        id: `${organization.id}--fair-contributor--${reportingAreaId}`,
+        id: `${organization.id}-fair-contributor-${reportingAreaId}`,
         organizationId: organization.id,
         relationshipType,
         scopeType: 'reportingArea' as const,
