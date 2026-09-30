@@ -181,6 +181,43 @@ export interface TicketOrder {
   notes?: string;
 }
 
+export interface PublicOrderShareSnapshot {
+  seasonId: SeasonId;
+  category: OrderCatalogCategory;
+  generatedAt: string;
+  title: LocalizedName;
+  items: ReadonlyArray<{
+    id: string;
+    code: string;
+    label: LocalizedName;
+    displayOrder: number;
+    displayColorHex?: string;
+    displayTextColorHex?: string;
+    supplierColorReference?: string;
+  }>;
+  organizations: ReadonlyArray<{
+    organizationId: OrganizationId;
+    sourceLabel: string;
+  }>;
+  cells: ReadonlyArray<{
+    organizationId: OrganizationId;
+    catalogItemId: string;
+    quantity: number | null;
+  }>;
+  totalQuantity: number;
+}
+
+export interface PublicOrderShare {
+  id: string;
+  seasonId: SeasonId;
+  category: OrderCatalogCategory;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt?: string;
+  snapshot: PublicOrderShareSnapshot;
+}
+
 export interface TicketOrderLine {
   id: string;
   ticketOrderId: string;
@@ -349,6 +386,7 @@ export const FIRESTORE_OPERATIONAL_COLLECTIONS = {
   pricingConfigs: 'pricingConfigs',
   orderCatalogItems: 'orderCatalogItems',
   orderSetupImports: 'orderSetupImports',
+  publicOrderShares: 'publicOrderShares',
   orderFormConfigs: 'orderFormConfigs',
   ticketOrders: 'ticketOrders',
   ticketOrderLines: 'ticketOrderLines',

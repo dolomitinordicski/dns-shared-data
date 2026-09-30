@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.2.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.3.0' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -234,6 +234,29 @@ export const DNS_DESIGN_SYSTEM = {
       tertiary: '#AAD0D1',
     },
     yearSeries: ['#0D4D5E', '#5A8F9E', '#8AB8C4', '#C8E8E9'],
+  },
+  assets: {
+    brandDirectory: 'brand',
+    webLogoFile: 'logo-web.png',
+    printLogoFile: 'logo.png',
+  },
+  print: {
+    pageSize: 'A4',
+    orientation: 'landscape',
+    marginMm: 10,
+    logoFile: 'logo.png',
+    logoHeightMm: 14,
+    titleSizePt: 15,
+    subtitleSizePt: 9,
+    bodySizePt: 8,
+    tableHeaderSizePt: 7,
+    tableBodySizePt: 7,
+    rowMinHeightMm: 7,
+    borderColor: '#B8C9CE',
+    headerTextColor: '#0D4D5E',
+    footerTextColor: '#5A7F8A',
+    showGeneratedAt: true,
+    hideInteractiveControls: true,
   },
   behavior: {
     bilingualPattern: 'de-it',
