@@ -1,5 +1,5 @@
 /**
- * DNS Canonical Dataset v1.1
+ * DNS Canonical Dataset v1.2
  *
  * Shared, application-agnostic master data for the Dolomiti NordicSki
  * digital ecosystem.
@@ -86,9 +86,16 @@ export interface Organization {
   destinationIds: string[];
   relationshipTypes: RelationshipType[];
   identityStatus: IdentityStatus;
+  /**
+   * Primary organization logo filename stored in assets/organization-logos/.
+   * Keep null until a verified logo asset has been added to the repository.
+   */
+  logoFile: string | null;
   aliases?: string[];
   active: boolean;
 }
+
+export const ORGANIZATION_LOGO_DIRECTORY = 'assets/organization-logos' as const;
 
 export interface Season {
   id: string;
@@ -444,6 +451,7 @@ export const ORGANIZATIONS = [
     destinationIds: [],
     relationshipTypes: [],
     identityStatus: 'verified',
+    logoFile: null,
     active: true,
   },
   {
@@ -459,6 +467,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['osttirol'],
     relationshipTypes: ['dns-member', 'fair-contributor'],
     identityStatus: 'verified',
+    logoFile: null,
     aliases: ['TVB Osttirol', 'Osttirol'],
     active: true,
   },
@@ -470,6 +479,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['sexten'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     active: true,
   },
   {
@@ -480,6 +490,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['innichen'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     active: true,
   },
   {
@@ -490,6 +501,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['toblach'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     active: true,
   },
   {
@@ -500,6 +512,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['niederdorf'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     active: true,
   },
   {
@@ -510,6 +523,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['prags'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     active: true,
   },
   {
@@ -520,6 +534,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['antholzertal'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     active: true,
   },
   {
@@ -530,6 +545,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['antholzertal'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     active: true,
   },
   {
@@ -540,6 +556,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['ahrntal'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     active: true,
   },
   {
@@ -550,6 +567,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['sand-in-taufers'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     active: true,
   },
   {
@@ -560,6 +578,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['seiser-alm'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     active: true,
   },
   {
@@ -570,6 +589,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['val-gardena'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     active: true,
   },
   {
@@ -580,6 +600,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['cortina-d-ampezzo'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     active: true,
   },
   {
@@ -590,6 +611,7 @@ export const ORGANIZATIONS = [
     destinationIds: ['val-comelico'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     aliases: ['Comelico'],
     active: true,
   },
@@ -601,11 +623,20 @@ export const ORGANIZATIONS = [
     destinationIds: ['gsiesertal', 'welsberg-taisten'],
     relationshipTypes: ['fair-contributor'],
     identityStatus: 'provisional',
+    logoFile: null,
     active: true,
   },
 ] as const satisfies readonly Organization[];
 
 export type OrganizationId = (typeof ORGANIZATIONS)[number]['id'];
+
+export function getOrganizationLogoPath(
+  organization: Pick<Organization, 'logoFile'>,
+): string | undefined {
+  return organization.logoFile
+    ? `${ORGANIZATION_LOGO_DIRECTORY}/${organization.logoFile}`
+    : undefined;
+}
 
 export const SEASONS = [
   {
