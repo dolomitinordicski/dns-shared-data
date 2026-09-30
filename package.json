@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "deploy:firebase:rules": "npx firebase-tools@latest deploy --only firestore:rules --project dns-core",
     "seed:design-system": "tsx scripts/seed-design-system.ts",
-    "seed:design-system:apply": "tsx scripts/seed-design-system.ts --apply"
+    "seed:design-system:apply": "tsx scripts/seed-design-system.ts --apply",
+    "bootstrap:admin": "tsx scripts/bootstrap-admin.ts"
   },
   "dependencies": {
     "firebase-admin": "^14.5.0"
