@@ -14,9 +14,10 @@ import type {
   ReportingAreaId,
   SeasonId,
   DestinationId,
+  LocalizedName,
 } from './canonical-data.js';
 
-export const SEASONAL_OPERATIONAL_SCHEMA_VERSION = 2 as const;
+export const SEASONAL_OPERATIONAL_SCHEMA_VERSION = 3 as const;
 
 export type CurrencyCode = 'EUR';
 
@@ -112,6 +113,41 @@ export interface TicketPricingSnapshot {
  * Orders are operational distribution/billing-preparation facts.
  * They must never be interpreted as actual sales.
  */
+export type OrderCatalogCategory = 'ticket' | 'wristband';
+
+export interface OrderCatalogItem {
+  id: string;
+  seasonId: SeasonId;
+  category: OrderCatalogCategory;
+  /**
+   * Stable technical code used by the UI/import layer. For ticket items this
+   * can mirror a TicketProductCode; wristband codes remain season-specific.
+   */
+  code: string;
+  label: LocalizedName;
+  displayOrder: number;
+  active: boolean;
+  /**
+   * Ticket items may map to the sales/pricing product model. Wristbands do not.
+   */
+  productCode?: TicketProductCode;
+  /** Optional physical colour/reference code from supplier/order sheets. */
+  physicalVariantCode?: string;
+  provenance?: DataProvenance;
+  notes?: string;
+}
+
+export interface OrderFormConfig {
+  id: string;
+  seasonId: SeasonId;
+  category: OrderCatalogCategory;
+  catalogItemIds: readonly string[];
+  organizationIds: readonly OrganizationId[];
+  active: boolean;
+  provenance?: DataProvenance;
+  notes?: string;
+}
+
 export type TicketOrderStatus =
   | 'draft'
   | 'submitted'
@@ -142,7 +178,16 @@ export interface TicketOrderLine {
   seasonId: SeasonId;
   organizationId: OrganizationId;
   reportingAreaId: ReportingAreaId;
-  productCode: TicketProductCode;
+  /**
+   * First-class reference to the season's order catalogue. This supports both
+   * sellable ticket products and physical order material such as wristbands.
+   */
+  catalogItemId: string;
+  /**
+   * Optional shortcut for ticket catalogue items. Wristband lines deliberately
+   * have no TicketProductCode.
+   */
+  productCode?: TicketProductCode;
   quantity: number;
   /**
    * Optional intended sales channel/period. Orders may be channel-agnostic;
@@ -152,11 +197,11 @@ export interface TicketOrderLine {
   salesChannel?: TicketSalesChannel;
   salesPeriod?: TicketSalesPeriod;
   /**
-   * Snapshot used for operational Billing Prep. Official invoices remain in
-   * XGLA4; changing later prices must not rewrite an historical order line.
+   * Ticket lines can snapshot pricing for Billing Prep. Physical material
+   * lines such as wristbands may have no ticket pricing at all.
    */
-  pricing: TicketPricingSnapshot;
-  calculatedAmount: number;
+  pricing?: TicketPricingSnapshot;
+  calculatedAmount?: number;
   provenance: DataProvenance;
   notes?: string;
 }
@@ -293,6 +338,8 @@ export const PRICING_SCOPE_PRECEDENCE = [
 
 export const FIRESTORE_OPERATIONAL_COLLECTIONS = {
   pricingConfigs: 'pricingConfigs',
+  orderCatalogItems: 'orderCatalogItems',
+  orderFormConfigs: 'orderFormConfigs',
   ticketOrders: 'ticketOrders',
   ticketOrderLines: 'ticketOrderLines',
   ticketSales: 'ticketSales',
