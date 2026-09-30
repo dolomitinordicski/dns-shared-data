@@ -1,4 +1,5 @@
 name: Deploy DNS Design System
+# Fresh runs pick up current repository secrets.
 
 on:
   push:
