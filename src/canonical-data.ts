@@ -1,5 +1,5 @@
 /**
- * DNS Canonical Dataset v1.3
+ * DNS Canonical Dataset v1.4
  *
  * Shared, application-agnostic master data for the Dolomiti NordicSki
  * digital ecosystem.
@@ -595,15 +595,15 @@ export const ORGANIZATIONS = [
     active: true,
   },
   {
-    id: 'seiser-alm',
-    canonicalName: 'Seiser Alm',
+    id: 'seiser-alm-marketing',
+    canonicalName: 'Seiser Alm Marketing',
     organizationType: 'tourism-organisation',
     reportingAreaIds: ['seiser-alm-dolomites-val-gardena'],
     destinationIds: ['seiser-alm'],
     relationshipTypes: ['fair-contributor'],
-    identityStatus: 'provisional',
+    identityStatus: 'verified',
     logoFile: null,
-    aliases: ['Alpe di Siusi'],
+    aliases: ['Seiser Alm', 'Alpe di Siusi', 'Seiser Alm Marketing Gen.'],
     active: true,
   },
   {
@@ -624,15 +624,15 @@ export const ORGANIZATIONS = [
     active: true,
   },
   {
-    id: 'cortina-d-ampezzo',
-    canonicalName: "Cortina d'Ampezzo",
+    id: 'servizi-ampezzo',
+    canonicalName: 'Servizi Ampezzo',
     organizationType: 'tourism-organisation',
     reportingAreaIds: ['cortina-d-ampezzo'],
     destinationIds: ['cortina-d-ampezzo'],
     relationshipTypes: ['fair-contributor'],
-    identityStatus: 'provisional',
+    identityStatus: 'verified',
     logoFile: null,
-    aliases: ['Cortina', 'Cortina Marketing'],
+    aliases: ['Cortina', 'Cortina Marketing', "Cortina d'Ampezzo"],
     active: true,
   },
   {
