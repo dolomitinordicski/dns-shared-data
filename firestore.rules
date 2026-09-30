@@ -31,6 +31,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Public DNS Design System tokens. Applications may read the current
+    // design configuration but browser clients can never modify it.
+    match /designSystem/{document} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Everything else remains closed until its own authentication and
     // authorization model has been explicitly designed.
     match /{document=**} {
