@@ -195,3 +195,40 @@ The first write-enabled domain should be admin-only Pricing Persistence.
 Memberships and grants should eventually be managed through a trusted DNS admin interface backed by privileged server-side operations or narrowly-scoped administrative rules.
 
 They must never be user-self-service permissions.
+
+
+## 11. First DNS administrator bootstrap
+
+The first administrator is bootstrapped from an **existing Firebase Authentication user**.
+
+The repository provides:
+
+```text
+.github/workflows/bootstrap-admin.yml
+scripts/bootstrap-admin.ts
+```
+
+The workflow is intentionally manual (`workflow_dispatch`) and asks for:
+
+- existing Firebase Auth email;
+- preferred UI language.
+
+It never asks for or stores a password.
+
+The bootstrap resolves the Firebase Auth user UID and creates/updates:
+
+```text
+users/{uid}
+```
+
+with:
+
+```text
+active: true
+globalRoles: ["dns-admin"]
+preferredLanguage: de | it | en
+```
+
+No organization membership or access grant is required for a global DNS administrator.
+
+Subsequent partner users should normally use scoped memberships/access grants instead of `dns-admin`.
