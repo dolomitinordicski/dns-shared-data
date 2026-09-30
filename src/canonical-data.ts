@@ -12,6 +12,9 @@
  * - This file contains no Firebase-specific code by design.
  */
 
+export const CANONICAL_DATASET_VERSION = '1.4' as const;
+export const CANONICAL_SCHEMA_VERSION = 1 as const;
+
 export type Language = 'de' | 'it' | 'en';
 
 export type CanonicalScopeType =
