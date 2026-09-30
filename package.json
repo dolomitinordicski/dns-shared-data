@@ -9,7 +9,8 @@
   "scripts": {
     "seed:firebase": "tsx scripts/seed-firestore.ts",
     "seed:firebase:apply": "tsx scripts/seed-firestore.ts --apply",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy:firebase:rules": "npx firebase-tools@latest deploy --only firestore:rules --project dns-core"
   },
   "dependencies": {
     "firebase-admin": "^14.5.0"

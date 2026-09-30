@@ -1,5 +1,5 @@
 /**
- * DNS Canonical Dataset v1.5
+ * DNS Canonical Dataset v1.6
  *
  * Shared, application-agnostic master data for the Dolomiti NordicSki
  * digital ecosystem.
@@ -12,8 +12,8 @@
  * - This file contains no Firebase-specific code by design.
  */
 
-export const CANONICAL_DATASET_VERSION = '1.5' as const;
-export const CANONICAL_SCHEMA_VERSION = 1 as const;
+export const CANONICAL_DATASET_VERSION = '1.6' as const;
+export const CANONICAL_SCHEMA_VERSION = 2 as const;
 
 export type Language = 'de' | 'it' | 'en';
 
@@ -98,6 +98,15 @@ export interface Organization {
 }
 
 export const ORGANIZATION_LOGO_DIRECTORY = 'assets/organization-logos' as const;
+
+export interface OrganizationRelationship {
+  id: string;
+  organizationId: string;
+  relationshipType: RelationshipType;
+  scopeType: 'network' | 'reportingArea';
+  scopeId: string;
+  active: boolean;
+}
 
 export interface Season {
   id: string;
@@ -674,6 +683,141 @@ export const ORGANIZATIONS = [
 ] as const satisfies readonly Organization[];
 
 export type OrganizationId = (typeof ORGANIZATIONS)[number]['id'];
+
+export const ORGANIZATION_RELATIONSHIPS = [
+  {
+    id: 'tvb-osttirol-dns-member-dolomiti-nordicski',
+    organizationId: 'tvb-osttirol',
+    relationshipType: 'dns-member',
+    scopeType: 'network',
+    scopeId: 'dolomiti-nordicski',
+    active: true,
+  },
+  {
+    id: 'tvb-osttirol-fair-contributor-osttirol',
+    organizationId: 'tvb-osttirol',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'osttirol',
+    active: true,
+  },
+  {
+    id: 'tv-sexten-fair-contributor-drei-zinnen',
+    organizationId: 'tv-sexten',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'drei-zinnen',
+    active: true,
+  },
+  {
+    id: 'tv-innichen-fair-contributor-drei-zinnen',
+    organizationId: 'tv-innichen',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'drei-zinnen',
+    active: true,
+  },
+  {
+    id: 'tv-toblach-fair-contributor-drei-zinnen',
+    organizationId: 'tv-toblach',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'drei-zinnen',
+    active: true,
+  },
+  {
+    id: 'tv-niederdorf-fair-contributor-drei-zinnen',
+    organizationId: 'tv-niederdorf',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'drei-zinnen',
+    active: true,
+  },
+  {
+    id: 'tv-prags-fair-contributor-drei-zinnen',
+    organizationId: 'tv-prags',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'drei-zinnen',
+    active: true,
+  },
+  {
+    id: 'biathlon-antholz-fair-contributor-antholzertal',
+    organizationId: 'biathlon-antholz',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'antholzertal',
+    active: true,
+  },
+  {
+    id: 'antholzertal-fair-contributor-antholzertal',
+    organizationId: 'antholzertal',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'antholzertal',
+    active: true,
+  },
+  {
+    id: 'ahrntal-fair-contributor-ahrntal',
+    organizationId: 'ahrntal',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'ahrntal',
+    active: true,
+  },
+  {
+    id: 'sand-in-taufers-fair-contributor-ahrntal',
+    organizationId: 'sand-in-taufers',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'ahrntal',
+    active: true,
+  },
+  {
+    id: 'seiser-alm-marketing-fair-contributor-seiser-alm-dolomites-val-gardena',
+    organizationId: 'seiser-alm-marketing',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'seiser-alm-dolomites-val-gardena',
+    active: true,
+  },
+  {
+    id: 'val-gardena-fair-contributor-seiser-alm-dolomites-val-gardena',
+    organizationId: 'val-gardena',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'seiser-alm-dolomites-val-gardena',
+    active: true,
+  },
+  {
+    id: 'servizi-ampezzo-fair-contributor-cortina-d-ampezzo',
+    organizationId: 'servizi-ampezzo',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'cortina-d-ampezzo',
+    active: true,
+  },
+  {
+    id: 'val-comelico-fair-contributor-val-comelico',
+    organizationId: 'val-comelico',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'val-comelico',
+    active: true,
+  },
+  {
+    id: 'gsiesertal-welsberg-taisten-fair-contributor-gsiesertal-welsberg-taisten',
+    organizationId: 'gsiesertal-welsberg-taisten',
+    relationshipType: 'fair-contributor',
+    scopeType: 'reportingArea',
+    scopeId: 'gsiesertal-welsberg-taisten',
+    active: true,
+  },
+] as const satisfies readonly OrganizationRelationship[];
+
+export type OrganizationRelationshipId =
+  (typeof ORGANIZATION_RELATIONSHIPS)[number]['id'];
+
 
 export function getOrganizationLogoPath(
   organization: Pick<Organization, 'logoFile'>,

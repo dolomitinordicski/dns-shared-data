@@ -6,20 +6,26 @@ import {
   CANONICAL_SCHEMA_VERSION,
   DESTINATIONS,
   ORGANIZATIONS,
+  ORGANIZATION_RELATIONSHIPS,
   REPORTING_AREAS,
   SEASONS,
 } from '../src/canonical-data.js';
+import type { OrganizationRelationship } from '../src/canonical-data.js';
 
 const TARGET_PROJECT_ID = 'dns-core';
 const APPLY = process.argv.includes('--apply');
 
 type CanonicalRecord = {
   id: string;
-  [key: string]: unknown;
 };
 
 type SeedCollection = {
-  name: 'reportingAreas' | 'destinations' | 'organizations' | 'seasons';
+  name:
+    | 'reportingAreas'
+    | 'destinations'
+    | 'organizations'
+    | 'organizationRelationships'
+    | 'seasons';
   records: readonly CanonicalRecord[];
 };
 
@@ -27,6 +33,7 @@ const collections: readonly SeedCollection[] = [
   { name: 'reportingAreas', records: REPORTING_AREAS },
   { name: 'destinations', records: DESTINATIONS },
   { name: 'organizations', records: ORGANIZATIONS },
+  { name: 'organizationRelationships', records: ORGANIZATION_RELATIONSHIPS },
   { name: 'seasons', records: SEASONS },
 ];
 
@@ -59,8 +66,15 @@ function validateCanonicalData() {
     }
   }
 
-  const reportingAreaIds = new Set(REPORTING_AREAS.map((area) => area.id));
-  const destinationIds = new Set(DESTINATIONS.map((destination) => destination.id));
+  const reportingAreaIds = new Set<string>(
+    REPORTING_AREAS.map((area) => area.id),
+  );
+  const destinationIds = new Set<string>(
+    DESTINATIONS.map((destination) => destination.id),
+  );
+  const organizationIds = new Set<string>(
+    ORGANIZATIONS.map((organization) => organization.id),
+  );
 
   for (const destination of DESTINATIONS) {
     if (!reportingAreaIds.has(destination.reportingAreaId)) {
@@ -105,6 +119,59 @@ function validateCanonicalData() {
     }
   }
 
+
+  for (const rawRelationship of ORGANIZATION_RELATIONSHIPS) {
+    const relationship = rawRelationship as OrganizationRelationship;
+
+    if (!organizationIds.has(relationship.organizationId)) {
+      throw new Error(
+        `Relationship "${relationship.id}" references unknown organization "${relationship.organizationId}".`,
+      );
+    }
+
+    const organization = ORGANIZATIONS.find(
+      (candidate) => candidate.id === relationship.organizationId,
+    );
+
+    if (!organization) {
+      throw new Error(
+        `Relationship "${relationship.id}" cannot resolve organization "${relationship.organizationId}".`,
+      );
+    }
+
+    const declaredRelationshipTypes =
+      organization.relationshipTypes as readonly string[];
+
+    if (!declaredRelationshipTypes.includes(relationship.relationshipType)) {
+      throw new Error(
+        `Relationship "${relationship.id}" is not declared by organization "${relationship.organizationId}".`,
+      );
+    }
+
+    if (relationship.scopeType === 'network') {
+      if (relationship.scopeId !== 'dolomiti-nordicski') {
+        throw new Error(
+          `Relationship "${relationship.id}" references unknown network scope "${relationship.scopeId}".`,
+        );
+      }
+    } else if (!reportingAreaIds.has(relationship.scopeId)) {
+      throw new Error(
+        `Relationship "${relationship.id}" references unknown reporting area "${relationship.scopeId}".`,
+      );
+    }
+
+    if (
+      relationship.scopeType === 'reportingArea' &&
+      !(organization.reportingAreaIds as readonly string[]).includes(
+        relationship.scopeId,
+      )
+    ) {
+      throw new Error(
+        `Relationship "${relationship.id}" targets a reporting area not assigned to "${relationship.organizationId}".`,
+      );
+    }
+  }
+
   const activeSeasons = SEASONS.filter((season) => season.status === 'active');
   if (activeSeasons.length !== 1) {
     throw new Error(
@@ -115,7 +182,7 @@ function validateCanonicalData() {
 
 function printPlan() {
   console.log('');
-  console.log('DNS_Core — Firebase Master Dataset v0.1');
+  console.log('DNS_Core — Firebase Master Dataset v0.2');
   console.log('---------------------------------------');
   console.log(`Target project: ${TARGET_PROJECT_ID}`);
   console.log(`Canonical dataset: v${CANONICAL_DATASET_VERSION}`);
