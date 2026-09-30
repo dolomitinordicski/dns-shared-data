@@ -1,17 +1,25 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.0.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.2.0' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
   name: 'DNS Design System',
   version: DNS_DESIGN_SYSTEM_VERSION,
-  sourceReference: 'DNS Analytics',
   status: 'active',
+  brandSources: {
+    colors: 'DNS Partner Portal',
+    interaction: 'Dolomiti NordicSki public website',
+    dataUi: 'DNS Analytics',
+  },
   colors: {
     deep: '#0D4D5E',
     mid: '#417483',
     light: '#AAD0D1',
     background: '#F4F8F9',
     surface: '#FFFFFF',
+    darkText: '#313131',
+    gray: '#DDDDDD',
+    primaryDark: '#08343F',
+    secondaryDark: '#7BBABC',
     mutedText: '#5A7F8A',
     positive: '#0F6E56',
     negative: '#993C1D',
@@ -21,8 +29,8 @@ export const DNS_DESIGN_SYSTEM = {
   typography: {
     primaryFamily: 'Be Vietnam Pro',
     secondaryFamily: 'Roboto',
-    primaryWeights: [300, 400, 500, 600, 700],
-    secondaryWeights: [300, 400, 500, 700],
+    primaryWeights: [300, 400, 500, 600, 700, 800, 900],
+    secondaryWeights: [300, 400, 500, 700, 900],
     baseFontSizePx: 13,
     sectionTitlePx: 11,
     labelPx: 10,
@@ -46,6 +54,15 @@ export const DNS_DESIGN_SYSTEM = {
   shadow: {
     card: '0 1px 4px rgba(13,77,94,.07)',
     header: '0 1px 0 rgba(255,255,255,.08)',
+    floatingControl: '0 4px 6px rgba(0,0,0,.10)',
+  },
+  motion: {
+    fastMs: 200,
+    standardMs: 300,
+    revealMs: 600,
+    easing: 'ease',
+    hoverScale: 1.05,
+    touchScale: 0.96,
   },
   header: {
     background: '#0D4D5E',
@@ -90,6 +107,118 @@ export const DNS_DESIGN_SYSTEM = {
     focusColor: '#417483',
     primaryBackground: '#0D4D5E',
     primaryHoverBackground: '#417483',
+    secondaryBackground: '#FFFFFF',
+    secondaryText: '#0D4D5E',
+    transitionMs: 300,
+  },
+  navigation: {
+    tabs: {
+      visualStyle: 'analytics',
+      containerBackground: '#417483',
+      textColor: 'rgba(255,255,255,.60)',
+      activeTextColor: '#FFFFFF',
+      hoverTextColor: 'rgba(255,255,255,.85)',
+      activeIndicator: 'bottom-border',
+      activeIndicatorColor: '#FFFFFF',
+      activeIndicatorWidthPx: 3,
+      buttonBackground: 'transparent',
+      buttonRadiusPx: 0,
+      uppercase: true,
+      fontSizePx: 11,
+      fontWeight: 600,
+      letterSpacingEm: 0.06,
+      transitionMs: 200,
+    },
+  },
+  responsive: {
+    breakpointsPx: {
+      mobileMax: 767,
+      tabletMin: 768,
+      desktopMin: 1024,
+      wideMin: 1280,
+    },
+    page: {
+      desktop: { paddingXRem: 1.8, paddingYRem: 1.3 },
+      tablet: { paddingXRem: 1.25, paddingYRem: 1.1 },
+      mobile: { paddingXRem: 1.0, paddingYRem: 0.9 },
+    },
+    header: {
+      desktop: {
+        logoHeightPx: 40,
+        showTitle: true,
+        showSubtitle: true,
+        showStatus: true,
+        compact: false,
+      },
+      tablet: {
+        logoHeightPx: 36,
+        showTitle: true,
+        showSubtitle: true,
+        showStatus: true,
+        compact: true,
+      },
+      mobile: {
+        logoHeightPx: 32,
+        showTitle: true,
+        showSubtitle: false,
+        showStatus: false,
+        compact: true,
+      },
+    },
+    tabs: {
+      desktop: {
+        layout: 'horizontal',
+        overflowX: 'visible',
+        wrap: false,
+        sticky: true,
+        tabPaddingXRem: 1.2,
+        tabPaddingYRem: 0.65,
+      },
+      tablet: {
+        layout: 'horizontal-scroll',
+        overflowX: 'auto',
+        wrap: false,
+        sticky: true,
+        tabPaddingXRem: 0.95,
+        tabPaddingYRem: 0.6,
+      },
+      mobile: {
+        layout: 'horizontal-scroll',
+        overflowX: 'auto',
+        wrap: false,
+        sticky: true,
+        scrollSnap: true,
+        tabPaddingXRem: 0.8,
+        tabPaddingYRem: 0.55,
+        useHamburger: false,
+        stackTabs: false,
+        renderAsButtons: false,
+      },
+    },
+    cards: {
+      desktopColumnsDefault: 3,
+      tabletColumnsDefault: 2,
+      mobileColumnsDefault: 1,
+    },
+    metrics: {
+      desktopColumnsDefault: 4,
+      tabletColumnsDefault: 2,
+      mobileColumnsDefault: 1,
+    },
+    tables: {
+      desktop: { behavior: 'full-table' },
+      tablet: { behavior: 'horizontal-scroll' },
+      mobile: {
+        behavior: 'horizontal-scroll',
+        collapseColumns: false,
+        preserveDataColumns: true,
+      },
+    },
+    footer: {
+      desktop: { layout: 'row', align: 'space-between' },
+      tablet: { layout: 'row', align: 'space-between' },
+      mobile: { layout: 'stacked', align: 'start' },
+    },
   },
   chartPalette: {
     product: {
@@ -110,6 +239,7 @@ export const DNS_DESIGN_SYSTEM = {
     bilingualPattern: 'de-it',
     denseDataUi: true,
     avoidDecorativeAiUi: true,
+    interactionStyle: 'lightweight-brand-led',
   },
 } as const;
 
