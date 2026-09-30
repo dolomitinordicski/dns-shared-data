@@ -39,6 +39,78 @@ function plain<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
+function validateCanonicalData() {
+  const idPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+  for (const collection of collections) {
+    const ids = collection.records.map((record) => record.id);
+    const uniqueIds = new Set(ids);
+
+    if (uniqueIds.size !== ids.length) {
+      throw new Error(`Duplicate IDs found in ${collection.name}.`);
+    }
+
+    for (const id of ids) {
+      if (!idPattern.test(id)) {
+        throw new Error(
+          `Invalid canonical ID "${id}" in ${collection.name}. Expected lowercase kebab-case.`,
+        );
+      }
+    }
+  }
+
+  const reportingAreaIds = new Set(REPORTING_AREAS.map((area) => area.id));
+  const destinationIds = new Set(DESTINATIONS.map((destination) => destination.id));
+
+  for (const destination of DESTINATIONS) {
+    if (!reportingAreaIds.has(destination.reportingAreaId)) {
+      throw new Error(
+        `Destination "${destination.id}" references unknown reporting area "${destination.reportingAreaId}".`,
+      );
+    }
+
+    if (
+      destination.parentDestinationId &&
+      !destinationIds.has(destination.parentDestinationId)
+    ) {
+      throw new Error(
+        `Destination "${destination.id}" references unknown parent destination "${destination.parentDestinationId}".`,
+      );
+    }
+  }
+
+  for (const organization of ORGANIZATIONS) {
+    if (organization.identityStatus !== 'verified') {
+      throw new Error(
+        `Organization "${organization.id}" is not verified and cannot be seeded into DNS_Core.`,
+      );
+    }
+
+    for (const reportingAreaId of organization.reportingAreaIds) {
+      if (!reportingAreaIds.has(reportingAreaId)) {
+        throw new Error(
+          `Organization "${organization.id}" references unknown reporting area "${reportingAreaId}".`,
+        );
+      }
+    }
+
+    for (const destinationId of organization.destinationIds) {
+      if (!destinationIds.has(destinationId)) {
+        throw new Error(
+          `Organization "${organization.id}" references unknown destination "${destinationId}".`,
+        );
+      }
+    }
+  }
+
+  const activeSeasons = SEASONS.filter((season) => season.status === 'active');
+  if (activeSeasons.length !== 1) {
+    throw new Error(
+      `Expected exactly one active season, found ${activeSeasons.length}.`,
+    );
+  }
+}
+
 function printPlan() {
   console.log('');
   console.log('DNS_Core — Firebase Master Dataset v0.1');
@@ -61,6 +133,7 @@ function printPlan() {
 }
 
 async function seed() {
+  validateCanonicalData();
   printPlan();
 
   if (!APPLY) {
