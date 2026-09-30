@@ -16,7 +16,6 @@ const APPLY = process.argv.includes('--apply');
 
 type CanonicalRecord = {
   id: string;
-  [key: string]: unknown;
 };
 
 type SeedCollection = {
@@ -66,9 +65,15 @@ function validateCanonicalData() {
     }
   }
 
-  const reportingAreaIds = new Set(REPORTING_AREAS.map((area) => area.id));
-  const destinationIds = new Set(DESTINATIONS.map((destination) => destination.id));
-  const organizationIds = new Set(ORGANIZATIONS.map((organization) => organization.id));
+  const reportingAreaIds = new Set<string>(
+    REPORTING_AREAS.map((area) => area.id),
+  );
+  const destinationIds = new Set<string>(
+    DESTINATIONS.map((destination) => destination.id),
+  );
+  const organizationIds = new Set<string>(
+    ORGANIZATIONS.map((organization) => organization.id),
+  );
 
   for (const destination of DESTINATIONS) {
     if (!reportingAreaIds.has(destination.reportingAreaId)) {
@@ -125,7 +130,10 @@ function validateCanonicalData() {
       (candidate) => candidate.id === relationship.organizationId,
     );
 
-    if (!organization?.relationshipTypes.includes(relationship.relationshipType)) {
+    const declaredRelationshipTypes =
+      organization?.relationshipTypes as readonly string[] | undefined;
+
+    if (!declaredRelationshipTypes?.includes(relationship.relationshipType)) {
       throw new Error(
         `Relationship "${relationship.id}" is not declared by organization "${relationship.organizationId}".`,
       );
@@ -145,7 +153,9 @@ function validateCanonicalData() {
 
     if (
       relationship.scopeType === 'reportingArea' &&
-      !organization.reportingAreaIds.includes(relationship.scopeId)
+      !(organization.reportingAreaIds as readonly string[]).includes(
+        relationship.scopeId,
+      )
     ) {
       throw new Error(
         `Relationship "${relationship.id}" targets a reporting area not assigned to "${relationship.organizationId}".`,
