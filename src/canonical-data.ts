@@ -1,5 +1,5 @@
 /**
- * DNS Canonical Dataset v1.4
+ * DNS Canonical Dataset v1.5
  *
  * Shared, application-agnostic master data for the Dolomiti NordicSki
  * digital ecosystem.
@@ -11,6 +11,9 @@
  *   destructively.
  * - This file contains no Firebase-specific code by design.
  */
+
+export const CANONICAL_DATASET_VERSION = '1.5' as const;
+export const CANONICAL_SCHEMA_VERSION = 1 as const;
 
 export type Language = 'de' | 'it' | 'en';
 
@@ -33,7 +36,6 @@ export type OrganizationType =
   | 'mobility-provider'
   | 'institution'
   | 'sponsor'
-  | 'b2b-partner'
   | 'other';
 
 export type RelationshipType =

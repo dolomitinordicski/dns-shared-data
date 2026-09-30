@@ -1,1 +1,1 @@
-export * from './canonical-data';
+export * from './canonical-data.js';
