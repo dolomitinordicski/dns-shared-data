@@ -12,6 +12,8 @@ This repository contains:
 
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
+- **Seasonal Operational Dataset:** v0.2
+- **DNS Design System:** v1.2
 
 ## Source of truth
 
@@ -43,6 +45,7 @@ docs/
   Firebase-Master-Dataset-v0.1.md
   Firebase-Master-Dataset-v0.2.md
   Seasonal-Operational-Dataset-v0.1.md
+  Seasonal-Operational-Dataset-v0.2.md
 
 scripts/
   seed-firestore.ts
@@ -95,10 +98,10 @@ Client writes remain denied. All non-master collections remain closed by default
 
 ## Seasonal operational data
 
-Season-specific pricing, ticket sales and KP/track input are modelled separately from canonical master data. The architecture baseline is documented in:
+Season-specific pricing, ticket orders, ticket sales and KP/track input are modelled separately from canonical master data. The current operational contract is documented in:
 
 ```text
-docs/Seasonal-Operational-Dataset-v0.1.md
+docs/Seasonal-Operational-Dataset-v0.2.md
 ```
 
-The operational schema is exported from `src/seasonal-operational-data.ts`. It supports season-versioned prices, network/area/organization overrides, settlement values for complimentary tickets, raw ticket quantities, KP milestones and draft/submitted/verified workflows.
+The operational schema is exported from `src/seasonal-operational-data.ts`. It supports season-versioned prices, ticket orders/order lines, network/area/organization overrides, frozen pricing snapshots, raw ticket quantities, KP milestones, provenance/method versioning, append-only corrections and draft/submitted/verified workflows.
