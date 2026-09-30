@@ -186,7 +186,7 @@ export interface PublicOrderShareSnapshot {
   category: OrderCatalogCategory;
   generatedAt: string;
   title: LocalizedName;
-  items: readonly Array<{
+  items: ReadonlyArray<{
     id: string;
     code: string;
     label: LocalizedName;
@@ -195,11 +195,11 @@ export interface PublicOrderShareSnapshot {
     displayTextColorHex?: string;
     supplierColorReference?: string;
   }>;
-  organizations: readonly Array<{
+  organizations: ReadonlyArray<{
     organizationId: OrganizationId;
     sourceLabel: string;
   }>;
-  cells: readonly Array<{
+  cells: ReadonlyArray<{
     organizationId: OrganizationId;
     catalogItemId: string;
     quantity: number | null;
