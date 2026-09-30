@@ -49,9 +49,9 @@ async function seed() {
     source: {
       type: 'dns-shared-data',
       repository: 'dolomitinordicski/dns-shared-data',
-      brandColorReference: 'https://partner.dolomitinordicski.com/',
-      interactionReference: 'https://www.dolomitinordicski.com/',
-      dataUiReference: 'dolomitinordicski/analytics',
+      brandColorReference: 'DNS Partner Portal',
+      interactionReference: 'Dolomiti NordicSki public website',
+      dataUiReference: 'DNS Analytics',
     },
     updatedAt: now,
   };
