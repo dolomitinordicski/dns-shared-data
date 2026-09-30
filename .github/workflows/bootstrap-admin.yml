@@ -1,0 +1,57 @@
+name: Bootstrap DNS Admin
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: Existing Firebase Authentication user email
+        required: true
+        type: string
+      preferred_language:
+        description: Preferred UI language
+        required: true
+        default: de
+        type: choice
+        options:
+          - de
+          - it
+          - en
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Firebase credentials
+        shell: bash
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::Missing FIREBASE_SERVICE_ACCOUNT_DNS_CORE repository secret."
+            exit 1
+          fi
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Bootstrap DNS admin
+        run: npm run bootstrap:admin -- --email="${{ inputs.email }}" --preferred-language="${{ inputs.preferred_language }}"
+        env:
+          GOOGLE_CLOUD_PROJECT: dns-core
