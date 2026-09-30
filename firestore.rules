@@ -3,9 +3,68 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function activeUser() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true;
+    }
+
+    function isAdmin() {
+      return activeUser()
+        && 'dns-admin' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.globalRoles;
+    }
+
+    function hasGrant(scopeType, scopeId, permission) {
+      let grantId = request.auth.uid + "__" + scopeType + "__" + scopeId;
+      let grantPath = /databases/$(database)/documents/accessGrants/$(grantId);
+      return activeUser()
+        && scopeId != ''
+        && exists(grantPath)
+        && get(grantPath).data.active == true
+        && permission in get(grantPath).data.permissions;
+    }
+
+    function dataAreaId(data) {
+      return data.keys().hasAny(['reportingAreaId'])
+        ? data.reportingAreaId
+        : '';
+    }
+
+    function hasOrderPermission(permission, data) {
+      return isAdmin()
+        || hasGrant('network', 'dolomiti-nordicski', permission)
+        || hasGrant('organization', data.organizationId, permission)
+        || hasGrant('reportingArea', dataAreaId(data), permission);
+    }
+
+    function validOrder(data) {
+      return data.seasonId is string
+        && data.organizationId is string
+        && data.category in ['ticket', 'wristband']
+        && data.status in ['draft', 'submitted', 'confirmed', 'fulfilled', 'cancelled'];
+    }
+
+    function validOrderLine(data) {
+      return data.seasonId is string
+        && data.organizationId is string
+        && data.ticketOrderId is string
+        && data.catalogItemId is string
+        && data.quantity is int
+        && data.quantity >= 0;
+    }
+
+    function lineMatchesOrder(data) {
+      let orderPath = /databases/$(database)/documents/ticketOrders/$(data.ticketOrderId);
+      let order = getAfter(orderPath);
+      return order.data.organizationId == data.organizationId
+        && order.data.seasonId == data.seasonId;
+    }
+
     // Public canonical master data.
-    // These collections contain only non-personal, already public DNS
-    // reference data. Browser clients may read them, but never write them.
     match /reportingAreas/{document} {
       allow read: if true;
       allow write: if false;
@@ -31,34 +90,82 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Public DNS Design System tokens. Applications may read the current
-    // design configuration but browser clients can never modify it.
     match /designSystem/{document} {
       allow read: if true;
       allow write: if false;
     }
 
-    // Private authorization metadata. Each authenticated user may read only
-    // their own authorization context. Browser clients can never modify it.
+    // Private authorization metadata.
     match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
+      allow read: if signedIn() && request.auth.uid == userId;
       allow write: if false;
     }
 
     match /memberships/{document} {
-      allow read: if request.auth != null
-                  && resource.data.userId == request.auth.uid;
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
       allow write: if false;
     }
 
     match /accessGrants/{document} {
-      allow read: if request.auth != null
-                  && resource.data.userId == request.auth.uid;
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
       allow write: if false;
     }
 
-    // Everything else remains closed until its own authentication and
-    // authorization model has been explicitly designed.
+    // Seasonal order catalogue/configuration is available to active DNS users.
+    // Only DNS administrators can alter the catalogue itself.
+    match /orderCatalogItems/{document} {
+      allow read: if activeUser();
+      allow write: if isAdmin();
+    }
+
+    match /orderFormConfigs/{document} {
+      allow read: if activeUser();
+      allow write: if isAdmin();
+    }
+
+    // Operational order headers.
+    match /ticketOrders/{document} {
+      allow read: if hasOrderPermission('ticketOrders.read', resource.data);
+
+      allow create: if validOrder(request.resource.data)
+        && hasOrderPermission('ticketOrders.write', request.resource.data);
+
+      allow update: if validOrder(request.resource.data)
+        && resource.data.organizationId == request.resource.data.organizationId
+        && resource.data.seasonId == request.resource.data.seasonId
+        && resource.data.category == request.resource.data.category
+        && hasOrderPermission('ticketOrders.write', request.resource.data);
+
+      // Order headers are retained for audit; normal contributors do not delete them.
+      allow delete: if isAdmin();
+    }
+
+    // Operational order matrix cells.
+    match /ticketOrderLines/{document} {
+      allow read: if hasOrderPermission('ticketOrders.read', resource.data);
+
+      allow create: if validOrderLine(request.resource.data)
+        && hasOrderPermission('ticketOrders.write', request.resource.data)
+        && lineMatchesOrder(request.resource.data);
+
+      allow update: if validOrderLine(request.resource.data)
+        && resource.data.organizationId == request.resource.data.organizationId
+        && resource.data.seasonId == request.resource.data.seasonId
+        && resource.data.ticketOrderId == request.resource.data.ticketOrderId
+        && resource.data.catalogItemId == request.resource.data.catalogItemId
+        && hasOrderPermission('ticketOrders.write', request.resource.data)
+        && lineMatchesOrder(request.resource.data);
+
+      // Clearing a matrix cell deletes only that organization's own line.
+      allow delete: if hasOrderPermission('ticketOrders.write', resource.data);
+    }
+
+    // One-time import markers are trusted-backend only.
+    match /orderSetupImports/{document} {
+      allow read, write: if false;
+    }
+
+    // Everything else remains closed until its domain rules are implemented.
     match /{document=**} {
       allow read, write: if false;
     }

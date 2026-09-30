@@ -12,7 +12,7 @@ import type {
   OrganizationId,
 } from './canonical-data.js';
 
-export const ACCESS_CONTROL_SCHEMA_VERSION = 1 as const;
+export const ACCESS_CONTROL_SCHEMA_VERSION = 2 as const;
 
 export type DNSGlobalRole = 'dns-admin';
 
@@ -146,3 +146,21 @@ export const FIRESTORE_ACCESS_COLLECTIONS = {
   memberships: 'memberships',
   accessGrants: 'accessGrants',
 } as const;
+
+
+/**
+ * Access grants use deterministic document IDs so Firestore Security Rules can
+ * resolve a user's grant without a query.
+ *
+ * Example:
+ *   <uid>__organization__tv-toblach
+ *   <uid>__reportingArea__drei-zinnen
+ *   <uid>__network__dolomiti-nordicski
+ */
+export function buildAccessGrantId(
+  userId: string,
+  scopeType: CanonicalScopeType,
+  scopeId: string,
+) {
+  return `${userId}__${scopeType}__${scopeId}`;
+}
