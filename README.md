@@ -14,6 +14,7 @@ This repository contains:
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.2
 - **DNS Design System:** v1.2
+- **DNS Access Control:** v0.1
 
 ## Source of truth
 
@@ -46,6 +47,7 @@ docs/
   Firebase-Master-Dataset-v0.2.md
   Seasonal-Operational-Dataset-v0.1.md
   Seasonal-Operational-Dataset-v0.2.md
+  DNS-Access-Control-v0.1.md
 
 scripts/
   seed-firestore.ts
@@ -105,3 +107,24 @@ docs/Seasonal-Operational-Dataset-v0.2.md
 ```
 
 The operational schema is exported from `src/seasonal-operational-data.ts`. It supports season-versioned prices, ticket orders/order lines, network/area/organization overrides, frozen pricing snapshots, raw ticket quantities, KP milestones, provenance/method versioning, append-only corrections and draft/submitted/verified workflows.
+
+
+## Authentication and access control
+
+DNS tools use Firebase Authentication for identity and private Firestore metadata for authorization.
+
+The v0.1 contract is documented in:
+
+```text
+docs/DNS-Access-Control-v0.1.md
+```
+
+Authorization collections:
+
+```text
+users
+memberships
+accessGrants
+```
+
+Authenticated clients may read only their own authorization context. Browser writes to these collections remain denied.

@@ -38,6 +38,25 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Private authorization metadata. Each authenticated user may read only
+    // their own authorization context. Browser clients can never modify it.
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    match /memberships/{document} {
+      allow read: if request.auth != null
+                  && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /accessGrants/{document} {
+      allow read: if request.auth != null
+                  && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
     // Everything else remains closed until its own authentication and
     // authorization model has been explicitly designed.
     match /{document=**} {
