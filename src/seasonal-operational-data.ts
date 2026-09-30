@@ -17,7 +17,7 @@ import type {
   LocalizedName,
 } from './canonical-data.js';
 
-export const SEASONAL_OPERATIONAL_SCHEMA_VERSION = 3 as const;
+export const SEASONAL_OPERATIONAL_SCHEMA_VERSION = 4 as const;
 
 export type CurrencyCode = 'EUR';
 
@@ -133,6 +133,14 @@ export interface OrderCatalogItem {
   productCode?: TicketProductCode;
   /** Optional physical colour/reference code from supplier/order sheets. */
   physicalVariantCode?: string;
+  /**
+   * Season-specific visual legend used in the order UI. This is deliberately
+   * part of the seasonal catalogue because wristband colours rotate between
+   * seasons. displayColorHex is an approximate screen swatch, not a print spec.
+   */
+  displayColorHex?: string;
+  displayTextColorHex?: string;
+  supplierColorReference?: string;
   provenance?: DataProvenance;
   notes?: string;
 }
@@ -159,10 +167,11 @@ export interface TicketOrder {
   id: string;
   seasonId: SeasonId;
   organizationId: OrganizationId;
-  reportingAreaId: ReportingAreaId;
+  reportingAreaId?: ReportingAreaId;
+  category: OrderCatalogCategory;
   /** Human/business order number when one exists. */
   orderNumber?: string;
-  orderDate: string;
+  orderDate?: string;
   status: TicketOrderStatus;
   submittedAt?: string;
   confirmedAt?: string;
@@ -177,7 +186,7 @@ export interface TicketOrderLine {
   ticketOrderId: string;
   seasonId: SeasonId;
   organizationId: OrganizationId;
-  reportingAreaId: ReportingAreaId;
+  reportingAreaId?: ReportingAreaId;
   /**
    * First-class reference to the season's order catalogue. This supports both
    * sellable ticket products and physical order material such as wristbands.
