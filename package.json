@@ -13,7 +13,9 @@
     "deploy:firebase:rules": "npx firebase-tools@latest deploy --only firestore:rules --project dns-core",
     "seed:design-system": "tsx scripts/seed-design-system.ts",
     "seed:design-system:apply": "tsx scripts/seed-design-system.ts --apply",
-    "bootstrap:admin": "tsx scripts/bootstrap-admin.ts"
+    "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
+    "seed:orders:2026-27": "tsx scripts/seed-orders-2026-27.ts",
+    "seed:orders:2026-27:apply": "tsx scripts/seed-orders-2026-27.ts --apply"
   },
   "dependencies": {
     "firebase-admin": "^14.5.0"
