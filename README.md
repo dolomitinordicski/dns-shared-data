@@ -11,7 +11,7 @@ This repository contains:
 ## Current versions
 
 - **DNS Foundation:** v1.2
-- **Canonical Dataset:** v1.1
+- **Canonical Dataset:** v1.2
 
 ## Source of truth
 
@@ -32,6 +32,15 @@ src/
   canonical-data.ts
   index.ts
 
+assets/
+  organization-logos/
+    public organization logo assets
+
 docs/
   DNS-Foundation-v1.2.md
 ```
+
+
+## Organization logos
+
+Canonical organizations may reference one primary public logo through `logoFile`. Logo assets live in `assets/organization-logos/`; keep `logoFile: null` until the correct asset has been uploaded and verified.
