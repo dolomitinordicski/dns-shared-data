@@ -1,17 +1,34 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.0.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.1.0' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
   name: 'DNS Design System',
   version: DNS_DESIGN_SYSTEM_VERSION,
-  sourceReference: 'DNS Analytics',
   status: 'active',
+  brandSources: {
+    colors: {
+      name: 'DNS Partner Portal',
+      url: 'https://partner.dolomitinordicski.com/',
+    },
+    interaction: {
+      name: 'Dolomiti NordicSki public website',
+      url: 'https://www.dolomitinordicski.com/',
+    },
+    dataUi: {
+      name: 'DNS Analytics',
+      repository: 'dolomitinordicski/analytics',
+    },
+  },
   colors: {
     deep: '#0D4D5E',
     mid: '#417483',
     light: '#AAD0D1',
     background: '#F4F8F9',
     surface: '#FFFFFF',
+    darkText: '#313131',
+    gray: '#DDDDDD',
+    primaryDark: '#08343F',
+    secondaryDark: '#7BBABC',
     mutedText: '#5A7F8A',
     positive: '#0F6E56',
     negative: '#993C1D',
@@ -21,8 +38,8 @@ export const DNS_DESIGN_SYSTEM = {
   typography: {
     primaryFamily: 'Be Vietnam Pro',
     secondaryFamily: 'Roboto',
-    primaryWeights: [300, 400, 500, 600, 700],
-    secondaryWeights: [300, 400, 500, 700],
+    primaryWeights: [300, 400, 500, 600, 700, 800, 900],
+    secondaryWeights: [300, 400, 500, 700, 900],
     baseFontSizePx: 13,
     sectionTitlePx: 11,
     labelPx: 10,
@@ -46,6 +63,15 @@ export const DNS_DESIGN_SYSTEM = {
   shadow: {
     card: '0 1px 4px rgba(13,77,94,.07)',
     header: '0 1px 0 rgba(255,255,255,.08)',
+    floatingControl: '0 4px 6px rgba(0,0,0,.10)',
+  },
+  motion: {
+    fastMs: 200,
+    standardMs: 300,
+    revealMs: 600,
+    easing: 'ease',
+    hoverScale: 1.05,
+    touchScale: 0.96,
   },
   header: {
     background: '#0D4D5E',
@@ -90,6 +116,15 @@ export const DNS_DESIGN_SYSTEM = {
     focusColor: '#417483',
     primaryBackground: '#0D4D5E',
     primaryHoverBackground: '#417483',
+    secondaryBackground: '#FFFFFF',
+    secondaryText: '#0D4D5E',
+    transitionMs: 300,
+  },
+  navigation: {
+    textColor: '#0D4D5E',
+    hoverTextColor: '#417483',
+    underlineColor: '#417483',
+    transitionMs: 300,
   },
   chartPalette: {
     product: {
@@ -110,6 +145,7 @@ export const DNS_DESIGN_SYSTEM = {
     bilingualPattern: 'de-it',
     denseDataUi: true,
     avoidDecorativeAiUi: true,
+    interactionStyle: 'lightweight-brand-led',
   },
 } as const;
 
