@@ -160,6 +160,16 @@ service cloud.firestore {
       allow delete: if hasOrderPermission('ticketOrders.write', resource.data);
     }
 
+    // Public supplier snapshots. Public clients can fetch one exact document
+    // by its unguessable ID, but cannot list/search the collection.
+    match /publicOrderShares/{shareId} {
+      allow get: if resource.data.active == true
+                 && (!resource.data.keys().hasAny(['expiresAt'])
+                     || request.time < resource.data.expiresAt);
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
     // One-time import markers are trusted-backend only.
     match /orderSetupImports/{document} {
       allow read, write: if false;
