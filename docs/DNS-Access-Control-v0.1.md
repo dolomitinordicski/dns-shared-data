@@ -232,3 +232,16 @@ preferredLanguage: de | it | en
 No organization membership or access grant is required for a global DNS administrator.
 
 Subsequent partner users should normally use scoped memberships/access grants instead of `dns-admin`.
+
+
+## 12. Deterministic access-grant IDs
+
+From Access Control schema v0.2, grant document IDs follow:
+
+```text
+<uid>__<scopeType>__<scopeId>
+```
+
+This is required so Firestore Security Rules can resolve a grant directly without
+querying the `accessGrants` collection. The payload still contains `userId`,
+`scopeType`, `scopeId` and `permissions`.
