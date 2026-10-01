@@ -41,15 +41,19 @@ service cloud.firestore {
         || hasGrant('reportingArea', dataAreaId(data), permission);
     }
 
+    function historicalLocked(data) {
+      return data.seasonId == '2025-26';
+    }
+
     function validOrder(data) {
-      return data.seasonId is string
+      return !historicalLocked(data) && data.seasonId is string
         && data.organizationId is string
         && data.category in ['ticket', 'wristband']
         && data.status in ['draft', 'submitted', 'confirmed', 'fulfilled', 'cancelled'];
     }
 
     function validOrderLine(data) {
-      return data.seasonId is string
+      return !historicalLocked(data) && data.seasonId is string
         && data.organizationId is string
         && data.ticketOrderId is string
         && data.catalogItemId is string
@@ -137,7 +141,7 @@ service cloud.firestore {
         && hasOrderPermission('ticketOrders.write', request.resource.data);
 
       // Order headers are retained for audit; normal contributors do not delete them.
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() && !historicalLocked(resource.data);
     }
 
     // Operational order matrix cells.
@@ -157,7 +161,7 @@ service cloud.firestore {
         && lineMatchesOrder(request.resource.data);
 
       // Clearing a matrix cell deletes only that organization's own line.
-      allow delete: if hasOrderPermission('ticketOrders.write', resource.data);
+      allow delete: if !historicalLocked(resource.data) && hasOrderPermission('ticketOrders.write', resource.data);
     }
 
     // Public supplier snapshots. Public clients can fetch one exact document
@@ -240,9 +244,9 @@ service cloud.firestore {
 
     match /ticketPricingConfigs/{document} {
       allow read: if activeUser();
-      allow create: if validPricing(request.resource.data) && managePricing(request.resource.data)
+      allow create: if !historicalLocked(request.resource.data) && validPricing(request.resource.data) && managePricing(request.resource.data)
         && request.resource.data.id == document && request.resource.data.revision == 1;
-      allow update: if validPricing(request.resource.data) && managePricing(resource.data)
+      allow update: if !historicalLocked(request.resource.data) && validPricing(request.resource.data) && managePricing(resource.data)
         && request.resource.data.id == resource.data.id
         && request.resource.data.seasonId == resource.data.seasonId
         && request.resource.data.scopeType == resource.data.scopeType && request.resource.data.scopeId == resource.data.scopeId
@@ -272,10 +276,10 @@ service cloud.firestore {
       allow get: if (resource == null && canReadNewSalesDocument(document))
         || (resource != null && hasOrderPermission('ticketSales.read',resource.data));
       allow list: if hasOrderPermission('ticketSales.read',resource.data);
-      allow create: if validSales(request.resource.data) && salesPricingMatches(request.resource.data)
+      allow create: if !historicalLocked(request.resource.data) && validSales(request.resource.data) && salesPricingMatches(request.resource.data)
         && hasOrderPermission('ticketSales.write',request.resource.data)
         && request.resource.data.id == document && request.resource.data.revision == 1;
-      allow update: if validSales(request.resource.data) && salesPricingMatches(request.resource.data)
+      allow update: if !historicalLocked(request.resource.data) && validSales(request.resource.data) && salesPricingMatches(request.resource.data)
         && hasOrderPermission('ticketSales.write',resource.data)
         && request.resource.data.id == resource.data.id && request.resource.data.draftKey == resource.data.draftKey
         && request.resource.data.organizationId == resource.data.organizationId && request.resource.data.reportingAreaId == resource.data.reportingAreaId
@@ -291,6 +295,24 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/ticketSales/$(document)).data.revision == request.resource.data.revision + 1;
         allow update, delete: if false;
       }
+    }
+
+    // Trusted Admin import only. Historical sources and facts are immutable to all app clients.
+    match /historicalSeasonRecords/{document} {
+      allow read: if activeUser() && (isAdmin()
+        || (resource.data.domain == 'pricing')
+        || (resource.data.domain == 'sales' && hasOrderPermission('ticketSales.read',resource.data))
+        || (resource.data.domain == 'orders' && hasOrderPermission('ticketOrders.read',resource.data))
+        || (resource.data.domain == 'kp' && hasOrderPermission('kp.read',resource.data)));
+      allow write: if false;
+    }
+    match /historicalSeasonImports/{document} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+    match /historicalSeasonSources/{document} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
     // Everything else remains closed until its domain rules are implemented.
