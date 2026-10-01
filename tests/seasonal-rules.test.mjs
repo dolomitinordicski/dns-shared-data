@@ -15,6 +15,7 @@ try {
     await setDoc(doc(db,'reportingAreas','area'),{canonicalName:'Area'});
     await setDoc(doc(db,'organizations','org'),{reportingAreaIds:['area']});
     await setDoc(doc(db,'deliveryLocations','delivery-org'),{id:'delivery-org',organizationId:'org',reportingAreaId:'area',recipientName:'Org',label:'Org delivery',status:'verified'});
+    await setDoc(doc(db,'pocketfolderSourceRows','2026-27__source-row-06'),{id:'2026-27__source-row-06',seasonId:'2026-27',sourceRow:6,label:'Antholzertal',comparison2025:3500,requested2026:3000,dnsCopies:100,areaTotal2026:4200,printerTotal2026:4550,backLanguageNote:'Rückseite dt-it-en',rowKind:'area'});
     for(const [uid,permissions] of [['seller',['ticketOrders.read','ticketOrders.write','ticketSales.read','ticketSales.write','kp.read','kp.write']],['reader',['ticketOrders.read','ticketSales.read']]])
       await setDoc(doc(db,'accessGrants',`${uid}__organization__org`),{active:true,permissions});
     await setDoc(doc(db,'accessGrants','reader__reportingArea__area'),{active:true,permissions:['kp.read']});
@@ -26,6 +27,8 @@ try {
   const verifier=env.authenticatedContext('verifier').firestore();
   await assertSucceeds(getDoc(doc(seller,'deliveryLocations','delivery-org')));
   await assertSucceeds(getDoc(doc(reader,'deliveryLocations','delivery-org')));
+  await assertSucceeds(getDoc(doc(reader,'pocketfolderSourceRows','2026-27__source-row-06')));
+  await assertFails(setDoc(doc(admin,'pocketfolderSourceRows','manual-row'),{id:'manual-row'}));
   await assertFails(setDoc(doc(admin,'deliveryLocations','manual'),{id:'manual'}));
   const pocketfolderOrder={id:'2026-27__pocketfolder__org',seasonId:'2026-27',organizationId:'org',reportingAreaId:'area',category:'pocketfolder',status:'draft'};
   await assertSucceeds(setDoc(doc(seller,'ticketOrders',pocketfolderOrder.id),pocketfolderOrder));
