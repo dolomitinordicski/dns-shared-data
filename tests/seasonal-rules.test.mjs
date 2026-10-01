@@ -14,7 +14,8 @@ try {
     await setDoc(doc(db,'seasons','2024-25'),{status:'historical'});
     await setDoc(doc(db,'reportingAreas','area'),{canonicalName:'Area'});
     await setDoc(doc(db,'organizations','org'),{reportingAreaIds:['area']});
-    for(const [uid,permissions] of [['seller',['ticketSales.read','ticketSales.write','kp.read','kp.write']],['reader',['ticketSales.read']]])
+    await setDoc(doc(db,'deliveryLocations','delivery-org'),{id:'delivery-org',organizationId:'org',reportingAreaId:'area',recipientName:'Org',label:'Org delivery',status:'verified'});
+    for(const [uid,permissions] of [['seller',['ticketOrders.read','ticketOrders.write','ticketSales.read','ticketSales.write','kp.read','kp.write']],['reader',['ticketOrders.read','ticketSales.read']]])
       await setDoc(doc(db,'accessGrants',`${uid}__organization__org`),{active:true,permissions});
     await setDoc(doc(db,'accessGrants','reader__reportingArea__area'),{active:true,permissions:['kp.read']});
     await setDoc(doc(db,'accessGrants','verifier__reportingArea__area'),{active:true,permissions:['kp.read','kp.verify']});
@@ -23,6 +24,12 @@ try {
   const seller=env.authenticatedContext('seller').firestore();
   const reader=env.authenticatedContext('reader').firestore();
   const verifier=env.authenticatedContext('verifier').firestore();
+  await assertSucceeds(getDoc(doc(seller,'deliveryLocations','delivery-org')));
+  await assertSucceeds(getDoc(doc(reader,'deliveryLocations','delivery-org')));
+  await assertFails(setDoc(doc(admin,'deliveryLocations','manual'),{id:'manual'}));
+  const pocketfolderOrder={id:'2026-27__pocketfolder__org',seasonId:'2026-27',organizationId:'org',reportingAreaId:'area',category:'pocketfolder',status:'draft'};
+  await assertSucceeds(setDoc(doc(seller,'ticketOrders',pocketfolderOrder.id),pocketfolderOrder));
+  await assertSucceeds(getDoc(doc(reader,'ticketOrders',pocketfolderOrder.id)));
   const milestone={id:'2026-27__m1',seasonId:'2026-27',date:'2026-12-23',label:'Milestone 1',order:1,updatedBy:'admin',updatedAt:serverTimestamp()};
   await assertSucceeds(setDoc(doc(admin,'kpMilestones',milestone.id),milestone));
   await assertFails(setDoc(doc(seller,'kpMilestones','2026-27__m2'),{...milestone,id:'2026-27__m2',order:2,updatedBy:'seller'}));

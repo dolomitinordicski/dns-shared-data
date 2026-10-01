@@ -48,7 +48,7 @@ service cloud.firestore {
     function validOrder(data) {
       return !historicalLocked(data) && data.seasonId is string
         && data.organizationId is string
-        && data.category in ['ticket', 'wristband']
+        && data.category in ['ticket', 'wristband', 'pocketfolder']
         && data.status in ['draft', 'submitted', 'confirmed', 'fulfilled', 'cancelled'];
     }
 
@@ -125,6 +125,15 @@ service cloud.firestore {
     match /orderFormConfigs/{document} {
       allow read: if activeUser();
       allow write: if isAdmin();
+    }
+
+    match /deliveryLocations/{document} {
+      allow read: if activeUser();
+      allow write: if false;
+    }
+
+    match /pocketfolderSetupImports/{document} {
+      allow read, write: if false;
     }
 
     // Operational order headers.
