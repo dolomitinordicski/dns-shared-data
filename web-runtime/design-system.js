@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/design-system.ts
 // Keep this file synchronized with the canonical TypeScript contract.
-export const DNS_DESIGN_SYSTEM_VERSION = '1.8.0';
+export const DNS_DESIGN_SYSTEM_VERSION = '1.9.0';
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -465,6 +465,29 @@ export const DNS_DESIGN_SYSTEM = {
       rule:
         'Render the print document outside the application root so hidden web layout never contributes phantom pages.',
     },
+  },
+  contextSelector: {
+    semanticRole: 'active-context',
+    useFor: ['region', 'reporting-area', 'season', 'operational-scope'],
+    selected: {
+      background: '#AAD0D1',
+      text: '#0D4D5E',
+      border: '#417483',
+    },
+    hover: {
+      background: 'rgba(170,208,209,.35)',
+      border: 'rgba(65,116,131,.35)',
+    },
+    focus: {
+      color: '#417483',
+      widthPx: 2,
+      offsetPx: 2,
+    },
+    rules: [
+      'Use selected-state emphasis only for selectors that change the operational context of a view.',
+      'Do not apply this treatment to ordinary form fields.',
+      'Primary actions remain Frosted Ice Blue.',
+    ],
   },
   semanticAccent: {
     colorToken: 'colors.light',
