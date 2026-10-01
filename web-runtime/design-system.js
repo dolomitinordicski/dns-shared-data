@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/design-system.ts
 // Keep this file synchronized with the canonical TypeScript contract.
-export const DNS_DESIGN_SYSTEM_VERSION = '1.11.1';
+export const DNS_DESIGN_SYSTEM_VERSION = '1.12.0';
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -249,6 +249,12 @@ export const DNS_DESIGN_SYSTEM = {
         color: '#AAD0D1',
         track: 'transparent',
       },
+      runtime: {
+        source: 'ui/navigation',
+        stickyOffset: 'measured-header-height',
+        activeSection: 'measured-sticky-stack',
+        progress: 'document-scroll-ratio',
+      },
     },
   },
   responsive: {
@@ -454,6 +460,16 @@ export const DNS_DESIGN_SYSTEM = {
     },
   },
   implementationPatterns: {
+    navigationRuntime: {
+      codeSource: 'dns-shared-data/ui/navigation',
+      requiredForSharedNavigation: true,
+      rules: [
+        'All DNS tools use the shared navigation runtime for sticky metrics and scroll progress.',
+        'Section-based pages use the shared measured-sticky-stack active-section strategy.',
+        'Tool-specific navigation content is allowed; tool-specific navigation behavior is not.',
+        'Fixed pixel sticky offsets are not allowed.',
+      ],
+    },
     motionRuntime: {
       configSource: 'DNS_Core / designSystem/current',
       codeSource: 'dns-shared-data or local application bundle',
