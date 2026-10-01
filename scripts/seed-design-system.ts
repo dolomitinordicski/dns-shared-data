@@ -49,7 +49,7 @@ async function seed() {
     source: {
       type: 'dns-shared-data',
       repository: 'dolomitinordicski/dns-shared-data',
-      brandColorReference: 'DNS Partner Portal',
+      brandColorReference: 'Dolomiti NordicSki Corporate Design',
       interactionReference: 'Dolomiti NordicSki public website',
       dataUiReference: 'DNS Analytics',
     },
