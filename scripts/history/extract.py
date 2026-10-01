@@ -93,7 +93,7 @@ for sheetname,partner,start in blocks:
    period='regular' if offset<3 or c==4 else ('presale' if c==2 else 'unspecified')
    facts.append(dict(productCode=product,salesChannel=channel,salesPeriod=period,
     quantity=int(q),amount=amount,currency='EUR',sourceCell=s.cell(row,c).coordinate))
- add('sales',partner,partner,sheetname,facts)
+ add('sales',partner,partner,sheetname,facts,str(s.cell(start-4 if start>=45 else start-5,1).value))
 
 
 for sheetname,partner,start in blocks:
@@ -118,6 +118,9 @@ for row,area in enumerate(areas,8):
   reportedAmount=analysis.cell(row,16).value,detailQuantity=quantity,detailAmount=amount,
   quantityDifference=analysis.cell(row,15).value-quantity,
   amountDifference=analysis.cell(row,16).value-amount,sourceCell=f'DNS ANALYSE!O{row}:P{row}'))
+assert sum(c['quantityDifference'] for c in controls)==34
+assert sum(c['amountDifference'] for c in controls)==2745
+assert all(c['quantityDifference']==0 and c['amountDifference']==0 for c in controls[:5])
 summary=dict(seasonId=season,readOnly=True,reportedQuantity=analysis['O16'].value,
  reportedAmount=analysis['P16'].value,controls=controls,
  notes=['Reported totals and leaf details are separate measures. Never sum both.',
