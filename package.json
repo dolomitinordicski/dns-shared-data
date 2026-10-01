@@ -18,7 +18,9 @@
     "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
     "seed:orders:2026-27": "tsx scripts/seed-orders-2026-27.ts",
     "seed:orders:2026-27:apply": "tsx scripts/seed-orders-2026-27.ts --apply",
-    "test:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/seasonal-rules.test.mjs\""
+    "test:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/seasonal-rules.test.mjs\"",
+    "seed:kp:2026-27": "tsx scripts/seed-kp-2026-27.ts",
+    "seed:kp:2026-27:apply": "tsx scripts/seed-kp-2026-27.ts --apply"
   },
   "devDependencies": {
     "firebase-admin": "^14.5.0",
