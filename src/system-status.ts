@@ -1,4 +1,4 @@
-export const DNS_SYSTEM_STATUS_VERSION = '0.7.0' as const;
+export const DNS_SYSTEM_STATUS_VERSION = '0.8.0' as const;
 export const DNS_SYSTEM_STATUS_VERIFIED_AT = '2026-10-01' as const;
 
 export type DNSAdoptionState = 'adopted' | 'partial' | 'notYet' | 'na' | 'pending';
@@ -140,9 +140,9 @@ export const DNS_SYSTEM_STATUS = [
     id: 'faktura',
     label: 'DNS Faktura / Commercial',
     repo: 'dolomitinordicski/DNS-Faktura',
-    phase: 'commercial-rates',
-    firebaseProject: 'dns-core · authenticated Orders read · billingRateConfigs implemented · billing runs pending',
-    datasetVersion: 'F.2.1 · Billing Preparation v0.2 · sourced Commercial Rates · Shared Design System v1.13.2',
+    phase: 'billing-snapshots',
+    firebaseProject: 'dns-core · Orders read · billingRateConfigs + billingRuns + billingLines implemented',
+    datasetVersion: 'F.2.3 · Billing Preparation v0.4 · revisioned billing snapshots · Shared Design System v1.13.2',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -154,7 +154,7 @@ export const DNS_SYSTEM_STATUS = [
       dataContracts: 'adopted',
       accessibility: 'adopted',
     },
-    note: 'F.2.1 implemented in DNS-Faktura: exact Foundation header/language switch/responsive/season-selector/interaction/motion/print patterns are adopted; DNS-admin authentication and live read-only Orders integration remain active; admin-only billingRateConfigs now store sourced commercial rates by catalogue item with revision control and mandatory source document labels. No rates are seeded or inferred. FAIR, IDM Premium, seasonal extras and billing-run persistence remain pending. Official invoices, payments and accounting integration remain out of scope.',
+    note: 'F.2.3 implemented in DNS-Faktura: live Orders are calculated with documented per-item rates; manual per-organisation billing snapshots persist to revisioned billingRuns with append-only billingLines, preserving quantity, rate id/revision and source-document provenance. DRAFT runs may be revised; READY requires zero unpriced quantity and is immutable. Commercial Rates remain editable independently. FAIR, IDM Premium and seasonal extras remain pending. Official invoices, payments and accounting integration remain out of scope.',
   },
   {
     id: 'partner-portal',
