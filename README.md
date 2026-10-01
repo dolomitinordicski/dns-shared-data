@@ -61,7 +61,7 @@ firebase.json
 
 ## DNS Design System
 
-The current shared visual and interaction contract is **v1.11.0** and is documented in:
+The current shared visual and interaction contract is **v1.11.1** and is documented in:
 
 ```text
 docs/DNS-Design-System-v1.md
