@@ -12,3 +12,4 @@ export * from './system-status.js';
 
 export * from './ui/accessibility.js';
 export * from './ui/navigation.js';
+export * from './ui/print.js';
