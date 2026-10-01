@@ -71,6 +71,17 @@ Its runtime source is `DNS_Core / designSystem/current`. Applications keep a loc
 
 The v1.6 contract includes shared motion, focus, hover/press, tab and reduced-motion behavior.
 
+## Shared UI runtime
+
+DNS motion and interaction behavior is implemented as versioned, framework-agnostic source code in:
+
+```text
+src/ui/motion.ts
+src/ui/interaction.ts
+```
+
+Applications may consume the repository as a Git dependency and pin a specific commit. The shared runtime exposes reveal/stagger helpers, reduced-motion handling, focus-visible styling, and opt-in hover/press feedback. Runtime configuration still comes from `DNS_Core / designSystem/current`; executable code never comes from Firestore.
+
 ## Organization logos
 
 Canonical organizations may reference one primary public logo through `logoFile`. Logo assets live in `assets/organization-logos/`; keep `logoFile: null` until the correct asset has been uploaded and verified.
