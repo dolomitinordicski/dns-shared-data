@@ -15,6 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Publish import encryption public key
+        if: ${{ hashFiles('scripts/history/2025-26.encrypted.json') == '' }}
+        env:
+          FIREBASE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+        run: node -e 'const c=require("node:crypto"); const a=JSON.parse(process.env.FIREBASE_ACCOUNT); console.log("IMPORT_PUBLIC_KEY="+c.createPublicKey(a.private_key).export({type:"spki",format:"der"}).toString("base64"));'
       - uses: actions/setup-node@v4
         with:
           node-version: 22
