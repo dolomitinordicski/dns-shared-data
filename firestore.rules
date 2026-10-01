@@ -345,6 +345,94 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // DNS Faktura billing snapshots. A run may be revised while draft.
+    // READY snapshots are immutable; line snapshots are append-only.
+    match /billingRuns/{document} {
+      allow read: if isAdmin();
+
+      allow create: if isAdmin()
+        && request.resource.data.id == document
+        && request.resource.data.seasonId is string
+        && request.resource.data.organizationId is string
+        && request.resource.data.reportingAreaId is string
+        && (request.resource.data.status == 'draft' || request.resource.data.status == 'ready')
+        && request.resource.data.revision == 1
+        && request.resource.data.sourceTypes is list
+        && request.resource.data.sourceOrderStatuses is list
+        && request.resource.data.lineCount is int
+        && request.resource.data.lineCount >= 0
+        && request.resource.data.billedQuantity is number
+        && request.resource.data.billedQuantity >= 0
+        && request.resource.data.unpricedQuantity is number
+        && request.resource.data.unpricedQuantity >= 0
+        && request.resource.data.totalAmount is number
+        && request.resource.data.totalAmount >= 0
+        && request.resource.data.generatedBy is string
+        && request.resource.data.generatedAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && (request.resource.data.status != 'ready'
+          || request.resource.data.unpricedQuantity == 0);
+
+      allow update: if isAdmin()
+        && resource.data.status == 'draft'
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.seasonId == resource.data.seasonId
+        && request.resource.data.organizationId == resource.data.organizationId
+        && request.resource.data.reportingAreaId == resource.data.reportingAreaId
+        && (request.resource.data.status == 'draft' || request.resource.data.status == 'ready')
+        && request.resource.data.revision == resource.data.revision + 1
+        && request.resource.data.sourceTypes is list
+        && request.resource.data.sourceOrderStatuses is list
+        && request.resource.data.lineCount is int
+        && request.resource.data.lineCount >= 0
+        && request.resource.data.billedQuantity is number
+        && request.resource.data.billedQuantity >= 0
+        && request.resource.data.unpricedQuantity is number
+        && request.resource.data.unpricedQuantity >= 0
+        && request.resource.data.totalAmount is number
+        && request.resource.data.totalAmount >= 0
+        && request.resource.data.generatedBy is string
+        && request.resource.data.generatedAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && (request.resource.data.status != 'ready'
+          || request.resource.data.unpricedQuantity == 0);
+
+      allow delete: if false;
+    }
+
+    match /billingLines/{document} {
+      allow read: if isAdmin();
+
+      allow create: if isAdmin()
+        && request.resource.data.id == document
+        && request.resource.data.runId is string
+        && request.resource.data.runRevision is int
+        && request.resource.data.runRevision >= 1
+        && request.resource.data.seasonId is string
+        && request.resource.data.organizationId is string
+        && request.resource.data.reportingAreaId is string
+        && request.resource.data.source is map
+        && request.resource.data.source.type == 'order'
+        && request.resource.data.catalogItemId is string
+        && request.resource.data.description is string
+        && request.resource.data.quantity is number
+        && request.resource.data.quantity >= 0
+        && request.resource.data.unitAmount is number
+        && request.resource.data.unitAmount >= 0
+        && request.resource.data.amount is number
+        && request.resource.data.amount >= 0
+        && request.resource.data.included is bool
+        && request.resource.data.rateId is string
+        && request.resource.data.rateRevision is int
+        && request.resource.data.rateRevision >= 1
+        && request.resource.data.sourceDocumentLabel is string
+        && request.resource.data.sourceDocumentLabel.size() > 0
+        && request.resource.data.createdBy is string
+        && request.resource.data.createdAt is timestamp;
+
+      allow update, delete: if false;
+    }
+
     match /ticketSales/{document} {
       allow get: if (resource == null && canReadNewSalesDocument(document))
         || (resource != null && hasOrderPermission('ticketSales.read',resource.data));
