@@ -69,6 +69,10 @@
     "./ui/navigation": {
       "types": "./dist/ui/navigation.d.ts",
       "import": "./dist/ui/navigation.js"
+    },
+    "./ui/print": {
+      "types": "./dist/ui/print.d.ts",
+      "import": "./dist/ui/print.js"
     }
   }
 }
