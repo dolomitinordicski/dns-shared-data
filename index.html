@@ -297,6 +297,198 @@
       outline-offset: var(--dns-focus-offset);
     }
 
+    .dns-system-map {
+      overflow: hidden;
+      border: 1px solid var(--color-dns-subtle-border);
+    }
+    .dns-map-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      padding: .3rem;
+      border: 1px solid var(--color-dns-border);
+      border-radius: var(--dns-control-radius);
+      background: var(--color-dns-bg);
+    }
+    .dns-map-mode {
+      border: 0;
+      border-radius: calc(var(--dns-control-radius) - 1px);
+      background: transparent;
+      padding: .45rem .7rem;
+      color: var(--color-dns-mid);
+      cursor: pointer;
+      font-size: var(--dns-label-size);
+      font-weight: 700;
+      letter-spacing: var(--dns-uppercase-tracking);
+      text-transform: uppercase;
+      transition:
+        background-color var(--dns-motion-fast) var(--dns-motion-easing),
+        color var(--dns-motion-fast) var(--dns-motion-easing);
+    }
+    .dns-map-mode.is-active {
+      background: var(--color-dns-deep);
+      color: #fff;
+    }
+    .dns-system-map-viewport {
+      overflow-x: auto;
+      padding: 1rem 0 .25rem;
+      scrollbar-width: thin;
+    }
+    .dns-system-map-svg {
+      display: block;
+      width: 100%;
+      min-width: 900px;
+      height: auto;
+    }
+    .dns-map-layer-label {
+      fill: var(--color-dns-muted);
+      font-family: var(--font-alt);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .dns-map-edge {
+      fill: none;
+      stroke: var(--color-dns-light);
+      stroke-width: 2;
+      opacity: .7;
+      transition:
+        stroke var(--dns-motion-standard) var(--dns-motion-easing),
+        stroke-width var(--dns-motion-standard) var(--dns-motion-easing),
+        opacity var(--dns-motion-standard) var(--dns-motion-easing);
+    }
+    .dns-map-edge[data-kind="external"] {
+      stroke-dasharray: 5 5;
+      opacity: .6;
+    }
+    .dns-map-node {
+      cursor: pointer;
+      outline: none;
+    }
+    .dns-map-node rect {
+      fill: var(--color-dns-surface);
+      stroke: var(--color-dns-border);
+      stroke-width: 1.2;
+      rx: var(--dns-control-radius);
+      transition:
+        fill var(--dns-motion-standard) var(--dns-motion-easing),
+        stroke var(--dns-motion-standard) var(--dns-motion-easing),
+        stroke-width var(--dns-motion-standard) var(--dns-motion-easing);
+    }
+    .dns-map-node text {
+      pointer-events: none;
+      fill: var(--color-dns-deep);
+      font-family: var(--font-display);
+    }
+    .dns-map-node .dns-map-node-kicker {
+      fill: var(--color-dns-mid);
+      font-family: var(--font-alt);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .dns-map-node .dns-map-node-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .dns-map-node[data-tier="source"] rect {
+      fill: var(--color-dns-deep);
+      stroke: var(--color-dns-deep);
+    }
+    .dns-map-node[data-tier="source"] text,
+    .dns-map-node[data-tier="source"] .dns-map-node-kicker {
+      fill: #fff;
+    }
+    .dns-map-node[data-tier="domain"] rect {
+      fill: var(--color-dns-bg);
+    }
+    .dns-map-node[data-tier="external"] rect {
+      stroke-dasharray: 4 3;
+    }
+    .dns-map-node.is-muted,
+    .dns-map-edge.is-muted {
+      opacity: .12;
+    }
+    .dns-map-node.is-active rect,
+    .dns-map-node:hover rect,
+    .dns-map-node:focus-visible rect {
+      stroke: var(--color-dns-deep);
+      stroke-width: 2;
+    }
+    .dns-map-edge.is-active {
+      stroke: var(--color-dns-deep);
+      stroke-width: 3;
+      opacity: 1;
+    }
+    .dns-system-map[data-mode="ownership"] .dns-map-edge[data-mode~="system"]:not([data-mode~="ownership"]),
+    .dns-system-map[data-mode="flow"] .dns-map-edge:not([data-mode~="flow"]) {
+      opacity: .12;
+    }
+    .dns-system-map[data-mode="ownership"] .dns-map-node[data-ownership="reference"] rect {
+      fill: var(--color-dns-deep);
+    }
+    .dns-system-map[data-mode="ownership"] .dns-map-node[data-ownership="reference"] text,
+    .dns-system-map[data-mode="ownership"] .dns-map-node[data-ownership="reference"] .dns-map-node-kicker {
+      fill: #fff;
+    }
+    .dns-system-map[data-mode="ownership"] .dns-map-node[data-ownership="owner"] rect {
+      fill: color-mix(in srgb, var(--color-dns-light) 28%, white);
+    }
+    .dns-map-detail {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+      gap: 1rem;
+      margin-top: 1rem;
+      border-top: 1px solid var(--color-dns-subtle-border);
+      padding-top: 1rem;
+    }
+    .dns-map-detail-title {
+      margin-top: .15rem;
+      color: var(--color-dns-deep);
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .dns-map-detail-text {
+      margin-top: .35rem;
+      color: var(--color-dns-mid);
+      font-family: var(--font-alt);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .dns-map-detail-meta {
+      display: grid;
+      gap: .45rem;
+      align-content: start;
+    }
+    .dns-map-detail-meta-row {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: .6rem;
+      border-bottom: 1px solid var(--color-dns-subtle-border);
+      padding-bottom: .45rem;
+      font-family: var(--font-alt);
+      font-size: 11px;
+    }
+    .dns-map-detail-meta-row:last-child { border-bottom: 0; }
+    .dns-map-detail-meta-label {
+      color: var(--color-dns-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .dns-map-detail-meta-value { color: var(--color-dns-deep); }
+    @media (max-width: 767px) {
+      .dns-system-map-svg { min-width: 760px; }
+      .dns-map-detail { grid-template-columns: 1fr; }
+      .dns-map-mode { padding: .4rem .55rem; font-size: 9px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .dns-map-edge,
+      .dns-map-node rect,
+      .dns-map-mode { transition-duration: 0ms !important; }
+    }
+
     @media (max-width: 1023px) {
       .dns-tab-nav-inner { padding: 0 1rem; }
       .dns-tab { padding-left: .95rem; padding-right: .95rem; }
@@ -393,6 +585,164 @@
           </div>
         </div>
 
+      </div>
+    </section>
+
+    <section id="system-map" class="dns-page-shell mx-auto max-w-[1440px] px-5 pt-5 pb-2 md:px-8" data-dns-reveal>
+      <div class="dns-card dns-system-map p-5 md:p-6" data-mode="system">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div class="max-w-3xl">
+            <div class="lang-de">
+              <p class="dns-kicker">System Map</p>
+              <h2 class="mt-1 font-semibold tracking-[-.02em] text-dns-deep">Das DNS-System auf einen Blick</h2>
+              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
+                Wählen Sie eine Sicht und klicken Sie auf einen Knoten, um Rolle, Datenverantwortung und Verbindungen zu sehen.
+              </p>
+            </div>
+            <div class="lang-it">
+              <p class="dns-kicker">System Map</p>
+              <h2 class="mt-1 font-semibold tracking-[-.02em] text-dns-deep">Il sistema DNS a colpo d’occhio</h2>
+              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
+                Scegli una vista e seleziona un nodo per vedere ruolo, responsabilità sui dati e collegamenti.
+              </p>
+            </div>
+          </div>
+
+          <div class="dns-map-toolbar" role="group" aria-label="System map view">
+            <button class="dns-map-mode is-active" type="button" data-map-mode="system" data-dns-press>
+              <span class="lang-de">System</span><span class="lang-it">Sistema</span>
+            </button>
+            <button class="dns-map-mode" type="button" data-map-mode="ownership" data-dns-press>
+              Ownership
+            </button>
+            <button class="dns-map-mode" type="button" data-map-mode="flow" data-dns-press>
+              Flow
+            </button>
+          </div>
+        </div>
+
+        <div class="dns-system-map-viewport" aria-label="Interactive DNS system architecture">
+          <svg class="dns-system-map-svg" viewBox="0 0 1180 610" role="img" aria-labelledby="dns-map-title dns-map-desc">
+            <title id="dns-map-title">Dolomiti NordicSki system architecture</title>
+            <desc id="dns-map-desc">Interactive map of shared data, Firebase domains, DNS applications and XGLA4.</desc>
+
+            <text x="18" y="68" class="dns-map-layer-label">01 · SOURCE OF TRUTH</text>
+            <text x="18" y="208" class="dns-map-layer-label">02 · OPERATIONAL DOMAINS</text>
+            <text x="18" y="368" class="dns-map-layer-label">03 · APPLICATIONS</text>
+            <text x="18" y="535" class="dns-map-layer-label">04 · EXTERNAL AUTHORITY</text>
+
+            <g aria-hidden="true">
+              <path class="dns-map-edge" data-edge="shared-core" data-from="shared" data-to="core" data-mode="system ownership flow" d="M590 130 V188" />
+              <path class="dns-map-edge" data-edge="core-platform" data-from="core" data-to="platform" data-mode="system ownership flow" d="M590 252 V282 H276 V312" />
+              <path class="dns-map-edge" data-edge="core-commercial" data-from="core" data-to="commercial" data-mode="system ownership flow" d="M590 252 V312" />
+              <path class="dns-map-edge" data-edge="core-polls" data-from="core" data-to="polls-domain" data-mode="system ownership flow" d="M590 252 V282 H904 V312" />
+
+              <path class="dns-map-edge" data-edge="platform-portal" data-from="platform" data-to="portal" data-mode="system ownership flow" d="M276 374 V402 H124 V432" />
+              <path class="dns-map-edge" data-edge="platform-fair" data-from="platform" data-to="fair" data-mode="system ownership flow" d="M276 374 V402 H276 V432" />
+              <path class="dns-map-edge" data-edge="platform-analytics" data-from="platform" data-to="analytics" data-mode="system ownership flow" d="M276 374 V402 H428 V432" />
+              <path class="dns-map-edge" data-edge="platform-flyer" data-from="platform" data-to="flyer" data-mode="system ownership flow" d="M276 374 V402 H580 V432" />
+
+              <path class="dns-map-edge" data-edge="commercial-orders" data-from="commercial" data-to="orders" data-mode="system ownership flow" d="M590 374 V402 H732 V432" />
+              <path class="dns-map-edge" data-edge="polls-pollsapp" data-from="polls-domain" data-to="polls-app" data-mode="system ownership flow" d="M904 374 V402 H884 V432" />
+
+              <path class="dns-map-edge" data-edge="orders-xgla4" data-from="orders" data-to="xgla4" data-kind="external" data-mode="system flow" d="M732 494 V520 H590 V552" />
+              <path class="dns-map-edge" data-edge="fair-analytics" data-from="fair" data-to="analytics" data-mode="flow" d="M336 463 H368" />
+            </g>
+
+            <g class="dns-map-node" data-node="shared" data-tier="source" data-ownership="reference" tabindex="0" role="button" aria-label="dns-shared-data">
+              <rect x="480" y="78" width="220" height="52" />
+              <text x="590" y="100" text-anchor="middle" class="dns-map-node-kicker">CANONICAL REFERENCE</text>
+              <text x="590" y="119" text-anchor="middle" class="dns-map-node-title">dns-shared-data</text>
+            </g>
+
+            <g class="dns-map-node" data-node="core" data-tier="domain" data-ownership="owner" tabindex="0" role="button" aria-label="DNS Core">
+              <rect x="480" y="188" width="220" height="64" />
+              <text x="590" y="211" text-anchor="middle" class="dns-map-node-kicker">FIREBASE · DNS_CORE</text>
+              <text x="590" y="234" text-anchor="middle" class="dns-map-node-title">Master + shared operational layer</text>
+            </g>
+
+            <g class="dns-map-node" data-node="platform" data-tier="domain" data-ownership="owner" tabindex="0" role="button" aria-label="DNS Platform">
+              <rect x="186" y="312" width="180" height="62" />
+              <text x="276" y="335" text-anchor="middle" class="dns-map-node-kicker">DOMAIN</text>
+              <text x="276" y="357" text-anchor="middle" class="dns-map-node-title">DNS Platform</text>
+            </g>
+
+            <g class="dns-map-node" data-node="commercial" data-tier="domain" data-ownership="owner" tabindex="0" role="button" aria-label="DNS Commercial">
+              <rect x="500" y="312" width="180" height="62" />
+              <text x="590" y="335" text-anchor="middle" class="dns-map-node-kicker">DOMAIN</text>
+              <text x="590" y="357" text-anchor="middle" class="dns-map-node-title">DNS Commercial</text>
+            </g>
+
+            <g class="dns-map-node" data-node="polls-domain" data-tier="domain" data-ownership="owner" tabindex="0" role="button" aria-label="DNS Polls domain">
+              <rect x="814" y="312" width="180" height="62" />
+              <text x="904" y="335" text-anchor="middle" class="dns-map-node-kicker">SEPARATE PII DOMAIN</text>
+              <text x="904" y="357" text-anchor="middle" class="dns-map-node-title">DNS Polls</text>
+            </g>
+
+            <g class="dns-map-node" data-node="portal" data-tier="app" data-ownership="consumer" tabindex="0" role="button" aria-label="Partner Portal">
+              <rect x="54" y="432" width="140" height="62" />
+              <text x="124" y="455" text-anchor="middle" class="dns-map-node-kicker">APP</text>
+              <text x="124" y="477" text-anchor="middle" class="dns-map-node-title">Partner Portal</text>
+            </g>
+            <g class="dns-map-node" data-node="fair" data-tier="app" data-ownership="owner" tabindex="0" role="button" aria-label="FAIR">
+              <rect x="206" y="432" width="140" height="62" />
+              <text x="276" y="455" text-anchor="middle" class="dns-map-node-kicker">APP</text>
+              <text x="276" y="477" text-anchor="middle" class="dns-map-node-title">FAIR</text>
+            </g>
+            <g class="dns-map-node" data-node="analytics" data-tier="app" data-ownership="owner" tabindex="0" role="button" aria-label="Analytics">
+              <rect x="358" y="432" width="140" height="62" />
+              <text x="428" y="455" text-anchor="middle" class="dns-map-node-kicker">APP</text>
+              <text x="428" y="477" text-anchor="middle" class="dns-map-node-title">Analytics</text>
+            </g>
+            <g class="dns-map-node" data-node="flyer" data-tier="app" data-ownership="consumer" tabindex="0" role="button" aria-label="Flyer Studio">
+              <rect x="510" y="432" width="140" height="62" />
+              <text x="580" y="455" text-anchor="middle" class="dns-map-node-kicker">APP</text>
+              <text x="580" y="477" text-anchor="middle" class="dns-map-node-title">Flyer Studio</text>
+            </g>
+            <g class="dns-map-node" data-node="orders" data-tier="app" data-ownership="owner" tabindex="0" role="button" aria-label="Ticket Orders">
+              <rect x="662" y="432" width="140" height="62" />
+              <text x="732" y="455" text-anchor="middle" class="dns-map-node-kicker">APP</text>
+              <text x="732" y="477" text-anchor="middle" class="dns-map-node-title">Ticket Orders</text>
+            </g>
+            <g class="dns-map-node" data-node="polls-app" data-tier="app" data-ownership="owner" tabindex="0" role="button" aria-label="Polls">
+              <rect x="814" y="432" width="140" height="62" />
+              <text x="884" y="455" text-anchor="middle" class="dns-map-node-kicker">APP</text>
+              <text x="884" y="477" text-anchor="middle" class="dns-map-node-title">Polls</text>
+            </g>
+
+            <g class="dns-map-node" data-node="xgla4" data-tier="external" data-ownership="external" tabindex="0" role="button" aria-label="XGLA4">
+              <rect x="500" y="552" width="180" height="50" />
+              <text x="590" y="572" text-anchor="middle" class="dns-map-node-kicker">ACCOUNTING AUTHORITY</text>
+              <text x="590" y="591" text-anchor="middle" class="dns-map-node-title">XGLA4</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="dns-map-detail" aria-live="polite">
+          <div>
+            <div class="dns-kicker" id="dns-map-detail-kicker">System Map</div>
+            <div class="dns-map-detail-title" id="dns-map-detail-title">
+              <span class="lang-de">Knoten auswählen</span><span class="lang-it">Seleziona un nodo</span>
+            </div>
+            <div class="dns-map-detail-text" id="dns-map-detail-text">
+              <span class="lang-de">Die Karte zeigt Definition, operative Domänen, Anwendungen und externe Buchhaltung als ein zusammenhängendes System.</span>
+              <span class="lang-it">La mappa mostra definizione, domini operativi, applicazioni e contabilità esterna come un unico sistema connesso.</span>
+            </div>
+          </div>
+          <div class="dns-map-detail-meta" id="dns-map-detail-meta">
+            <div class="dns-map-detail-meta-row">
+              <div class="dns-map-detail-meta-label">View</div>
+              <div class="dns-map-detail-meta-value">System</div>
+            </div>
+            <div class="dns-map-detail-meta-row">
+              <div class="dns-map-detail-meta-label">Interaction</div>
+              <div class="dns-map-detail-meta-value">
+                <span class="lang-de">Hover / Fokus hebt Beziehungen hervor · Klick öffnet Details</span>
+                <span class="lang-it">Hover / focus evidenzia le relazioni · click apre i dettagli</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -973,6 +1323,235 @@
     );
 
     sections.forEach((section) => observer.observe(section));
+
+    const systemMap = document.querySelector('.dns-system-map');
+    const mapNodes = Array.from(document.querySelectorAll('.dns-map-node[data-node]'));
+    const mapEdges = Array.from(document.querySelectorAll('.dns-map-edge[data-from][data-to]'));
+    const mapModes = Array.from(document.querySelectorAll('.dns-map-mode[data-map-mode]'));
+    const detailKicker = document.getElementById('dns-map-detail-kicker');
+    const detailTitle = document.getElementById('dns-map-detail-title');
+    const detailText = document.getElementById('dns-map-detail-text');
+    const detailMeta = document.getElementById('dns-map-detail-meta');
+
+    const mapContent = {
+      shared: {
+        kicker: 'Source of truth',
+        title: 'dns-shared-data',
+        de: 'Definiert kanonische IDs, Regionen, Destinationen, Organisationen, Seasons sowie die gemeinsamen Architektur- und Designregeln.',
+        it: 'Definisce ID canonici, aree, destinazioni, organizzazioni, stagioni e le regole comuni di architettura e design.',
+        owner: 'DNS Foundation',
+        data: 'Master definitions · design tokens'
+      },
+      core: {
+        kicker: 'Shared runtime',
+        title: 'DNS_Core',
+        de: 'Stellt kanonische Referenzdaten und gemeinsame operative Daten für autorisierte DNS-Anwendungen bereit.',
+        it: 'Rende disponibili dati canonici di riferimento e dati operativi condivisi alle applicazioni DNS autorizzate.',
+        owner: 'DNS Platform',
+        data: 'Master data · access · shared operational data'
+      },
+      platform: {
+        kicker: 'Operational domain',
+        title: 'DNS Platform',
+        de: 'Gemeinsamer operativer Datenraum für Portal, FAIR, Analytics und weitere interne DNS-Werkzeuge.',
+        it: 'Dominio operativo condiviso per Portal, FAIR, Analytics e altri strumenti interni DNS.',
+        owner: 'DNS',
+        data: 'Analytics · FAIR · memberships · assets'
+      },
+      commercial: {
+        kicker: 'Operational domain',
+        title: 'DNS Commercial',
+        de: 'Verarbeitet Bestellungen und Fakturavorbereitung. Die offizielle Buchhaltung bleibt außerhalb des DNS-Systems.',
+        it: 'Gestisce ordini e preparazione alla fatturazione. La contabilità ufficiale resta esterna al sistema DNS.',
+        owner: 'DNS',
+        data: 'Orders · price lists · billing preparation'
+      },
+      'polls-domain': {
+        kicker: 'Protected domain',
+        title: 'DNS Polls',
+        de: 'Getrennter Firebase-Bereich für öffentliche Formulare, Teilnehmerdaten und zweckgebundene personenbezogene Daten.',
+        it: 'Ambiente Firebase separato per form pubblici, dati dei partecipanti e dati personali legati allo scopo.',
+        owner: 'DNS Polls',
+        data: 'Polls · participants · responses'
+      },
+      portal: {
+        kicker: 'Application',
+        title: 'Partner Portal',
+        de: 'Nutzt gemeinsame Identitäten, Berechtigungen und operative Daten, ohne eigene Kopien der Stammdaten zu erzeugen.',
+        it: 'Usa identità, permessi e dati operativi condivisi senza creare copie autonome dei dati master.',
+        owner: 'DNS Platform',
+        data: 'Consumes shared data'
+      },
+      fair: {
+        kicker: 'Application · data owner',
+        title: 'FAIR',
+        de: 'Besitzt FAIR-Parameter, Scores, Beitragsberechnungen und genehmigte FAIR-Ergebnisse.',
+        it: 'È proprietario di parametri FAIR, score, calcolo dei contributi e risultati FAIR approvati.',
+        owner: 'FAIR',
+        data: 'Parameters · scores · contributions'
+      },
+      analytics: {
+        kicker: 'Application · data owner',
+        title: 'Analytics',
+        de: 'Besitzt die gemeldeten Leistungskennzahlen und kann FAIR-Ergebnisse anzeigen, ohne deren Eigentümer zu werden.',
+        it: 'È proprietario degli indicatori operativi e può mostrare risultati FAIR senza diventarne proprietario.',
+        owner: 'Analytics',
+        data: 'Nights · tickets · revenue · KPIs'
+      },
+      flyer: {
+        kicker: 'Application',
+        title: 'Flyer Studio',
+        de: 'Konsumiert freigegebene gemeinsame Assets und Stammdaten für die Inhaltserstellung.',
+        it: 'Consuma asset condivisi e dati master approvati per la produzione dei contenuti.',
+        owner: 'DNS Platform',
+        data: 'Consumes assets · master data'
+      },
+      orders: {
+        kicker: 'Application · data owner',
+        title: 'Ticket Orders',
+        de: 'Erfasst operative Bestellungen und erstellt die geprüfte Grundlage für die Übergabe an XGLA4.',
+        it: 'Registra gli ordini operativi e prepara la base verificata da trasferire a XGLA4.',
+        owner: 'DNS Commercial',
+        data: 'Orders · billing preparation'
+      },
+      'polls-app': {
+        kicker: 'Application · data owner',
+        title: 'Polls',
+        de: 'Erfasst Umfragen, Teilnehmer und Antworten innerhalb des getrennten PII-Domains.',
+        it: 'Gestisce sondaggi, partecipanti e risposte all’interno del dominio PII separato.',
+        owner: 'DNS Polls',
+        data: 'Polls · participants · responses'
+      },
+      xgla4: {
+        kicker: 'External authority',
+        title: 'XGLA4',
+        de: 'Bleibt das offizielle System für Rechnungen, Buchhaltung und Zahlungen. DNS bereitet Daten nur vor.',
+        it: 'Rimane il sistema ufficiale per fatture, contabilità e pagamenti. DNS prepara soltanto i dati.',
+        owner: 'External authority',
+        data: 'Invoices · bookkeeping · payments'
+      }
+    };
+
+    function currentMapLang() {
+      return document.documentElement.dataset.lang === 'it' ? 'it' : 'de';
+    }
+
+    function connectedNodeIds(nodeId) {
+      const ids = new Set([nodeId]);
+      mapEdges.forEach((edge) => {
+        if (edge.dataset.from === nodeId) ids.add(edge.dataset.to);
+        if (edge.dataset.to === nodeId) ids.add(edge.dataset.from);
+      });
+      return ids;
+    }
+
+    function highlightMapNode(nodeId, persistent = false) {
+      const connected = connectedNodeIds(nodeId);
+      mapNodes.forEach((node) => {
+        const active = connected.has(node.dataset.node);
+        node.classList.toggle('is-muted', !active);
+        node.classList.toggle('is-active', node.dataset.node === nodeId);
+      });
+      mapEdges.forEach((edge) => {
+        const active = edge.dataset.from === nodeId || edge.dataset.to === nodeId;
+        edge.classList.toggle('is-muted', !active);
+        edge.classList.toggle('is-active', active);
+      });
+      if (persistent) systemMap.dataset.selectedNode = nodeId;
+    }
+
+    function resetMapHighlight() {
+      if (systemMap.dataset.selectedNode) {
+        highlightMapNode(systemMap.dataset.selectedNode);
+        return;
+      }
+      mapNodes.forEach((node) => node.classList.remove('is-muted', 'is-active'));
+      mapEdges.forEach((edge) => edge.classList.remove('is-muted', 'is-active'));
+    }
+
+    function renderMapDetail(nodeId) {
+      const content = mapContent[nodeId];
+      if (!content) return;
+      const lang = currentMapLang();
+      detailKicker.textContent = content.kicker;
+      detailTitle.textContent = content.title;
+      detailText.textContent = content[lang];
+      detailMeta.innerHTML = `
+        <div class="dns-map-detail-meta-row">
+          <div class="dns-map-detail-meta-label">${lang === 'it' ? 'Responsabile' : 'Owner'}</div>
+          <div class="dns-map-detail-meta-value">${content.owner}</div>
+        </div>
+        <div class="dns-map-detail-meta-row">
+          <div class="dns-map-detail-meta-label">Data</div>
+          <div class="dns-map-detail-meta-value">${content.data}</div>
+        </div>
+      `;
+    }
+
+    function selectMapNode(nodeId) {
+      systemMap.dataset.selectedNode = nodeId;
+      highlightMapNode(nodeId, true);
+      renderMapDetail(nodeId);
+    }
+
+    mapNodes.forEach((node) => {
+      const nodeId = node.dataset.node;
+      node.addEventListener('mouseenter', () => highlightMapNode(nodeId));
+      node.addEventListener('mouseleave', resetMapHighlight);
+      node.addEventListener('focus', () => highlightMapNode(nodeId));
+      node.addEventListener('blur', resetMapHighlight);
+      node.addEventListener('click', () => selectMapNode(nodeId));
+      node.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          selectMapNode(nodeId);
+        }
+      });
+    });
+
+    mapModes.forEach((button) => {
+      button.addEventListener('click', () => {
+        const mode = button.dataset.mapMode;
+        systemMap.dataset.mode = mode;
+        delete systemMap.dataset.selectedNode;
+        mapModes.forEach((item) => item.classList.toggle('is-active', item === button));
+        resetMapHighlight();
+
+        const lang = currentMapLang();
+        detailKicker.textContent = 'System Map';
+        detailTitle.textContent =
+          mode === 'ownership'
+            ? (lang === 'it' ? 'Chi possiede quale dato?' : 'Wer besitzt welche Daten?')
+            : mode === 'flow'
+              ? (lang === 'it' ? 'Come scorrono i dati?' : 'Wie fließen die Daten?')
+              : (lang === 'it' ? 'Il sistema DNS completo' : 'Das gesamte DNS-System');
+        detailText.textContent =
+          mode === 'ownership'
+            ? (lang === 'it'
+                ? 'La vista distingue reference, proprietari operativi e applicazioni che consumano dati condivisi.'
+                : 'Die Ansicht unterscheidet Referenzquelle, operative Eigentümer und Anwendungen, die gemeinsame Daten konsumieren.')
+            : mode === 'flow'
+              ? (lang === 'it'
+                  ? 'La vista mette in evidenza i principali flussi: dalla definizione ai domini, alle app e fino a XGLA4.'
+                  : 'Die Ansicht hebt die wichtigsten Flüsse hervor: von der Definition über Domänen und Apps bis zu XGLA4.')
+              : (lang === 'it'
+                  ? 'La struttura mostra i quattro livelli principali e le loro relazioni.'
+                  : 'Die Struktur zeigt die vier Hauptebenen und ihre Beziehungen.');
+        detailMeta.innerHTML = `
+          <div class="dns-map-detail-meta-row">
+            <div class="dns-map-detail-meta-label">View</div>
+            <div class="dns-map-detail-meta-value">${mode === 'system' ? 'System' : mode === 'ownership' ? 'Ownership' : 'Flow'}</div>
+          </div>
+        `;
+      });
+    });
+
+    const originalSetLang = setLang;
+    setLang = function(lang) {
+      originalSetLang(lang);
+      const selectedNode = systemMap?.dataset.selectedNode;
+      if (selectedNode) renderMapDetail(selectedNode);
+    };
   </script>
   <script type="module">
     import { DNS_DESIGN_SYSTEM } from './web-runtime/design-system.js';
