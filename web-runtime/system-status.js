@@ -3,8 +3,6 @@
 export const DNS_SYSTEM_STATUS_VERSION = '0.1.0';
 export const DNS_SYSTEM_STATUS_VERIFIED_AT = '2026-10-01';
 
-export type DNSAdoptionState = 'adopted' | 'partial' | 'notYet' | 'na' | 'pending';
-
 export const DNS_SYSTEM_STATUS_CRITERIA = [
   { id: 'designSystem', label: 'Design System' },
   { id: 'sharedData', label: 'Shared Data' },
