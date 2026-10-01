@@ -296,3 +296,37 @@ The canonical print implementation is `src/ui/print.ts`.
 All printable DNS tools must consume the shared print runtime and `DNS_DESIGN_SYSTEM.print` tokens. Applications may define which rows and columns are printed, but page geometry, print typography, table styling and the body-level `.dns-print-sheet` portal are Foundation-owned.
 
 Legacy popup/document-write print implementations are not part of the DNS architecture.
+
+
+## Canonical Tool Chrome runtime
+
+The shared header/navigation behavior is mounted through `src/ui/tool-chrome.ts`.
+
+DNS applications declare only:
+
+```html
+<header data-dns-tool-header>…</header>
+<nav data-dns-tool-nav>…</nav>
+```
+
+Optional navigation items use `data-section="<section-id>"`.
+
+The shared runtime owns:
+
+- corporate-header hide on scroll down;
+- reveal on meaningful scroll up;
+- sticky navigation offset under the visible header;
+- zero-offset navigation while the header is hidden;
+- measured sticky-stack height;
+- the 3 px scroll-progress indicator between header and navigation;
+- desktop wrapping and tablet/mobile horizontal scrolling through the canonical navigation runtime;
+- section tracking where matching section IDs exist;
+- reduced-motion behavior.
+
+The progress element is created automatically. Applications must not maintain local
+`ScrollProgress` components, local sticky-offset listeners, duplicate scroll-direction
+listeners or independent header/nav animation CSS.
+
+Framework-specific markup remains local only where the application needs distinct
+controls, account context or domain navigation. The scroll/sticky/progress behavior
+is Foundation-owned.
