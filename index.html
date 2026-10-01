@@ -1039,7 +1039,7 @@
   </style>
 </head>
 
-<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.10.1">
+<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.11.0">
   <header id="dns-site-header" class="dns-site-header sticky top-0 z-30 text-white">
     <div class="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-6 px-5 py-3.5 md:px-8">
       <a id="dns-home-link" href="#top" class="flex min-w-0 items-center gap-4 text-white no-underline" aria-label="DNS Shared Data · page top">
@@ -1058,7 +1058,8 @@
         </div>
       </a>
 
-      <div class="flex gap-3 text-[10px] font-bold uppercase tracking-[.06em]">
+      <div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[.06em]">
+        <div id="dns-accessibility-mount"></div>
         <button id="btn-de" type="button" data-dns-press class="dns-lang-button is-active" onclick="setLang('de')" aria-label="Deutsch">DE</button>
         <button id="btn-it" type="button" data-dns-press class="dns-lang-button" onclick="setLang('it')" aria-label="Italiano">IT</button>
       </div>
@@ -1101,6 +1102,9 @@
       </a>
       <a href="#system-status" class="dns-tab" data-section="system-status">
         <span class="lang-de">08 · System Status</span><span class="lang-it">08 · System Status</span>
+      </a>
+      <a href="#accessibility" class="dns-tab" data-section="accessibility">
+        <span class="lang-de">09 · Barrierefreiheit</span><span class="lang-it">09 · Accessibilità</span>
       </a>
     </div>
   </nav>
@@ -1774,7 +1778,7 @@
               <p class="dns-kicker">Foundation</p>
               <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">Color & typography</h3>
             </div>
-            <span class="dns-pill">v<span data-design-value="version">1.10.1</span></span>
+            <span class="dns-pill">v<span data-design-value="version">1.11.0</span></span>
           </div>
 
           <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -2224,6 +2228,60 @@
       </div>
     </section>
 
+    <section id="accessibility" class="dns-page-shell section-anchor mx-auto max-w-[1440px] px-5 py-5 md:px-8">
+      <div class="dns-editorial-heading mb-8 max-w-3xl">
+        <div class="lang-de">
+          <p class="dns-kicker">09 · Barrierefreiheit</p>
+          <h2 class="mt-1 font-semibold tracking-[-.02em] text-dns-deep">Gemeinsame Accessibility-Einstellungen für alle DNS-Tools</h2>
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
+            Ein leichtes Foundation-Modul für Textgröße, Kontrast, Abstand, Bewegung, Fokus und UI-Dichte. Die Einstellungen bleiben ausschließlich lokal im Browser.
+          </p>
+        </div>
+        <div class="lang-it">
+          <p class="dns-kicker">09 · Accessibilità</p>
+          <h2 class="mt-1 font-semibold tracking-[-.02em] text-dns-deep">Impostazioni di accessibilità comuni a tutti i tool DNS</h2>
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
+            Un modulo Foundation leggero per dimensione testo, contrasto, spaziatura, movimento, focus e densità UI. Le preferenze restano esclusivamente nel browser.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
+        <article class="dns-card dns-card-primary p-5 md:p-6">
+          <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p class="dns-kicker">Accessibility runtime v1</p>
+              <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">Aa · Alt + A</h3>
+            </div>
+            <span class="dns-pill">local-browser-only</span>
+          </div>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="dns-context-soft rounded-lg border p-4"><strong class="text-dns-deep">100 / 115 / 130%</strong><div class="mt-1 font-alt text-[10px] text-dns-muted">Text scale</div></div>
+            <div class="dns-context-soft rounded-lg border p-4"><strong class="text-dns-deep">High contrast</strong><div class="mt-1 font-alt text-[10px] text-dns-muted">Stronger borders & separation</div></div>
+            <div class="dns-context-soft rounded-lg border p-4"><strong class="text-dns-deep">Relaxed spacing</strong><div class="mt-1 font-alt text-[10px] text-dns-muted">Reading comfort</div></div>
+            <div class="dns-context-soft rounded-lg border p-4"><strong class="text-dns-deep">Reduce motion</strong><div class="mt-1 font-alt text-[10px] text-dns-muted">Motion override</div></div>
+            <div class="dns-context-soft rounded-lg border p-4"><strong class="text-dns-deep">Strong focus</strong><div class="mt-1 font-alt text-[10px] text-dns-muted">Enhanced keyboard focus</div></div>
+            <div class="dns-context-soft rounded-lg border p-4"><strong class="text-dns-deep">Comfort density</strong><div class="mt-1 font-alt text-[10px] text-dns-muted">Larger controls & table rows</div></div>
+          </div>
+        </article>
+
+        <aside class="dns-card p-5 md:p-6">
+          <p class="dns-kicker">Foundation rule</p>
+          <div class="lang-de mt-2 font-alt text-[11px] leading-relaxed text-dns-mid">
+            Das Modul ergänzt die native Barrierefreiheit, ersetzt sie aber nicht. Semantisches HTML, Tastaturbedienung, sichtbarer Fokus und <code>prefers-reduced-motion</code> bleiben Pflicht.
+          </div>
+          <div class="lang-it mt-2 font-alt text-[11px] leading-relaxed text-dns-mid">
+            Il modulo integra l’accessibilità nativa, ma non la sostituisce. HTML semantico, navigazione da tastiera, focus visibile e <code>prefers-reduced-motion</code> restano requisiti di base.
+          </div>
+          <div class="mt-5 rounded-lg border border-dns-mid/15 bg-dns-bg p-4 font-alt text-[10px] leading-relaxed text-dns-muted">
+            <strong class="text-dns-deep">Storage:</strong> <code>dns-accessibility-v1</code><br>
+            <strong class="text-dns-deep">Firebase:</strong> none<br>
+            <strong class="text-dns-deep">Shortcut:</strong> Alt + A · Esc
+          </div>
+        </aside>
+      </div>
+    </section>
+
     <section class="dns-page-shell mx-auto max-w-[1440px] px-5 py-5 md:px-8">
       <div class="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
         <article class="dns-card p-5 md:p-6">
@@ -2322,6 +2380,7 @@
       btnIt.classList.toggle('is-active', activeLang === 'it');
 
       localStorage.setItem('dns-shared-data-lang', activeLang);
+      window.dnsAccessibilityRuntime?.setLanguage(activeLang);
     }
 
     const savedLang = localStorage.getItem('dns-shared-data-lang');
@@ -2710,6 +2769,7 @@
       DNS_SYSTEM_STATUS_VERIFIED_AT,
     } from './web-runtime/system-status.js';
     import { initDNSRevealRuntime, initDNSInteractionRuntime } from './web-runtime/runtime.js';
+    import { initDNSAccessibilityRuntime } from './web-runtime/accessibility.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
     import { doc, getDoc, getFirestore } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
 
@@ -2725,6 +2785,13 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
+    const accessibilityMount = document.getElementById('dns-accessibility-mount');
+    window.dnsAccessibilityRuntime = initDNSAccessibilityRuntime({
+      mountTarget: accessibilityMount,
+      language: document.documentElement.dataset.lang === 'it' ? 'it' : 'de',
+      storageKey: DNS_DESIGN_SYSTEM.accessibility.storageKey,
+    });
 
     function renderDataContracts() {
       const grid = document.getElementById('data-contract-grid');
