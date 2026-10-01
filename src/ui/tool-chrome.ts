@@ -37,6 +37,7 @@ const DEFAULT_NAV_SELECTOR = '[data-dns-tool-nav]';
 const DEFAULT_TAB_SELECTOR = '[data-section]';
 const PROGRESS_TRACK_ATTR = 'data-dns-scroll-progress';
 const PROGRESS_BAR_ATTR = 'data-dns-scroll-progress-bar';
+const runtimeByNav = new WeakMap<HTMLElement, DNSNavigationRuntimeHandle>();
 
 function noOpHandle(): DNSToolChromeRuntimeHandle {
   return {
@@ -200,7 +201,13 @@ export function initDNSToolChromeRuntime(
     onActiveSectionChange: options.onActiveSectionChange,
   });
 
+  runtimeByNav.set(nav, runtime);
   documentRoot.documentElement.dataset.dnsToolChrome = 'shared';
+
+  const initialActiveSection = nav.dataset.dnsActiveSection?.trim();
+  if (initialActiveSection) {
+    runtime.setActiveSection(initialActiveSection);
+  }
 
   return {
     header,
@@ -208,6 +215,7 @@ export function initDNSToolChromeRuntime(
     refresh: () => runtime.refresh(),
     setActiveSection: (id: string) => runtime.setActiveSection(id),
     disconnect() {
+      runtimeByNav.delete(nav);
       runtime.disconnect();
 
       if (progress.created) {
@@ -217,4 +225,23 @@ export function initDNSToolChromeRuntime(
       delete documentRoot.documentElement.dataset.dnsToolChrome;
     },
   };
+}
+
+
+export function setDNSToolChromeActiveSection(
+  id: string,
+  root?: Document,
+): void {
+  const documentRoot =
+    root ?? (typeof document !== 'undefined' ? document : undefined);
+  if (!documentRoot || !id) return;
+
+  const nav = documentRoot.querySelector<HTMLElement>(
+    DEFAULT_NAV_SELECTOR,
+  );
+  if (!(nav instanceof HTMLElement)) return;
+
+  nav.dataset.dnsActiveSection = id;
+  runtimeByNav.get(nav)?.setActiveSection(id);
+  runtimeByNav.get(nav)?.refresh();
 }
