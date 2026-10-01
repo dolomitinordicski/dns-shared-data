@@ -5,7 +5,7 @@
 **Data-tool reference:** DNS Analytics  
 **Target:** all DNS digital tools  
 **Runtime source:** DNS_Core / Firestore  
-**Current semantic version:** 1.10.1
+**Current semantic version:** 1.11.0
 
 ## Principle
 
@@ -161,7 +161,7 @@ designSystem/v1
 designSystem/current
 ```
 
-The document keeps a semantic `version` field, currently `1.10.1`.
+The document keeps a semantic `version` field, currently `1.11.0`.
 
 Applications should:
 
@@ -233,3 +233,41 @@ DNS applications must render from the canonical local Design System fallback imm
 When the remote document exposes the same semantic version already shipped locally, applications should avoid reapplying an identical token set. Motion/interaction runtimes should be restarted only when their relevant token groups actually differ.
 
 This prevents visible second-pass layout/reveal behavior while preserving the remote configuration layer.
+
+
+## Foundation accessibility v1
+
+Accessibility is a shared DNS Foundation behavior.
+
+The common runtime is framework-agnostic and is published from `src/ui/accessibility.ts`. Applications should mount the shared runtime rather than creating incompatible local settings panels.
+
+### Shared preferences
+
+- text scale: 100%, 115%, 130%;
+- high contrast;
+- relaxed text spacing;
+- reduce motion override;
+- stronger keyboard focus;
+- comfortable UI density;
+- reset to DNS defaults.
+
+The runtime also respects native `prefers-reduced-motion`; the user override is an additional control, not a replacement for operating-system preferences.
+
+### Persistence and privacy
+
+Accessibility preferences are stored only in browser `localStorage` using the key `dns-accessibility-v1`.
+
+They are not:
+- written to Firebase;
+- associated with a DNS user account;
+- synchronized across browsers;
+- treated as personal profile data.
+
+### Keyboard behavior
+
+- `Alt+A` opens/closes the panel;
+- `Escape` closes it;
+- opening the panel moves focus into the dialog;
+- closing returns focus to the previous control.
+
+The module supplements baseline accessibility. Semantic HTML, keyboard operability, visible focus, meaningful labels and reduced-motion support remain mandatory even when the panel is never opened.
