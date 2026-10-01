@@ -60,6 +60,31 @@ try {
   await assertSucceeds(setDoc(doc(admin,'billingRateConfigs',billingRate.id),{...billingRate,billingUnitPrice:0.18,revision:2}));
   await assertFails(setDoc(doc(admin,'billingRateConfigs',billingRate.id),{...billingRate,billingUnitPrice:0.19,revision:4}));
 
+  const seasonalExtra={
+    id:'2026-27__org__jackets',
+    seasonId:'2026-27',
+    sourceType:'seasonal-extra',
+    organizationId:'org',
+    reportingAreaId:'area',
+    description:'Jackets 2026',
+    quantity:2,
+    unitAmount:75,
+    amount:150,
+    currency:'EUR',
+    source:{documentLabel:'Supplier offer jackets'},
+    active:true,
+    revision:1,
+    notes:'',
+  };
+  await assertSucceeds(setDoc(doc(admin,'billingSeasonalExtras',seasonalExtra.id),seasonalExtra));
+  await assertSucceeds(getDoc(doc(admin,'billingSeasonalExtras',seasonalExtra.id)));
+  await assertFails(getDoc(doc(seller,'billingSeasonalExtras',seasonalExtra.id)));
+  await assertFails(setDoc(doc(seller,'billingSeasonalExtras','seller-extra'),{...seasonalExtra,id:'seller-extra'}));
+  await assertFails(setDoc(doc(admin,'billingSeasonalExtras','missing-extra-source'),{...seasonalExtra,id:'missing-extra-source',source:{documentLabel:''}}));
+  await assertSucceeds(setDoc(doc(admin,'billingSeasonalExtras',seasonalExtra.id),{...seasonalExtra,quantity:3,amount:225,revision:2}));
+  await assertFails(setDoc(doc(admin,'billingSeasonalExtras',seasonalExtra.id),{...seasonalExtra,revision:4}));
+  await assertFails(deleteDoc(doc(admin,'billingSeasonalExtras',seasonalExtra.id)));
+
   const billingRun={
     id:'2026-27__org',
     seasonId:'2026-27',
@@ -193,5 +218,5 @@ try {
   await assertFails(setDoc(doc(admin,'ticketSales','2024-25__org__area__day__official__regular'),{...sale,id:'2024-25__org__area__day__official__regular',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketPricingConfigs','historic-price-2024'),{...price,id:'historic-price-2024',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketOrders','historic-order-2024'),{seasonId:'2024-25',organizationId:'org',category:'ticket',status:'draft'}));
-  console.log('Seasonal rules passed: scoped reads/writes, admin-only sourced billing rates, revisioned immutable billing snapshots, read-only users, invalid quantities/amounts, immutable audit history, stale pricing and anonymous access.');
+  console.log('Seasonal rules passed: scoped reads/writes, admin-only sourced billing rates and seasonal extras, revisioned immutable billing snapshots, read-only users, invalid quantities/amounts, immutable audit history, stale pricing and anonymous access.');
 } finally { await env.cleanup(); }
