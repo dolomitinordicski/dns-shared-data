@@ -114,6 +114,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Shared season-scoped allocation keys. These are canonical reference data
+    // consumed by FAIR, Faktura and future DNS tools.
+    match /areaAllocationKeys/{document} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Private authorization metadata.
     match /users/{userId} {
       allow read: if signedIn() && request.auth.uid == userId;
