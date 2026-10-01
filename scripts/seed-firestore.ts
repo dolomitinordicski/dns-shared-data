@@ -10,6 +10,7 @@ import {
   REPORTING_AREAS,
   SEASONS,
 } from '../src/canonical-data.js';
+import { AREA_ALLOCATION_KEYS } from '../src/area-allocation-keys.js';
 import type { OrganizationRelationship } from '../src/canonical-data.js';
 
 const TARGET_PROJECT_ID = 'dns-core';
@@ -25,7 +26,8 @@ type SeedCollection = {
     | 'destinations'
     | 'organizations'
     | 'organizationRelationships'
-    | 'seasons';
+    | 'seasons'
+    | 'areaAllocationKeys';
   records: readonly CanonicalRecord[];
 };
 
@@ -35,6 +37,7 @@ const collections: readonly SeedCollection[] = [
   { name: 'organizations', records: ORGANIZATIONS },
   { name: 'organizationRelationships', records: ORGANIZATION_RELATIONSHIPS },
   { name: 'seasons', records: SEASONS },
+  { name: 'areaAllocationKeys', records: AREA_ALLOCATION_KEYS },
 ];
 
 const totalDocuments = collections.reduce(
@@ -169,6 +172,22 @@ function validateCanonicalData() {
       throw new Error(
         `Relationship "${relationship.id}" targets a reporting area not assigned to "${relationship.organizationId}".`,
       );
+    }
+  }
+
+  for (const key of AREA_ALLOCATION_KEYS) {
+    if (!reportingAreaIds.has(key.reportingAreaId)) {
+      throw new Error(`Allocation key "${key.id}" references unknown reporting area "${key.reportingAreaId}".`);
+    }
+    const shareTotal = key.allocations.reduce((sum, row) => sum + row.share, 0);
+    const fixedShareTotal = key.allocations.reduce((sum, row) => sum + row.fixedShare, 0);
+    if (Math.abs(shareTotal - 1) > 0.000001 || Math.abs(fixedShareTotal - 1) > 0.000001) {
+      throw new Error(`Allocation key "${key.id}" must sum to 1.0 for share and fixedShare.`);
+    }
+    for (const row of key.allocations) {
+      if (!organizationIds.has(row.organizationId)) {
+        throw new Error(`Allocation key "${key.id}" references unknown organization "${row.organizationId}".`);
+      }
     }
   }
 
