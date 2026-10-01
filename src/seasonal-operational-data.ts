@@ -320,8 +320,27 @@ export interface KpReferenceKm {
  */
 export interface KpMilestoneValue {
   milestoneId: string;
+  /** Total opened kilometres at this milestone. */
+  openedKm: number;
+  /** Opened kilometres relying on natural snow. Derived as openedKm - artificialSnowKm. */
+  naturalSnowKm: number;
+  /** Opened kilometres relying on artificial snow. */
+  artificialSnowKm: number;
+}
+
+export interface KpFairValidation {
+  id: string;
+  seasonId: SeasonId;
+  reportingAreaId: ReportingAreaId;
+  milestoneId: string;
+  /** Snapshot of the area-level FAIR candidate at validation time. */
+  potentialOperationalKm: number;
+  openedKm: number;
   naturalSnowKm: number;
   artificialSnowKm: number;
+  revision: number;
+  validatedBy: string;
+  validatedAt: string;
 }
 
 export interface KpSeasonEntry {
@@ -399,6 +418,7 @@ export const FIRESTORE_OPERATIONAL_COLLECTIONS = {
   ticketSales: 'ticketSales',
   kpMilestones: 'kpMilestones',
   kpEntries: 'kpEntries',
+  kpFairValidations: 'kpFairValidations',
   seasonalSubmissions: 'seasonalSubmissions',
   operationalRevisions: 'operationalRevisions',
 } as const;
