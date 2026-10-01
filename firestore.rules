@@ -83,6 +83,66 @@ service cloud.firestore {
       return order.status == 'draft' || canVerifyOrder(order);
     }
 
+    function billingSnapshotTypeAllowed(data) {
+      return !data.keys().hasAny(['snapshotType'])
+        || data.snapshotType in ['orders', 'unified'];
+    }
+
+    function billingReadyAllowed(data) {
+      return data.status != 'ready'
+        || (
+          data.unpricedQuantity == 0
+          && (
+            !data.keys().hasAny(['snapshotType'])
+            || data.snapshotType != 'unified'
+            || (
+              data.sourceState == 'complete'
+              && data.sourceBlockingReasons is list
+              && data.sourceBlockingReasons.size() == 0
+              && 'fair-membership' in data.sourceTypes
+              && 'idm-premium-partner' in data.sourceTypes
+              && 'order' in data.sourceTypes
+              && 'seasonal-extra' in data.sourceTypes
+            )
+          )
+        );
+    }
+
+    function validBillingLineSource(data) {
+      return data.source is map
+        && data.source.type in ['fair-membership', 'idm-premium-partner', 'order', 'seasonal-extra']
+        && data.source.sourceId is string
+        && data.source.sourceId.size() > 0
+        && data.source.sourceLabel is string
+        && data.source.sourceLabel.size() > 0
+        && (
+          (
+            data.source.type == 'order'
+            && data.catalogItemId is string
+            && data.rateId is string
+            && data.rateRevision is int
+            && data.rateRevision >= 1
+            && data.sourceDocumentLabel is string
+            && data.sourceDocumentLabel.size() > 0
+          )
+          || (
+            data.source.type == 'fair-membership'
+          )
+          || (
+            data.source.type == 'idm-premium-partner'
+            && data.source.sourceRevision is int
+            && data.source.sourceRevision >= 1
+          )
+          || (
+            data.source.type == 'seasonal-extra'
+            && data.source.sourceRevision is int
+            && data.source.sourceRevision >= 1
+            && data.sourceDocumentLabel is string
+            && data.sourceDocumentLabel.size() > 0
+          )
+        );
+    }
+
     // Public canonical master data.
     match /reportingAreas/{document} {
       allow read: if true;
@@ -414,6 +474,15 @@ service cloud.firestore {
         && request.resource.data.reportingAreaId is string
         && (request.resource.data.status == 'draft' || request.resource.data.status == 'ready')
         && request.resource.data.revision == 1
+        && billingSnapshotTypeAllowed(request.resource.data)
+        && (
+          !request.resource.data.keys().hasAny(['snapshotType'])
+          || request.resource.data.snapshotType != 'unified'
+          || (
+            request.resource.data.sourceState in ['complete', 'incomplete']
+            && request.resource.data.sourceBlockingReasons is list
+          )
+        )
         && request.resource.data.sourceTypes is list
         && request.resource.data.sourceOrderStatuses is list
         && request.resource.data.lineCount is int
@@ -427,8 +496,7 @@ service cloud.firestore {
         && request.resource.data.generatedBy is string
         && request.resource.data.generatedAt == request.time
         && request.resource.data.updatedAt == request.time
-        && (request.resource.data.status != 'ready'
-          || request.resource.data.unpricedQuantity == 0);
+        && billingReadyAllowed(request.resource.data);
 
       allow update: if isAdmin()
         && resource.data.status == 'draft'
@@ -438,6 +506,15 @@ service cloud.firestore {
         && request.resource.data.reportingAreaId == resource.data.reportingAreaId
         && (request.resource.data.status == 'draft' || request.resource.data.status == 'ready')
         && request.resource.data.revision == resource.data.revision + 1
+        && billingSnapshotTypeAllowed(request.resource.data)
+        && (
+          !request.resource.data.keys().hasAny(['snapshotType'])
+          || request.resource.data.snapshotType != 'unified'
+          || (
+            request.resource.data.sourceState in ['complete', 'incomplete']
+            && request.resource.data.sourceBlockingReasons is list
+          )
+        )
         && request.resource.data.sourceTypes is list
         && request.resource.data.sourceOrderStatuses is list
         && request.resource.data.lineCount is int
@@ -451,8 +528,7 @@ service cloud.firestore {
         && request.resource.data.generatedBy is string
         && request.resource.data.generatedAt == request.time
         && request.resource.data.updatedAt == request.time
-        && (request.resource.data.status != 'ready'
-          || request.resource.data.unpricedQuantity == 0);
+        && billingReadyAllowed(request.resource.data);
 
       allow delete: if false;
     }
@@ -468,9 +544,7 @@ service cloud.firestore {
         && request.resource.data.seasonId is string
         && request.resource.data.organizationId is string
         && request.resource.data.reportingAreaId is string
-        && request.resource.data.source is map
-        && request.resource.data.source.type == 'order'
-        && request.resource.data.catalogItemId is string
+        && validBillingLineSource(request.resource.data)
         && request.resource.data.description is string
         && request.resource.data.quantity is number
         && request.resource.data.quantity >= 0
@@ -479,11 +553,6 @@ service cloud.firestore {
         && request.resource.data.amount is number
         && request.resource.data.amount >= 0
         && request.resource.data.included is bool
-        && request.resource.data.rateId is string
-        && request.resource.data.rateRevision is int
-        && request.resource.data.rateRevision >= 1
-        && request.resource.data.sourceDocumentLabel is string
-        && request.resource.data.sourceDocumentLabel.size() > 0
         && request.resource.data.createdBy is string
         && request.resource.data.createdAt == request.time
         && getAfter(/databases/$(database)/documents/billingRuns/$(request.resource.data.runId)).data.revision == request.resource.data.runRevision
