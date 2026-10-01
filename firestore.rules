@@ -345,6 +345,56 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // DNS Faktura seasonal extras. These are sourced, admin-managed
+    // commercial items such as seasonal clothing or one-off supplies.
+    match /billingSeasonalExtras/{document} {
+      allow read: if isAdmin();
+
+      allow create: if isAdmin()
+        && request.resource.data.id == document
+        && request.resource.data.seasonId is string
+        && request.resource.data.sourceType == 'seasonal-extra'
+        && request.resource.data.organizationId is string
+        && request.resource.data.reportingAreaId is string
+        && request.resource.data.description is string
+        && request.resource.data.description.size() > 0
+        && request.resource.data.quantity is number
+        && request.resource.data.quantity >= 0
+        && request.resource.data.unitAmount is number
+        && request.resource.data.unitAmount >= 0
+        && request.resource.data.amount is number
+        && request.resource.data.amount >= 0
+        && request.resource.data.currency == 'EUR'
+        && request.resource.data.source is map
+        && request.resource.data.source.documentLabel is string
+        && request.resource.data.source.documentLabel.size() > 0
+        && request.resource.data.active is bool
+        && request.resource.data.revision == 1;
+
+      allow update: if isAdmin()
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.seasonId == resource.data.seasonId
+        && request.resource.data.sourceType == resource.data.sourceType
+        && request.resource.data.organizationId == resource.data.organizationId
+        && request.resource.data.reportingAreaId == resource.data.reportingAreaId
+        && request.resource.data.description is string
+        && request.resource.data.description.size() > 0
+        && request.resource.data.quantity is number
+        && request.resource.data.quantity >= 0
+        && request.resource.data.unitAmount is number
+        && request.resource.data.unitAmount >= 0
+        && request.resource.data.amount is number
+        && request.resource.data.amount >= 0
+        && request.resource.data.currency == 'EUR'
+        && request.resource.data.source is map
+        && request.resource.data.source.documentLabel is string
+        && request.resource.data.source.documentLabel.size() > 0
+        && request.resource.data.active is bool
+        && request.resource.data.revision == resource.data.revision + 1;
+
+      allow delete: if false;
+    }
+
     // DNS Faktura billing snapshots. A run may be revised while draft.
     // READY snapshots are immutable; line snapshots are append-only.
     match /billingRuns/{document} {

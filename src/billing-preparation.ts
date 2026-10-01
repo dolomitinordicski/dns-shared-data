@@ -1,6 +1,6 @@
 import type { OrganizationId, ReportingAreaId, SeasonId } from './canonical-data.js';
 
-export const DNS_BILLING_PREPARATION_VERSION = '0.4.0' as const;
+export const DNS_BILLING_PREPARATION_VERSION = '0.5.0' as const;
 
 export type BillingSourceType =
   | 'fair-membership'
@@ -38,6 +38,29 @@ export interface BillingSourceReference {
   type: BillingSourceType;
   sourceId?: string;
   sourceLabel?: string;
+}
+
+export interface BillingSeasonalExtraSource {
+  documentLabel: string;
+  supplier?: string;
+  documentDate?: string;
+}
+
+export interface BillingSeasonalExtra {
+  id: string;
+  seasonId: SeasonId;
+  sourceType: 'seasonal-extra';
+  organizationId: OrganizationId;
+  reportingAreaId: ReportingAreaId;
+  description: string;
+  quantity: number;
+  unitAmount: number;
+  amount: number;
+  currency: 'EUR';
+  source: BillingSeasonalExtraSource;
+  active: boolean;
+  revision: number;
+  notes?: string;
 }
 
 export interface BillingPreparationLine {
