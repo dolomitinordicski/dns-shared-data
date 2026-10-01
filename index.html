@@ -297,7 +297,7 @@
       line-height: 1;
     }
 
-    .section-anchor { scroll-margin-top: 116px; }
+    .section-anchor { scroll-margin-top: 156px; }
 
     .dns-site-header {
       background: var(--dns-header-bg) !important;
@@ -959,9 +959,39 @@
       border-radius: inherit;
       background: var(--color-dns-light);
     }
+    @media (min-width: 1024px) {
+      .dns-tab-nav {
+        overflow: visible;
+      }
+      .dns-tab-nav-inner {
+        flex-wrap: wrap;
+        min-width: 0;
+        padding-top: .18rem;
+        padding-bottom: .18rem;
+      }
+      .dns-tab-season {
+        align-self: stretch;
+        display: flex;
+        align-items: center;
+      }
+      .dns-tab {
+        padding-left: .95rem;
+        padding-right: .95rem;
+      }
+    }
+
     @media (max-width: 1023px) {
-      .dns-tab-nav-inner { padding: 0 1rem; }
+      .dns-tab-nav {
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+      .dns-tab-nav-inner {
+        min-width: max-content;
+        flex-wrap: nowrap;
+        padding: 0 1rem;
+      }
       .dns-tab { padding-left: .95rem; padding-right: .95rem; }
+      .section-anchor { scroll-margin-top: 116px; }
     }
 
     @media (max-width: 767px) {
