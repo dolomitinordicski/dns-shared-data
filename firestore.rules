@@ -368,8 +368,8 @@ service cloud.firestore {
         && request.resource.data.totalAmount is number
         && request.resource.data.totalAmount >= 0
         && request.resource.data.generatedBy is string
-        && request.resource.data.generatedAt is timestamp
-        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.generatedAt == request.time
+        && request.resource.data.updatedAt == request.time
         && (request.resource.data.status != 'ready'
           || request.resource.data.unpricedQuantity == 0);
 
@@ -392,8 +392,8 @@ service cloud.firestore {
         && request.resource.data.totalAmount is number
         && request.resource.data.totalAmount >= 0
         && request.resource.data.generatedBy is string
-        && request.resource.data.generatedAt is timestamp
-        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.generatedAt == request.time
+        && request.resource.data.updatedAt == request.time
         && (request.resource.data.status != 'ready'
           || request.resource.data.unpricedQuantity == 0);
 
@@ -428,7 +428,12 @@ service cloud.firestore {
         && request.resource.data.sourceDocumentLabel is string
         && request.resource.data.sourceDocumentLabel.size() > 0
         && request.resource.data.createdBy is string
-        && request.resource.data.createdAt is timestamp;
+        && request.resource.data.createdAt == request.time
+        && getAfter(/databases/$(database)/documents/billingRuns/$(request.resource.data.runId)).data.revision == request.resource.data.runRevision
+        && getAfter(/databases/$(database)/documents/billingRuns/$(request.resource.data.runId)).data.seasonId == request.resource.data.seasonId
+        && getAfter(/databases/$(database)/documents/billingRuns/$(request.resource.data.runId)).data.organizationId == request.resource.data.organizationId
+        && getAfter(/databases/$(database)/documents/billingRuns/$(request.resource.data.runId)).data.reportingAreaId == request.resource.data.reportingAreaId
+        && getAfter(/databases/$(database)/documents/billingRuns/$(request.resource.data.runId)).data.updatedAt == request.time;
 
       allow update, delete: if false;
     }
