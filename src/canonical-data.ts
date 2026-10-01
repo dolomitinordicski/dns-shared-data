@@ -913,6 +913,33 @@ export function resolveReportingAreaId(
   return REPORTING_AREA_ALIAS_MAP[normalizeLegacyKey(value)];
 }
 
+const ORGANIZATION_ALIAS_ENTRIES: ReadonlyArray<
+  readonly [string, OrganizationId]
+> = ORGANIZATIONS.flatMap((organization) => {
+  const values = new Set<string>([
+    organization.id,
+    organization.canonicalName,
+    organization.localizedName.de,
+    organization.localizedName.it,
+    organization.localizedName.en,
+    ...organization.aliases,
+  ]);
+
+  return [...values].map(
+    (value) => [normalizeLegacyKey(value), organization.id] as const,
+  );
+});
+
+export const ORGANIZATION_ALIAS_MAP = Object.freeze(
+  Object.fromEntries(ORGANIZATION_ALIAS_ENTRIES),
+) as Readonly<Record<string, OrganizationId>>;
+
+export function resolveOrganizationId(
+  value: string,
+): OrganizationId | undefined {
+  return ORGANIZATION_ALIAS_MAP[normalizeLegacyKey(value)];
+}
+
 export const REPORTING_AREA_BY_ID = Object.freeze(
   Object.fromEntries(REPORTING_AREAS.map((area) => [area.id, area])),
 ) as Readonly<Record<ReportingAreaId, (typeof REPORTING_AREAS)[number]>>;
