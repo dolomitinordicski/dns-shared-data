@@ -15,13 +15,17 @@
     "seed:design-system:apply": "tsx scripts/seed-design-system.ts --apply",
     "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
     "seed:orders:2026-27": "tsx scripts/seed-orders-2026-27.ts",
-    "seed:orders:2026-27:apply": "tsx scripts/seed-orders-2026-27.ts --apply"
+    "seed:orders:2026-27:apply": "tsx scripts/seed-orders-2026-27.ts --apply",
+    "test:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/seasonal-rules.test.mjs\""
   },
   "dependencies": {
     "firebase-admin": "^14.5.0"
   },
   "devDependencies": {
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "firebase": "^12.3.0",
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "firebase-tools": "14.12.0"
   }
 }

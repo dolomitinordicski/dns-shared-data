@@ -35,3 +35,12 @@ jobs:
 
       - name: Validate seed plan
         run: npm run seed:firebase
+
+      - name: Setup Java for Firestore emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Test seasonal Firestore rules
+        run: npm run test:rules
