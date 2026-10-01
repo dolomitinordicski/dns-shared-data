@@ -5,7 +5,7 @@
 **Data-tool reference:** DNS Analytics  
 **Target:** all DNS digital tools  
 **Runtime source:** DNS_Core / Firestore  
-**Current semantic version:** 1.11.0
+**Current semantic version:** 1.11.1
 
 ## Principle
 
@@ -161,7 +161,7 @@ designSystem/v1
 designSystem/current
 ```
 
-The document keeps a semantic `version` field, currently `1.11.0`.
+The document keeps a semantic `version` field, currently `1.11.1`.
 
 Applications should:
 
@@ -244,7 +244,7 @@ The common runtime is framework-agnostic and is published from `src/ui/accessibi
 ### Shared preferences
 
 - text scale: 100%, 115%, 130%;
-- high contrast;
+- high contrast with black primary and secondary text;
 - relaxed text spacing;
 - reduce motion override;
 - stronger keyboard focus;
