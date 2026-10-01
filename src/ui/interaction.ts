@@ -5,7 +5,7 @@ type WidenToken<T> =
   T extends string ? string :
   T extends number ? number :
   T extends boolean ? boolean :
-  T extends readonly (infer U)[] ? WidenToken<U>[] :
+  T extends readonly (infer U)[] ? readonly WidenToken<U>[] :
   T extends object ? { [K in keyof T]: WidenToken<T[K]> } :
   T;
 
