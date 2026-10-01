@@ -10,10 +10,12 @@ try {
     await setDoc(doc(db,'users','seller'),{active:true,globalRoles:[]});
     await setDoc(doc(db,'users','reader'),{active:true,globalRoles:[]});
     await setDoc(doc(db,'seasons','2026-27'),{status:'active'});
+    await setDoc(doc(db,'seasons','2024-25'),{status:'historical'});
     await setDoc(doc(db,'reportingAreas','area'),{canonicalName:'Area'});
     await setDoc(doc(db,'organizations','org'),{reportingAreaIds:['area']});
     for(const [uid,permissions] of [['seller',['ticketSales.read','ticketSales.write']],['reader',['ticketSales.read']]])
       await setDoc(doc(db,'accessGrants',`${uid}__organization__org`),{active:true,permissions});
+    await setDoc(doc(db,'accessGrants','reader__reportingArea__area'),{active:true,permissions:['kp.read']});
   });
   const admin=env.authenticatedContext('admin').firestore();
   const seller=env.authenticatedContext('seller').firestore();
@@ -52,10 +54,14 @@ try {
   const historical={seasonId:'2025-26',domain:'sales',organizationId:'org',reportingAreaId:'area',facts:[{quantity:5,amount:50}]};
   await env.withSecurityRulesDisabled(async context=>{
     await setDoc(doc(context.firestore(),'historicalSeasonRecords','history'),historical);
+    await setDoc(doc(context.firestore(),'historicalSeasonRecords','history-2024-snow'),{seasonId:'2024-25',domain:'snow',organizationId:'',reportingAreaId:'area',facts:[{openKm:12}]});
+    await setDoc(doc(context.firestore(),'historicalSeasonRecords','history-2024-costs'),{seasonId:'2024-25',domain:'costs',organizationId:'',reportingAreaId:'area',facts:[{reportedAmount:1000}]});
     await setDoc(doc(context.firestore(),'historicalSeasonImports','2025-26'),{seasonId:'2025-26'});
     await setDoc(doc(context.firestore(),'seasons','2025-26'),{status:'closed'});
   });
   await assertSucceeds(getDocs(query(collection(seller,'historicalSeasonRecords'),where('seasonId','==','2025-26'),where('domain','==','sales'),where('organizationId','==','org'))));
+  await assertSucceeds(getDocs(query(collection(reader,'historicalSeasonRecords'),where('seasonId','==','2024-25'),where('domain','==','snow'),where('reportingAreaId','==','area'))));
+  await assertSucceeds(getDocs(query(collection(reader,'historicalSeasonRecords'),where('seasonId','==','2024-25'),where('domain','==','costs'),where('reportingAreaId','==','area'))));
   await assertFails(getDocs(collection(seller,'historicalSeasonRecords')));
   await assertFails(setDoc(doc(admin,'historicalSeasonRecords','history'),historical));
   await assertFails(setDoc(doc(admin,'historicalSeasonImports','2025-26'),{seasonId:'2025-26'}));
@@ -63,5 +69,8 @@ try {
   await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'historicalSeasonRecords','history')));
   await assertFails(setDoc(doc(admin,'ticketPricingConfigs','historic-price'),{...price,id:'historic-price',seasonId:'2025-26'}));
   await assertFails(setDoc(doc(admin,'ticketOrders','historic-order'),{seasonId:'2025-26',organizationId:'org',category:'ticket',status:'draft'}));
+  await assertFails(setDoc(doc(admin,'ticketSales','2024-25__org__area__day__official__regular'),{...sale,id:'2024-25__org__area__day__official__regular',seasonId:'2024-25'}));
+  await assertFails(setDoc(doc(admin,'ticketPricingConfigs','historic-price-2024'),{...price,id:'historic-price-2024',seasonId:'2024-25'}));
+  await assertFails(setDoc(doc(admin,'ticketOrders','historic-order-2024'),{seasonId:'2024-25',organizationId:'org',category:'ticket',status:'draft'}));
   console.log('Seasonal rules passed: scoped reads/writes, read-only users, invalid quantities/amounts, immutable audit history, stale pricing and anonymous access.');
 } finally { await env.cleanup(); }
