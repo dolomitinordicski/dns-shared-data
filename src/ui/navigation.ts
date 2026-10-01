@@ -11,7 +11,7 @@ type WidenToken<T> =
 export type DNSNavigationTokens = WidenToken<typeof DNS_DESIGN_SYSTEM.navigation>;
 export type DNSResponsiveTokens = WidenToken<typeof DNS_DESIGN_SYSTEM.responsive>;
 export type DNSHeaderTokens = WidenToken<typeof DNS_DESIGN_SYSTEM.header>;
-export type DNSMotionTokens = WidenToken<typeof DNS_DESIGN_SYSTEM.motion>;
+export type DNSNavigationMotionTokens = WidenToken<typeof DNS_DESIGN_SYSTEM.motion>;
 
 export interface DNSNavigationRuntimeOptions {
   root?: Document;
@@ -24,7 +24,7 @@ export interface DNSNavigationRuntimeOptions {
   navigation?: DNSNavigationTokens;
   responsive?: DNSResponsiveTokens;
   headerTokens?: DNSHeaderTokens;
-  motion?: DNSMotionTokens;
+  motion?: DNSNavigationMotionTokens;
   activeClassName?: string;
   activationOffsetPx?: number;
   onActiveSectionChange?: (id: string) => void;
@@ -43,7 +43,7 @@ function setNavigationVariables(
   root: HTMLElement,
   navigation: DNSNavigationTokens,
   header: DNSHeaderTokens,
-  motion: DNSMotionTokens,
+  motion: DNSNavigationMotionTokens,
 ) {
   const tabs = navigation.tabs;
   root.style.setProperty('--dns-tab-bg', tabs.containerBackground);
