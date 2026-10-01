@@ -1,4 +1,4 @@
-export const DNS_SYSTEM_STATUS_VERSION = '0.4.0' as const;
+export const DNS_SYSTEM_STATUS_VERSION = '0.5.0' as const;
 export const DNS_SYSTEM_STATUS_VERIFIED_AT = '2026-10-01' as const;
 
 export type DNSAdoptionState = 'adopted' | 'partial' | 'notYet' | 'na' | 'pending';
@@ -139,22 +139,22 @@ export const DNS_SYSTEM_STATUS = [
   {
     id: 'faktura',
     label: 'DNS Faktura / Commercial',
-    repo: null,
-    phase: 'foundation-defined',
-    firebaseProject: 'DNS Commercial target',
-    datasetVersion: 'Billing Preparation v0.1 · accounting integration intentionally out of scope',
+    repo: 'dolomitinordicski/DNS-Faktura',
+    phase: 'foundation-shell',
+    firebaseProject: 'dns-core reference probe · billing persistence pending',
+    datasetVersion: 'F.1 · Billing Preparation v0.1 · Shared Design System v1.13.2',
     criteria: {
-      designSystem: 'notYet',
-      sharedData: 'partial',
-      firebase: 'notYet',
+      designSystem: 'adopted',
+      sharedData: 'adopted',
+      firebase: 'partial',
       auth: 'notYet',
-      sharedAssets: 'notYet',
-      regionLogos: 'na',
+      sharedAssets: 'adopted',
+      regionLogos: 'adopted',
       motion: 'notYet',
       dataContracts: 'adopted',
-      accessibility: 'notYet',
+      accessibility: 'adopted',
     },
-    note: 'Faktura is defined as an internal billing-preparation tool only: it calculates billable amounts by organization/area and does not create official invoices, track payments or integrate accounting software.',
+    note: 'F.1 shell implemented in DNS-Faktura: canonical seasons/organizations/reporting areas, shared logos, navigation, accessibility, DNS_Core connectivity probe and internal print view are adopted. Monetary source integration and billing persistence remain F.2. Official invoices, payments and accounting integration remain out of scope.',
   },
   {
     id: 'partner-portal',
