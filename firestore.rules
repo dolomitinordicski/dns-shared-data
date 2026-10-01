@@ -322,11 +322,16 @@ service cloud.firestore {
     }
 
     function validKpMilestoneValue(value, seasonId) {
-      return value.keys().hasOnly(['milestoneId','naturalSnowKm','artificialSnowKm'])
+      let snowTotal = value.naturalSnowKm + value.artificialSnowKm;
+      return value.keys().hasOnly(['milestoneId','openedKm','naturalSnowKm','artificialSnowKm'])
         && value.milestoneId is string
         && get(/databases/$(database)/documents/kpMilestones/$(value.milestoneId)).data.seasonId == seasonId
+        && value.openedKm is number && value.openedKm >= 0
         && value.naturalSnowKm is number && value.naturalSnowKm >= 0
-        && value.artificialSnowKm is number && value.artificialSnowKm >= 0;
+        && value.artificialSnowKm is number && value.artificialSnowKm >= 0
+        && value.artificialSnowKm <= value.openedKm
+        && snowTotal - value.openedKm < 0.011
+        && value.openedKm - snowTotal < 0.011;
     }
 
     function validKpEntry(data) {
@@ -369,6 +374,60 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    function hasKpAreaPermission(permission, data) {
+      return isAdmin()
+        || hasGrant('reportingArea',data.reportingAreaId,permission)
+        || hasGrant('network','dolomiti-nordicski',permission);
+    }
+
+    function validKpFairValidation(data) {
+      let snowTotal = data.naturalSnowKm + data.artificialSnowKm;
+      return data.keys().hasOnly(['id','seasonId','reportingAreaId','milestoneId','potentialOperationalKm','openedKm','naturalSnowKm','artificialSnowKm','revision','validatedBy','validatedAt'])
+        && !historicalLocked(data)
+        && data.id == data.seasonId + '__' + data.reportingAreaId + '__' + data.milestoneId
+        && data.seasonId is string
+        && exists(/databases/$(database)/documents/seasons/$(data.seasonId))
+        && data.reportingAreaId is string
+        && exists(/databases/$(database)/documents/reportingAreas/$(data.reportingAreaId))
+        && data.milestoneId is string
+        && get(/databases/$(database)/documents/kpMilestones/$(data.milestoneId)).data.seasonId == data.seasonId
+        && data.potentialOperationalKm is number && data.potentialOperationalKm >= 0
+        && data.openedKm is number && data.openedKm >= 0
+        && data.naturalSnowKm is number && data.naturalSnowKm >= 0
+        && data.artificialSnowKm is number && data.artificialSnowKm >= 0
+        && data.artificialSnowKm <= data.openedKm
+        && snowTotal - data.openedKm < 0.011
+        && data.openedKm - snowTotal < 0.011
+        && data.revision is int && data.revision >= 1
+        && data.validatedBy == request.auth.uid
+        && data.validatedAt == request.time;
+    }
+
+    match /kpFairValidations/{document} {
+      allow read: if hasKpAreaPermission('kp.read',resource.data);
+      allow create: if validKpFairValidation(request.resource.data)
+        && hasKpAreaPermission('kp.verify',request.resource.data)
+        && request.resource.data.id == document
+        && request.resource.data.revision == 1;
+      allow update: if validKpFairValidation(request.resource.data)
+        && hasKpAreaPermission('kp.verify',resource.data)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.seasonId == resource.data.seasonId
+        && request.resource.data.reportingAreaId == resource.data.reportingAreaId
+        && request.resource.data.milestoneId == resource.data.milestoneId
+        && request.resource.data.revision == resource.data.revision + 1
+        && archived('kpFairValidations',document);
+      allow delete: if false;
+
+      match /revisions/{revision} {
+        allow read: if hasKpAreaPermission('kp.read',get(/databases/$(database)/documents/kpFairValidations/$(document)).data);
+        allow create: if hasKpAreaPermission('kp.verify',get(/databases/$(database)/documents/kpFairValidations/$(document)).data)
+          && request.resource.data == get(/databases/$(database)/documents/kpFairValidations/$(document)).data
+          && getAfter(/databases/$(database)/documents/kpFairValidations/$(document)).data.revision == request.resource.data.revision + 1;
+        allow update, delete: if false;
+      }
+    }
+
     match /kpEntries/{document} {
       allow read: if hasKpPermission('kp.read',resource.data);
       allow create: if validKpEntry(request.resource.data)
@@ -394,6 +453,10 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/kpEntries/$(document)).data.revision == request.resource.data.revision + 1;
         allow update, delete: if false;
       }
+    }
+
+    match /kpSetupImports/{document} {
+      allow read, write: if false;
     }
 
     // Trusted Admin import only. Historical sources and facts are immutable to all app clients.
