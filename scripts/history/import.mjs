@@ -11,6 +11,17 @@ const apply = process.argv.includes('--apply');
 const local = process.argv.find(arg => arg.startsWith('--file='))?.slice(7);
 const directory = await mkdtemp(join(tmpdir(), 'dns-history-'));
 try {
+ if(apply){
+  initializeApp({credential:applicationDefault(),projectId:'dns-core'});
+  const db=getFirestore();
+  const marker=await db.doc('historicalSeasonImports/2025-26').get();
+  if(marker.exists&&marker.data().sourceArchivesRemoved===true){
+   const remaining=await db.collection('historicalSeasonSources').where('seasonId','==','2025-26').get();
+   if(!remaining.empty)throw new Error('Archive cleanup marker exists but source documents remain.');
+   console.log('Historical import already verified and source archive removed. No action required.');
+   process.exit(0);
+  }
+ }
  let payloadPath=local;
  if (!payloadPath) {
   try {
@@ -53,7 +64,6 @@ try {
  if (entries.length>=490 || entries.some(([,id,data])=>!id || Buffer.byteLength(JSON.stringify(data))>900000)) throw new Error('Dataset exceeds atomic import limits');
  console.log(`Validated ${payload.records.length} scoped records and ${payload.archives.length} source sheets. Mode: ${apply?'APPLY':'DRY RUN'}`);
  if (apply) {
-  initializeApp({credential:applicationDefault(),projectId:'dns-core'});
   const db=getFirestore();
   await db.runTransaction(async transaction=>{
    const marker=db.doc('historicalSeasonImports/2025-26');
