@@ -312,6 +312,12 @@ export interface KpReferenceKm {
   potentialOperationalKm?: number;
 }
 
+/**
+ * KP = Kunstschneeproduktion.
+ * The canonical inputs are natural- and artificial-snow kilometres.
+ * UI/Analytics may express their composition as NS/KS shares; potential km
+ * remains a separate network-opening denominator and is not the KP value.
+ */
 export interface KpMilestoneValue {
   milestoneId: string;
   naturalSnowKm: number;
