@@ -49,6 +49,10 @@
     "./ui/interaction": {
       "types": "./dist/ui/interaction.d.ts",
       "import": "./dist/ui/interaction.js"
+    },
+    "./data-contracts": {
+      "types": "./dist/data-contracts.d.ts",
+      "import": "./dist/data-contracts.js"
     }
   }
 }
