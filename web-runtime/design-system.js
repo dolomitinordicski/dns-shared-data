@@ -287,9 +287,9 @@ export const DNS_DESIGN_SYSTEM = {
     },
     tabs: {
       desktop: {
-        layout: 'horizontal',
+        layout: 'wrapped-horizontal',
         overflowX: 'visible',
-        wrap: false,
+        wrap: true,
         sticky: true,
         tabPaddingXRem: 1.2,
         tabPaddingYRem: 0.65,
