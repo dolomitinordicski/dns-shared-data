@@ -22,7 +22,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/dns-shared-data',
     phase: 'foundation-source',
     firebaseProject: 'dns-core',
-    datasetVersion: 'Canonical v1.6 · Operational schema 4 · Design System v1.10',
+    datasetVersion: 'Canonical v1.6 · Operational schema 4 · Design System v1.11',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -42,7 +42,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/DNS-Data-Entry',
     phase: 'foundation-aligned',
     firebaseProject: 'dns-core',
-    datasetVersion: 'Shared package pinned to Foundation / Design System v1.10.1',
+    datasetVersion: 'Shared package pinned to Foundation / Design System v1.11.0',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -52,9 +52,9 @@ export const DNS_SYSTEM_STATUS = [
       regionLogos: 'adopted',
       motion: 'adopted',
       dataContracts: 'adopted',
-      accessibility: 'notYet',
+      accessibility: 'adopted',
     },
-    note: 'Reference operational consumer. Shared navigation, stable first paint, regional assets and module-level Data Contracts are adopted.',
+    note: 'Reference operational consumer. Shared navigation, stable first paint, regional assets, module-level Data Contracts and Accessibility v1 are adopted.',
   },
   {
     id: 'polls',
