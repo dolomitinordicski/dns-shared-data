@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/design-system.ts
 // Keep this file synchronized with the canonical TypeScript contract.
-export const DNS_DESIGN_SYSTEM_VERSION = '1.14.0';
+export const DNS_DESIGN_SYSTEM_VERSION = '1.15.0';
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -187,7 +187,7 @@ export const DNS_DESIGN_SYSTEM = {
     titleColor: '#FFFFFF',
     subtitleColor: '#AAD0D1',
     titleSizePx: 22,
-    subtitleSizePx: 13,
+    subtitleSizePx: 11,
     sticky: true,
     maxContentWidthPx: 1440,
     scrollBehavior: {
@@ -195,6 +195,7 @@ export const DNS_DESIGN_SYSTEM = {
       hideOnScrollDown: true,
       revealOnScrollUp: true,
       navRemainsVisible: true,
+      navTopWhenHeaderHiddenPx: 0,
       hideAfterPx: 72,
       topRevealPx: 12,
       directionDeltaPx: 6,
@@ -216,6 +217,32 @@ export const DNS_DESIGN_SYSTEM = {
       titleUppercase: true,
       subtitleUppercase: true,
       statusPosition: 'right',
+      layout: {
+        contentPaddingXMobilePx: 20,
+        contentPaddingXDesktopPx: 32,
+        contentPaddingYPx: 14,
+        shellGapPx: 24,
+        brandGapPx: 16,
+        actionsGapPx: 16,
+        controlsGapPx: 12,
+        accountContextMinWidthPx: 768,
+        firebaseStatusMinWidthPx: 1280,
+      },
+      classContract: {
+        shell: 'dns-tool-header-shell',
+        brand: 'dns-tool-header-brand',
+        logo: 'dns-tool-header-logo',
+        identity: 'dns-tool-header-identity',
+        title: 'dns-tool-header-title',
+        subtitle: 'dns-tool-header-subtitle',
+        actions: 'dns-tool-header-actions',
+        account: 'dns-tool-header-account',
+        controls: 'dns-tool-header-controls',
+        language: 'dns-tool-header-language',
+        sessionAction: 'dns-tool-header-session-action',
+        firebaseStatus: 'dns-tool-header-status',
+        firebaseStatusDot: 'dns-tool-header-status-dot',
+      },
       firebaseStatus: {
         readyDot: '#34D399',
         errorDot: '#FB923C',
