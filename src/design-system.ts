@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.5.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.6.0' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -57,12 +57,79 @@ export const DNS_DESIGN_SYSTEM = {
     floatingControl: '0 4px 6px rgba(0,0,0,.10)',
   },
   motion: {
+    // Backward-compatible base tokens used by existing DNS applications.
     fastMs: 200,
     standardMs: 300,
     revealMs: 600,
     easing: 'ease',
     hoverScale: 1.05,
     touchScale: 0.96,
+
+    // Semantic motion presets. Applications should consume these values
+    // rather than inventing per-tool durations, reveal distances or stagger.
+    reveal: {
+      enabled: true,
+      translateYPx: 8,
+      fromOpacity: 0,
+      toOpacity: 1,
+      durationMs: 600,
+      easing: 'ease',
+      once: true,
+      threshold: 0.12,
+    },
+    stagger: {
+      compactMs: 40,
+      standardMs: 70,
+    },
+    reducedMotion: {
+      mediaQuery: '(prefers-reduced-motion: reduce)',
+      durationMs: 0,
+      disableTransform: true,
+      disableAutoReveal: true,
+    },
+  },
+  interaction: {
+    focusVisible: {
+      required: true,
+      color: '#417483',
+      widthPx: 2,
+      offsetPx: 2,
+      radiusBehavior: 'inherit',
+    },
+    hover: {
+      pointerMediaQuery: '(hover: hover) and (pointer: fine)',
+      interactiveElementsOnly: true,
+      scale: 1.05,
+      durationMs: 200,
+    },
+    press: {
+      scale: 0.96,
+      durationMs: 200,
+    },
+    controls: {
+      transitionMs: 300,
+      transitionProperties: [
+        'background-color',
+        'border-color',
+        'color',
+        'box-shadow',
+        'transform',
+      ],
+      disabledOpacity: 0.55,
+    },
+    links: {
+      underlineBehavior: 'hover-or-focus-visible',
+      transitionMs: 200,
+    },
+    tabs: {
+      transitionMs: 200,
+      activeIndicatorMotion: 'color-and-border-only',
+      slidingIndicator: false,
+    },
+    cards: {
+      animateOnlyInteractive: true,
+      passiveCardsStatic: true,
+    },
   },
   header: {
     background: '#0D4D5E',
@@ -333,6 +400,17 @@ export const DNS_DESIGN_SYSTEM = {
     },
   },
   implementationPatterns: {
+    motionRuntime: {
+      configSource: 'DNS_Core / designSystem/current',
+      codeSource: 'dns-shared-data or local application bundle',
+      executeCodeFromFirestore: false,
+      rules: [
+        'Firestore provides declarative motion and interaction tokens only.',
+        'Shared JavaScript helpers must be versioned source code, never remote executable code.',
+        'All motion helpers must respect prefers-reduced-motion.',
+        'Hover transforms apply only to genuinely interactive elements.',
+      ],
+    },
     printPortal: {
       required: true,
       mountTarget: 'document.body',
