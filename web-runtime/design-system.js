@@ -166,6 +166,7 @@ export const DNS_DESIGN_SYSTEM = {
       underlineBehavior: 'hover-or-focus-visible',
       transitionMs: 200,
       surfaceOpacity: 0.94,
+      surfaceBackground: 'rgba(65,116,131,.94)',
       backdropBlurPx: 6,
       scrollProgress: {
         enabled: true,
