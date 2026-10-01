@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.13.2' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.14.0' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -130,6 +130,11 @@ export const DNS_DESIGN_SYSTEM = {
       disableTransform: true,
       disableAutoReveal: true,
     },
+    headerReveal: {
+      durationMs: 220,
+      easing: 'cubic-bezier(.2,.8,.2,1)',
+      willChange: 'transform',
+    },
   },
   interaction: {
     focusVisible: {
@@ -182,6 +187,52 @@ export const DNS_DESIGN_SYSTEM = {
     titleSizePx: 22,
     subtitleSizePx: 13,
     sticky: true,
+    maxContentWidthPx: 1440,
+    scrollBehavior: {
+      enabled: true,
+      hideOnScrollDown: true,
+      revealOnScrollUp: true,
+      navRemainsVisible: true,
+      hideAfterPx: 72,
+      topRevealPx: 12,
+      directionDeltaPx: 6,
+      hiddenTranslatePercent: -100,
+    },
+    standardShell: {
+      componentOrder: [
+        'brand',
+        'toolIdentity',
+        'accountContext',
+        'accessibility',
+        'language',
+        'sessionAction',
+        'firebaseStatus',
+      ],
+      titlePattern: 'DNS + TOOL',
+      dnsWeight: 700,
+      toolWeight: 400,
+      titleUppercase: true,
+      subtitleUppercase: true,
+      statusPosition: 'right',
+      firebaseStatus: {
+        readyDot: '#34D399',
+        errorDot: '#FB923C',
+        loadingDot: '#AAD0D1',
+        readyText: {
+          de: 'DNS_Core verbunden',
+          it: 'DNS_Core connesso',
+        },
+        errorText: {
+          de: 'DNS_Core nicht erreichbar',
+          it: 'DNS_Core non raggiungibile',
+        },
+        loadingText: {
+          de: 'DNS_Core verbindet…',
+          it: 'Connessione a DNS_Core…',
+        },
+        countPattern: 'reportingAreas/organizations',
+      },
+    },
   },
   footer: {
     background: '#0D4D5E',
@@ -462,10 +513,12 @@ export const DNS_DESIGN_SYSTEM = {
       codeSource: 'dns-shared-data/ui/navigation',
       requiredForSharedNavigation: true,
       rules: [
-        'All DNS tools use the shared navigation runtime for sticky metrics and scroll progress.',
+        'All DNS tools use the shared navigation runtime for sticky metrics, scroll progress and header reveal behavior.',
         'Section-based pages use the shared measured-sticky-stack active-section strategy.',
         'Tool-specific navigation content is allowed; tool-specific navigation behavior is not.',
         'Fixed pixel sticky offsets are not allowed.',
+        'On scroll down the Foundation header hides while the menu bar remains visible; on scroll up the header reveals again.',
+        'Tool-specific header hide/show behavior is not allowed.',
       ],
     },
     motionRuntime: {
@@ -582,6 +635,7 @@ export const DNS_DESIGN_SYSTEM = {
     denseDataUi: true,
     avoidDecorativeAiUi: true,
     interactionStyle: 'lightweight-brand-led',
+    standardHeaderRequired: true,
   },
 } as const;
 
