@@ -13,7 +13,7 @@ This repository contains:
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.3
-- **DNS Design System:** v1.10
+- **DNS Design System:** v1.10.1
 - **DNS Access Control:** v0.1
 
 ## Source of truth
@@ -61,7 +61,7 @@ firebase.json
 
 ## DNS Design System
 
-The current shared visual and interaction contract is **v1.10.0** and is documented in:
+The current shared visual and interaction contract is **v1.10.1** and is documented in:
 
 ```text
 docs/DNS-Design-System-v1.md
