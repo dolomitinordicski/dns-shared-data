@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.4.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.5.0' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -300,6 +300,47 @@ export const DNS_DESIGN_SYSTEM = {
       hideFooter: true,
       hidePublicShareControls: true,
       printActiveTableOnly: true,
+    },
+  },
+  iconography: {
+    style: 'wireframe',
+    strokeWidth: 1.6,
+    sizePx: {
+      micro: 14,
+      small: 16,
+      medium: 20,
+      large: 24,
+    },
+    color: 'currentColor',
+    fill: 'none',
+    lineCap: 'round',
+    lineJoin: 'round',
+    usage: {
+      density: 'sparse',
+      preferredContexts: [
+        'section-heading',
+        'module-heading',
+        'compact-action',
+        'status-context',
+      ],
+      avoid: [
+        'every-table-cell',
+        'decorative-background-pattern',
+        'filled-app-icon-look',
+        'emoji-style',
+        'ai-generated-ornament',
+      ],
+    },
+  },
+  implementationPatterns: {
+    printPortal: {
+      required: true,
+      mountTarget: 'document.body',
+      appRootSelector: '#root',
+      appRootPrintDisplay: 'none',
+      printableSelector: '.dns-print-sheet',
+      rule:
+        'Render the print document outside the application root so hidden web layout never contributes phantom pages.',
     },
   },
   behavior: {
