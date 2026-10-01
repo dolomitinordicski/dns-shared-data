@@ -26,5 +26,8 @@ jobs:
       - uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Enable Google Drive API for private source reads
+        run: gcloud services enable drive.googleapis.com --project=dns-core
       - name: Import private sources and verify Firebase
         run: node scripts/history/import-2024-25.mjs --apply
