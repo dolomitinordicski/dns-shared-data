@@ -227,8 +227,13 @@
         {
           "entityType": "organization",
           "entityId": "ahrntal"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "sand-in-taufers"
         }
       ],
+      "notes": "Canonical Ahrntal brand asset. Tourismusverein Sand in Taufers intentionally uses the Ahrntal logo.",
       "mimeType": "image/svg+xml",
       "sha256": "470b18672da8ea3969816ba6731e1186abfcb45abe5ed9a56622dd46ef7e4ef6",
       "containsEmbeddedRaster": true
