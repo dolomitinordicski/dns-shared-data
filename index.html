@@ -143,6 +143,33 @@
       box-shadow: var(--dns-card-shadow);
     }
 
+    .dns-card-primary {
+      position: relative;
+      overflow: hidden;
+    }
+    .dns-card-primary::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: var(--dns-card-accent-width);
+      background: var(--dns-card-accent);
+    }
+
+    .dns-editorial-heading h2::after {
+      content: "";
+      display: block;
+      width: 38px;
+      height: 3px;
+      margin-top: .6rem;
+      border-radius: 999px;
+      background: var(--color-dns-light);
+    }
+
+    .dns-context-soft {
+      border-color: color-mix(in srgb, var(--color-dns-light) 65%, transparent) !important;
+      background: color-mix(in srgb, var(--color-dns-light) 16%, var(--color-dns-surface)) !important;
+    }
+
     .dns-section-title {
       color: var(--color-dns-deep);
       font-size: var(--dns-section-title-size);
@@ -402,7 +429,7 @@
       fill: #fff;
     }
     .dns-map-node[data-tier="domain"] rect {
-      fill: var(--color-dns-bg);
+      fill: color-mix(in srgb, var(--color-dns-light) 18%, var(--color-dns-surface));
     }
     .dns-map-node[data-tier="external"] rect {
       stroke-dasharray: 4 3;
@@ -592,7 +619,7 @@
   </style>
 </head>
 
-<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.6.0">
+<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.7.0">
   <header class="dns-site-header sticky top-0 z-30 text-white">
     <div class="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-6 px-5 py-3.5 md:px-8">
       <a href="#top" class="flex min-w-0 items-center gap-4 text-white no-underline">
@@ -675,7 +702,7 @@
     </section>
 
     <section id="system-map" class="dns-page-shell mx-auto max-w-[1440px] px-5 pt-5 pb-2 md:px-8" data-dns-reveal>
-      <div class="dns-card dns-system-map p-5 md:p-6" data-mode="system">
+      <div class="dns-card dns-card-primary dns-system-map p-5 md:p-6" data-mode="system">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div class="max-w-3xl">
             <div class="lang-de">
@@ -804,7 +831,7 @@
           </svg>
         </div>
 
-        <div class="dns-map-detail" aria-live="polite">
+        <div class="dns-map-detail dns-context-soft rounded-lg p-4" aria-live="polite">
           <div>
             <div class="dns-kicker" id="dns-map-detail-kicker">System Map</div>
             <div class="dns-map-detail-title" id="dns-map-detail-title">
@@ -833,7 +860,7 @@
     </section>
 
     <section id="overview" class="dns-page-shell section-anchor mx-auto max-w-[1440px] px-5 py-5 md:px-8">
-      <div class="mb-8 max-w-3xl">
+      <div class="dns-editorial-heading mb-8 max-w-3xl">
         <div class="lang-de">
           <p class="dns-kicker">01 · Gesamtsystem</p>
           <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Vier klar getrennte Ebenen</h2>
@@ -851,7 +878,7 @@
       </div>
 
       <div class="grid gap-4 lg:grid-cols-4">
-        <article class="dns-card p-5 md:p-6">
+        <article class="dns-card dns-card-primary p-5 md:p-6">
           <div class="dns-kicker">Source of truth</div>
           <h3 class="mt-2 text-[16px] font-semibold text-dns-deep">dns-shared-data</h3>
           <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
@@ -862,7 +889,7 @@
           </div>
         </article>
 
-        <article class="dns-card p-5 md:p-6">
+        <article class="dns-card dns-card-primary p-5 md:p-6">
           <div class="dns-kicker">Operational data</div>
           <h3 class="mt-2 text-[16px] font-semibold text-dns-deep">Firebase</h3>
           <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
@@ -873,7 +900,7 @@
           </div>
         </article>
 
-        <article class="dns-card p-5 md:p-6">
+        <article class="dns-card dns-card-primary p-5 md:p-6">
           <div class="dns-kicker">Applications</div>
           <h3 class="mt-2 text-[16px] font-semibold text-dns-deep">DNS Tools</h3>
           <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
@@ -884,7 +911,7 @@
           </div>
         </article>
 
-        <article class="dns-card p-5 md:p-6">
+        <article class="dns-card dns-card-primary p-5 md:p-6">
           <div class="dns-kicker">External authority</div>
           <h3 class="mt-2 text-[16px] font-semibold text-dns-deep">XGLA4</h3>
           <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
@@ -923,7 +950,7 @@
 
     <section id="datasets" class="section-anchor bg-dns-bg">
       <div class="dns-page-shell mx-auto max-w-[1440px] px-5 py-5 md:px-8">
-        <div class="mb-8 max-w-3xl">
+        <div class="dns-editorial-heading mb-8 max-w-3xl">
           <div class="lang-de">
             <p class="dns-kicker">02 · Datenkategorien</p>
             <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Nicht alle Daten gehören in denselben Topf</h2>
@@ -1076,7 +1103,7 @@
     </section>
 
     <section id="firebase" class="dns-page-shell section-anchor mx-auto max-w-[1440px] px-5 py-5 md:px-8">
-      <div class="mb-8 max-w-3xl">
+      <div class="dns-editorial-heading mb-8 max-w-3xl">
         <div class="lang-de">
           <p class="dns-kicker">03 · Firebase & Apps</p>
           <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Firebase folgt Daten- und Sicherheitsgrenzen — nicht der Anzahl der Apps</h2>
@@ -1094,7 +1121,7 @@
       </div>
 
       <div class="grid gap-5 lg:grid-cols-3">
-        <article class="dns-card p-5 md:p-6">
+        <article class="dns-card dns-card-primary p-5 md:p-6">
           <div class="flex items-center justify-between gap-3">
             <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">DNS Platform</h3>
             <span class="dns-pill">Firebase</span>
@@ -1117,7 +1144,7 @@
           </div>
         </article>
 
-        <article class="dns-card p-5 md:p-6">
+        <article class="dns-card dns-card-primary p-5 md:p-6">
           <div class="flex items-center justify-between gap-3">
             <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">DNS Commercial</h3>
             <span class="dns-pill">Firebase</span>
@@ -1138,7 +1165,7 @@
           </div>
         </article>
 
-        <article class="dns-card p-5 md:p-6">
+        <article class="dns-card dns-card-primary p-5 md:p-6">
           <div class="flex items-center justify-between gap-3">
             <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">DNS Polls</h3>
             <span class="dns-pill">PII</span>
@@ -1176,7 +1203,7 @@
 
     <section id="flows" class="section-anchor bg-dns-bg">
       <div class="dns-page-shell mx-auto max-w-[1440px] px-5 py-5 md:px-8">
-        <div class="mb-8 max-w-3xl">
+        <div class="dns-editorial-heading mb-8 max-w-3xl">
           <div class="lang-de">
             <p class="dns-kicker">04 · Datenflüsse</p>
             <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Jeder Datensatz hat einen Besitzer</h2>
@@ -1285,7 +1312,7 @@
     </section>
 
     <section id="design-system" class="dns-page-shell section-anchor mx-auto max-w-[1440px] px-5 py-5 md:px-8">
-      <div class="mb-8 max-w-3xl">
+      <div class="dns-editorial-heading mb-8 max-w-3xl">
         <div class="lang-de">
           <p class="dns-kicker">05 · Design System</p>
           <h2 class="mt-1 font-semibold tracking-[-.02em] text-dns-deep">Ein gemeinsamer visueller Vertrag für alle DNS-Tools</h2>
@@ -1309,7 +1336,7 @@
               <p class="dns-kicker">Foundation</p>
               <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">Color & typography</h3>
             </div>
-            <span class="dns-pill">v<span data-design-value="version">1.6.0</span></span>
+            <span class="dns-pill">v<span data-design-value="version">1.7.0</span></span>
           </div>
 
           <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -1328,6 +1355,16 @@
             <div class="dns-token-swatch text-dns-deep" style="background:var(--color-dns-bg)">
               <div class="dns-token-swatch-label">Background</div>
               <div class="dns-token-swatch-value" data-design-value="colors.background">#F4F8F9</div>
+            </div>
+          </div>
+
+          <div class="dns-context-soft mt-4 rounded-lg border px-4 py-3">
+            <div class="dns-kicker">Light · semantic accent</div>
+            <div class="lang-de mt-1 font-alt text-[11px] leading-relaxed text-dns-mid">
+              #AAD0D1 steht für shared / connected / contextual: primäre Kartenakzente, Mikro-Akzente, leichte Auswahlzustände und sekundäre Diagrammverbindungen. Nicht als dekorative Großfläche.
+            </div>
+            <div class="lang-it mt-1 font-alt text-[11px] leading-relaxed text-dns-mid">
+              #AAD0D1 indica shared / connected / contextual: accenti sulle card principali, micro-accenti, selezioni leggere e connessioni secondarie nei diagrammi. Non come grande riempimento decorativo.
             </div>
           </div>
 
