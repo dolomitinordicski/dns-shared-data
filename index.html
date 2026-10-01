@@ -1039,7 +1039,7 @@
   </style>
 </head>
 
-<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.12.0">
+<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.14.0">
   <header id="dns-site-header" class="dns-site-header sticky top-0 z-30 text-white">
     <div class="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-6 px-5 py-3.5 md:px-8">
       <a id="dns-home-link" href="#top" class="flex min-w-0 items-center gap-4 text-white no-underline" aria-label="DNS Shared Data · page top">
@@ -1053,15 +1053,21 @@
             <strong>DNS</strong> <span class="font-normal">SHARED DATA</span>
           </div>
           <div class="dns-site-subtitle mt-1.5 font-alt uppercase tracking-[.06em]">
-            Foundation v1.2 · Canonical Dataset v1.6
+            System Architecture & Canonical Data
           </div>
         </div>
       </a>
 
-      <div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[.06em]">
-        <div id="dns-accessibility-mount"></div>
-        <button id="btn-de" type="button" data-dns-press class="dns-lang-button is-active" onclick="setLang('de')" aria-label="Deutsch">DE</button>
-        <button id="btn-it" type="button" data-dns-press class="dns-lang-button" onclick="setLang('it')" aria-label="Italiano">IT</button>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[.06em]">
+          <div id="dns-accessibility-mount"></div>
+          <button id="btn-de" type="button" data-dns-press class="dns-lang-button is-active" onclick="setLang('de')" aria-label="Deutsch">DE</button>
+          <button id="btn-it" type="button" data-dns-press class="dns-lang-button" onclick="setLang('it')" aria-label="Italiano">IT</button>
+        </div>
+        <div id="dns-core-header-status" class="hidden items-center gap-2 text-[10px] font-semibold uppercase tracking-[.05em] text-white/65 xl:flex" aria-live="polite">
+          <span id="dns-core-header-dot" class="h-2 w-2 rounded-full bg-dns-light"></span>
+          <span id="dns-core-header-text">DNS_Core verbindet…</span>
+        </div>
       </div>
     </div>
   </header>
@@ -2694,7 +2700,7 @@
     import { initDNSNavigationRuntime } from './web-runtime/navigation.js';
     import { initDNSAccessibilityRuntime } from './web-runtime/accessibility.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
-    import { doc, getDoc, getFirestore } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
+    import { collection, doc, getDoc, getDocs, getFirestore } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: 'AIzaSyAgxv6Z45-AfrusbFnCSyvYChRUBu6-vXc',
@@ -2732,7 +2738,54 @@
       sectionElements: sections,
       navigation: DNS_DESIGN_SYSTEM.navigation,
       responsive: DNS_DESIGN_SYSTEM.responsive,
+      headerTokens: DNS_DESIGN_SYSTEM.header,
+      motion: DNS_DESIGN_SYSTEM.motion,
     });
+
+    let dnsCoreHeaderStatus = { state: 'loading', reportingAreas: 0, organizations: 0 };
+
+    function renderDNSCoreHeaderStatus() {
+      const text = document.getElementById('dns-core-header-text');
+      const dot = document.getElementById('dns-core-header-dot');
+      if (!text || !dot) return;
+      const lang = document.documentElement.dataset.lang === 'it' ? 'it' : 'de';
+
+      dot.className = 'h-2 w-2 rounded-full';
+      if (dnsCoreHeaderStatus.state === 'ready') {
+        dot.classList.add('bg-emerald-400');
+        text.textContent = `${lang === 'it' ? 'DNS_Core connesso' : 'DNS_Core verbunden'} · ${dnsCoreHeaderStatus.reportingAreas}/${dnsCoreHeaderStatus.organizations}`;
+      } else if (dnsCoreHeaderStatus.state === 'error') {
+        dot.classList.add('bg-orange-400');
+        text.textContent = lang === 'it' ? 'DNS_Core non raggiungibile' : 'DNS_Core nicht erreichbar';
+      } else {
+        dot.classList.add('bg-dns-light');
+        text.textContent = lang === 'it' ? 'Connessione a DNS_Core…' : 'DNS_Core verbindet…';
+      }
+    }
+
+    async function probeDNSCoreHeader() {
+      try {
+        const [reportingAreas, organizations] = await Promise.all([
+          getDocs(collection(db, 'reportingAreas')),
+          getDocs(collection(db, 'organizations')),
+        ]);
+        dnsCoreHeaderStatus = {
+          state: 'ready',
+          reportingAreas: reportingAreas.size,
+          organizations: organizations.size,
+        };
+      } catch {
+        dnsCoreHeaderStatus = { state: 'error', reportingAreas: 0, organizations: 0 };
+      }
+      renderDNSCoreHeaderStatus();
+    }
+
+    new MutationObserver(renderDNSCoreHeaderStatus).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-lang'],
+    });
+    renderDNSCoreHeaderStatus();
+    void probeDNSCoreHeader();
 
     document.getElementById('dns-home-link')?.addEventListener('click', (event) => {
       event.preventDefault();
