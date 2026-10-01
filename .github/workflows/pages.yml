@@ -1,6 +1,15 @@
 name: Deploy architecture overview to GitHub Pages
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'web-runtime/**'
+      - 'brand/**'
+      - 'package.json'
+      - 'src/ui/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
