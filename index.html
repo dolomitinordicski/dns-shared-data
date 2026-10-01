@@ -664,6 +664,84 @@
       stroke-linecap: round;
       stroke-linejoin: round;
     }
+
+    .dns-asset-logo-frame {
+      display: grid;
+      min-height: 112px;
+      place-items: center;
+      border: 1px solid var(--color-dns-subtle-border);
+      border-radius: var(--dns-control-radius);
+      background:
+        linear-gradient(45deg, rgba(65,116,131,.035) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(65,116,131,.035) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(65,116,131,.035) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(65,116,131,.035) 75%),
+        var(--color-dns-surface);
+      background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+      background-size: 12px 12px;
+      padding: 1rem;
+    }
+    .dns-asset-logo-frame img {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      max-height: 78px;
+      object-fit: contain;
+    }
+    .dns-asset-meta {
+      display: grid;
+      gap: .35rem;
+      margin-top: .9rem;
+      font-family: var(--font-alt);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+    .dns-asset-meta-row {
+      display: grid;
+      grid-template-columns: 72px minmax(0,1fr);
+      gap: .55rem;
+    }
+    .dns-asset-meta-key {
+      color: var(--color-dns-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .dns-asset-meta-value {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: var(--color-dns-deep);
+    }
+    .dns-asset-binding {
+      display: inline-flex;
+      margin: .15rem .25rem .15rem 0;
+      border: 1px solid var(--color-dns-border);
+      border-radius: var(--dns-badge-radius);
+      background: color-mix(in srgb, var(--color-dns-light) 18%, white);
+      padding: .18rem .42rem;
+      color: var(--color-dns-deep);
+      font-size: 9px;
+      font-weight: 600;
+    }
+    .dns-asset-status {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      border-radius: var(--dns-badge-radius);
+      background: color-mix(in srgb, var(--color-dns-light) 22%, white);
+      padding: .25rem .55rem;
+      color: var(--color-dns-deep);
+      font-family: var(--font-alt);
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .dns-asset-status::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-dns-mid);
+    }
     @media (max-width: 1023px) {
       .dns-tab-nav-inner { padding: 0 1rem; }
       .dns-tab { padding-left: .95rem; padding-right: .95rem; }
@@ -731,6 +809,9 @@
       </a>
       <a href="#design-system" class="dns-tab" data-section="design-system">
         <span class="lang-de">05 · Design System</span><span class="lang-it">05 · Design System</span>
+      </a>
+      <a href="#shared-assets" class="dns-tab" data-section="shared-assets">
+        <span class="lang-de">06 · Shared Assets</span><span class="lang-it">06 · Shared Assets</span>
       </a>
     </div>
   </nav>
@@ -1606,6 +1687,96 @@
       </div>
     </section>
 
+    <section id="shared-assets" class="dns-page-shell section-anchor mx-auto max-w-[1440px] px-5 py-5 md:px-8">
+      <div class="dns-editorial-heading mb-8 max-w-3xl">
+        <div class="lang-de">
+          <p class="dns-kicker">06 · Shared Assets</p>
+          <h2 class="mt-1 font-semibold tracking-[-.02em] text-dns-deep">Eine gemeinsame Asset-Bibliothek statt lokaler Kopien</h2>
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
+            Logos werden zentral im Repository versioniert und über stabile IDs bzw. das Manifest referenziert. Anwendungen sollen keine Dateinamen erraten oder eigene Kopien pflegen.
+          </p>
+        </div>
+        <div class="lang-it">
+          <p class="dns-kicker">06 · Shared Assets</p>
+          <h2 class="mt-1 font-semibold tracking-[-.02em] text-dns-deep">Una libreria asset condivisa invece di copie locali</h2>
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
+            I loghi sono versionati centralmente nel repository e referenziati tramite ID stabili o manifest. Le applicazioni non devono indovinare i filename né mantenere copie autonome.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid gap-5 lg:grid-cols-2">
+        <article class="dns-card dns-card-primary p-5 md:p-6">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="dns-kicker">DNS Brand</p>
+              <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">Web / application</h3>
+            </div>
+            <span class="dns-asset-status">Canonical</span>
+          </div>
+          <div class="dns-asset-logo-frame mt-5">
+            <img src="./brand/logo-web.png" alt="Dolomiti NordicSki web logo" />
+          </div>
+          <div class="dns-asset-meta">
+            <div class="dns-asset-meta-row"><span class="dns-asset-meta-key">ID</span><span class="dns-asset-meta-value">dns-logo-web</span></div>
+            <div class="dns-asset-meta-row"><span class="dns-asset-meta-key">File</span><span class="dns-asset-meta-value">brand/logo-web.png</span></div>
+            <div class="dns-asset-meta-row"><span class="dns-asset-meta-key">Use</span><span class="dns-asset-meta-value">Header · application UI · web</span></div>
+          </div>
+        </article>
+
+        <article class="dns-card dns-card-primary p-5 md:p-6">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="dns-kicker">DNS Brand</p>
+              <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">Print / PDF</h3>
+            </div>
+            <span class="dns-asset-status">Canonical</span>
+          </div>
+          <div class="dns-asset-logo-frame mt-5">
+            <img src="./brand/logo.png" alt="Dolomiti NordicSki print logo" />
+          </div>
+          <div class="dns-asset-meta">
+            <div class="dns-asset-meta-row"><span class="dns-asset-meta-key">ID</span><span class="dns-asset-meta-value">dns-logo-print</span></div>
+            <div class="dns-asset-meta-row"><span class="dns-asset-meta-key">File</span><span class="dns-asset-meta-value">brand/logo.png</span></div>
+            <div class="dns-asset-meta-row"><span class="dns-asset-meta-key">Use</span><span class="dns-asset-meta-value">Print · PDF · operational documents</span></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="dns-card mt-5 p-5 md:p-6">
+        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p class="dns-kicker">Region / Partner Logos</p>
+            <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">
+              <span id="shared-assets-count">12</span> canonical SVG assets
+            </h3>
+            <p class="lang-de mt-2 max-w-3xl font-alt text-[11px] leading-relaxed text-dns-muted">
+              Quelle: <code>brand/regions/manifest.json</code>. Ein Asset kann mehreren Reporting Areas, Destinations oder Organizations zugeordnet sein.
+            </p>
+            <p class="lang-it mt-2 max-w-3xl font-alt text-[11px] leading-relaxed text-dns-muted">
+              Fonte: <code>brand/regions/manifest.json</code>. Un asset può essere associato a più Reporting Area, Destination o Organization.
+            </p>
+          </div>
+          <span class="dns-pill">Manifest v<span id="shared-assets-manifest-version">1</span></span>
+        </div>
+
+        <div id="shared-assets-grid" class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-live="polite">
+          <div class="rounded-lg border border-dns-mid/10 bg-dns-bg p-4 font-alt text-[11px] text-dns-muted">
+            Loading shared asset manifest…
+          </div>
+        </div>
+      </div>
+
+      <div class="dns-context-soft mt-5 rounded-lg border px-5 py-4">
+        <div class="lang-de font-alt text-[11px] leading-relaxed text-dns-mid">
+          <strong class="text-dns-deep">Regel:</strong> Consumer lösen Regionslogos über das Manifest auf. SVG ist das kanonische Format; Farben und Proportionen bleiben unverändert.
+        </div>
+        <div class="lang-it font-alt text-[11px] leading-relaxed text-dns-mid">
+          <strong class="text-dns-deep">Regola:</strong> i consumer risolvono i loghi regionali tramite il manifest. SVG è il formato canonico; colori e proporzioni restano invariati.
+        </div>
+      </div>
+    </section>
+
     <section class="dns-page-shell mx-auto max-w-[1440px] px-5 py-5 md:px-8">
       <div class="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
         <article class="dns-card p-5 md:p-6">
@@ -1953,6 +2124,74 @@
         `;
       });
     });
+
+    async function loadSharedAssets() {
+      const grid = document.getElementById('shared-assets-grid');
+      if (!grid) return;
+
+      try {
+        const response = await fetch('./brand/regions/manifest.json', { cache: 'no-cache' });
+        if (!response.ok) throw new Error(`Manifest HTTP ${response.status}`);
+        const manifest = await response.json();
+        const assets = Array.isArray(manifest.assets) ? manifest.assets : [];
+
+        document.getElementById('shared-assets-count').textContent = String(assets.length);
+        document.getElementById('shared-assets-manifest-version').textContent =
+          String(manifest.assetVersion ?? manifest.version ?? '1');
+
+        grid.innerHTML = '';
+        for (const asset of assets) {
+          const card = document.createElement('article');
+          card.className = 'rounded-lg border border-dns-mid/10 bg-white p-4';
+
+          const bindings = Array.isArray(asset.entityBindings) ? asset.entityBindings : [];
+          const bindingsHtml = bindings.length
+            ? bindings.map((binding) =>
+                `<span class="dns-asset-binding">${binding.entityType}: ${binding.entityId}</span>`
+              ).join('')
+            : '<span class="font-alt text-[9px] text-dns-muted">No canonical entity binding</span>';
+
+          const flags = [
+            asset.priority ? `priority: ${asset.priority}` : '',
+            asset.composite ? 'composite' : '',
+          ].filter(Boolean).join(' · ');
+
+          card.innerHTML = `
+            <div class="dns-asset-logo-frame">
+              <img src="./brand/regions/${asset.filename}" alt="${asset.label ?? asset.id}" loading="lazy" />
+            </div>
+            <div class="mt-3 flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <div class="font-semibold text-dns-deep">${asset.label ?? asset.id}</div>
+                <div class="mt-1 font-alt text-[9px] text-dns-muted">${flags || 'canonical region asset'}</div>
+              </div>
+              <span class="dns-asset-status">SVG</span>
+            </div>
+            <div class="dns-asset-meta">
+              <div class="dns-asset-meta-row">
+                <span class="dns-asset-meta-key">ID</span>
+                <span class="dns-asset-meta-value">${asset.id}</span>
+              </div>
+              <div class="dns-asset-meta-row">
+                <span class="dns-asset-meta-key">File</span>
+                <span class="dns-asset-meta-value">${asset.filename}</span>
+              </div>
+              <div class="dns-asset-meta-row">
+                <span class="dns-asset-meta-key">Bindings</span>
+                <span class="dns-asset-meta-value">${bindingsHtml}</span>
+              </div>
+            </div>
+          `;
+          grid.appendChild(card);
+        }
+      } catch (error) {
+        console.warn('Shared asset manifest load failed', error);
+        grid.innerHTML =
+          '<div class="rounded-lg border border-dns-mid/10 bg-dns-bg p-4 font-alt text-[11px] text-dns-muted">Shared asset manifest unavailable.</div>';
+      }
+    }
+
+    void loadSharedAssets();
 
     const originalSetLang = setLang;
     setLang = function(lang) {
