@@ -1,11 +1,11 @@
 # DNS Design System v1
 
-**Brand colors reference:** DNS Partner Portal  
+**Brand colors reference:** Dolomiti NordicSki Corporate Design  
 **Interaction reference:** dolomitinordicski.com  
 **Data-tool reference:** DNS Analytics  
 **Target:** all DNS digital tools  
 **Runtime source:** DNS_Core / Firestore  
-**Current semantic version:** 1.6.0
+**Current semantic version:** 1.8.0
 
 ## Principle
 
@@ -19,18 +19,15 @@ The design system centralizes **tokens and UI conventions**, not entire applicat
 
 ## Core brand palette
 
-The Partner Portal defines the DNS brand colors:
+The Dolomiti NordicSki Corporate Design defines three named corporate blues:
 
-- Primary / Deep: `#0D4D5E`
-- Secondary / Light: `#AAD0D1`
-- Third / Mid: `#417483`
-- Primary dark: `#08343F`
-- Secondary dark: `#7BBABC`
-- White: `#FFFFFF`
-- Dark text: `#313131`
-- Gray: `#DDDDDD`
+- **Frosted Ice Blue** — `#0D4D5E` — primary structural color for headers, strong hierarchy, major surfaces and primary actions.
+- **Nordic Sky Blue** — `#417483` — secondary interaction color for navigation, labels, focus, supporting text and UI hierarchy.
+- **Deep Glacier Blue** — `#AAD0D1` — semantic accent for shared, connected and contextual elements, micro-accents and secondary relationships.
 
-These are brand tokens. Individual applications must not invent alternate primary DNS colors.
+Supporting UI neutrals include `#F4F8F9` as the application canvas, white surfaces, dark text and gray utility tones. These neutrals support the three corporate blues and do not replace them.
+
+Individual applications must not invent alternate names or meanings for the three corporate blues.
 
 ## Typography
 
@@ -164,7 +161,7 @@ designSystem/v1
 designSystem/current
 ```
 
-The document keeps a semantic `version` field, currently `1.6.0`.
+The document keeps a semantic `version` field, currently `1.8.0`.
 
 Applications should:
 
