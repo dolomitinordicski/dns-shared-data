@@ -1039,7 +1039,7 @@
   </style>
 </head>
 
-<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.11.1">
+<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.12.0">
   <header id="dns-site-header" class="dns-site-header sticky top-0 z-30 text-white">
     <div class="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-6 px-5 py-3.5 md:px-8">
       <a id="dns-home-link" href="#top" class="flex min-w-0 items-center gap-4 text-white no-underline" aria-label="DNS Shared Data · page top">
@@ -1778,7 +1778,7 @@
               <p class="dns-kicker">Foundation</p>
               <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">Color & typography</h3>
             </div>
-            <span class="dns-pill">v<span data-design-value="version">1.11.1</span></span>
+            <span class="dns-pill">v<span data-design-value="version">1.12.0</span></span>
           </div>
 
           <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -2387,82 +2387,7 @@
     const savedLang = localStorage.getItem('dns-shared-data-lang');
     setLang(savedLang === 'it' ? 'it' : 'de');
 
-    const siteHeader = document.getElementById('dns-site-header');
-    const tabNav = document.getElementById('dns-tab-nav');
-    const homeLink = document.getElementById('dns-home-link');
-    const scrollProgress = document.getElementById('dns-scroll-progress');
-    const scrollProgressBar = document.getElementById('dns-scroll-progress-bar');
 
-    function updateStickyMetrics() {
-      const headerHeight = siteHeader?.getBoundingClientRect().height ?? 0;
-      const navHeight = tabNav?.getBoundingClientRect().height ?? 0;
-      const root = document.documentElement;
-      root.style.setProperty('--dns-header-height', `${Math.ceil(headerHeight)}px`);
-      root.style.setProperty('--dns-sticky-stack-height', `${Math.ceil(headerHeight + navHeight)}px`);
-    }
-
-    const stickyResizeObserver = new ResizeObserver(updateStickyMetrics);
-    if (siteHeader) stickyResizeObserver.observe(siteHeader);
-    if (tabNav) stickyResizeObserver.observe(tabNav);
-    updateStickyMetrics();
-
-    homeLink?.addEventListener('click', (event) => {
-      event.preventDefault();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      if (window.location.hash) {
-        history.replaceState(null, '', window.location.pathname + window.location.search);
-      }
-      setActiveTab('system-map');
-    });
-
-    let scrollProgressFrame = 0;
-
-    function updateScrollProgress() {
-      scrollProgressFrame = 0;
-      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      const ratio = Math.min(1, Math.max(0, window.scrollY / maxScroll));
-      if (scrollProgressBar) scrollProgressBar.style.transform = `scaleX(${ratio})`;
-      if (scrollProgress) scrollProgress.setAttribute('aria-valuenow', String(Math.round(ratio * 100)));
-    }
-
-    function requestScrollProgressUpdate() {
-      if (scrollProgressFrame) return;
-      scrollProgressFrame = requestAnimationFrame(updateScrollProgress);
-    }
-
-    window.addEventListener('load', () => {
-      updateStickyMetrics();
-      requestScrollProgressUpdate();
-    });
-    window.addEventListener('resize', () => {
-      updateStickyMetrics();
-      requestScrollProgressUpdate();
-    });
-    window.addEventListener('scroll', requestScrollProgressUpdate, { passive: true });
-    requestScrollProgressUpdate();
-
-    const tabs = Array.from(document.querySelectorAll('.dns-tab[data-section]'));
-    const sections = tabs
-      .map((tab) => document.getElementById(tab.dataset.section))
-      .filter(Boolean);
-
-    function setActiveTab(id) {
-      tabs.forEach((tab) => {
-        tab.classList.toggle('dns-tab-active', tab.dataset.section === id);
-      });
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible?.target?.id) setActiveTab(visible.target.id);
-      },
-      { rootMargin: '-120px 0px -55% 0px', threshold: [0.05, 0.2, 0.5] }
-    );
-
-    sections.forEach((section) => observer.observe(section));
 
     const systemMap = document.querySelector('.dns-system-map');
     const mapNodes = Array.from(document.querySelectorAll('.dns-map-node[data-node]'));
@@ -2770,6 +2695,7 @@
       DNS_SYSTEM_STATUS_VERIFIED_AT,
     } from './web-runtime/system-status.js';
     import { initDNSRevealRuntime, initDNSInteractionRuntime } from './web-runtime/runtime.js';
+    import { initDNSNavigationRuntime } from './web-runtime/navigation.js';
     import { initDNSAccessibilityRuntime } from './web-runtime/accessibility.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
     import { doc, getDoc, getFirestore } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
@@ -2792,6 +2718,33 @@
       mountTarget: accessibilityMount,
       language: document.documentElement.dataset.lang === 'it' ? 'it' : 'de',
       storageKey: DNS_DESIGN_SYSTEM.accessibility.storageKey,
+    });
+
+    const siteHeader = document.getElementById('dns-site-header');
+    const tabNav = document.getElementById('dns-tab-nav');
+    const tabs = Array.from(document.querySelectorAll('.dns-tab[data-section]'));
+    const sections = tabs
+      .map((tab) => document.getElementById(tab.dataset.section))
+      .filter(Boolean);
+
+    const navigationRuntime = initDNSNavigationRuntime({
+      header: siteHeader,
+      nav: tabNav,
+      progressTrack: document.getElementById('dns-scroll-progress'),
+      progressBar: document.getElementById('dns-scroll-progress-bar'),
+      sectionTabs: tabs,
+      sectionElements: sections,
+      navigation: DNS_DESIGN_SYSTEM.navigation,
+      responsive: DNS_DESIGN_SYSTEM.responsive,
+    });
+
+    document.getElementById('dns-home-link')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      navigationRuntime.setActiveSection('system-map');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.location.hash) {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
     });
 
     function renderDataContracts() {
