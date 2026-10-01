@@ -149,6 +149,134 @@ try {
   await assertFails(setDoc(doc(admin,'billingRuns',billingRun.id),{...billingRunReady,status:'draft',revision:4,generatedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
   await assertFails(setDoc(doc(admin,'billingLines','orphan-line'),{...billingLine,id:'orphan-line',runId:'missing-run',createdAt:serverTimestamp()}));
 
+  const unifiedRun={
+    id:'2026-27__org__unified',
+    seasonId:'2026-27',
+    organizationId:'org',
+    reportingAreaId:'area',
+    status:'draft',
+    revision:1,
+    snapshotType:'unified',
+    sourceState:'incomplete',
+    sourceBlockingReasons:['fair-not-final'],
+    sourceTypes:['fair-membership','idm-premium-partner','order','seasonal-extra'],
+    sourceOrderStatuses:['submitted','confirmed','fulfilled'],
+    lineCount:4,
+    billedQuantity:12,
+    unpricedQuantity:0,
+    totalAmount:177.16,
+    generatedBy:'admin',
+    generatedAt:serverTimestamp(),
+    updatedAt:serverTimestamp(),
+  };
+  const unifiedLines=[
+    {
+      id:'2026-27__org__unified__r1__fair',
+      runId:unifiedRun.id,
+      runRevision:1,
+      seasonId:'2026-27',
+      organizationId:'org',
+      reportingAreaId:'area',
+      source:{type:'fair-membership',sourceId:'ws-2026-27__org',sourceLabel:'DNS FAIR · live'},
+      description:'Mitgliedsbeitrag / FAIR',
+      quantity:1,
+      unitAmount:10,
+      amount:10,
+      included:true,
+      createdBy:'admin',
+      createdAt:serverTimestamp(),
+    },
+    {
+      id:'2026-27__org__unified__r1__idm',
+      runId:unifiedRun.id,
+      runRevision:1,
+      seasonId:'2026-27',
+      organizationId:'org',
+      reportingAreaId:'area',
+      source:{type:'idm-premium-partner',sourceId:'2026-27__area',sourceLabel:'IDM Premiumpartner WS2026/27',sourceRevision:1},
+      description:'IDM Premiumpartner',
+      quantity:1,
+      unitAmount:15,
+      amount:15,
+      included:true,
+      createdBy:'admin',
+      createdAt:serverTimestamp(),
+    },
+    {
+      id:'2026-27__org__unified__r1__order',
+      runId:unifiedRun.id,
+      runRevision:1,
+      seasonId:'2026-27',
+      organizationId:'org',
+      reportingAreaId:'area',
+      source:{type:'order',sourceId:billingRate.id,sourceLabel:'Supplier offer test',sourceRevision:2},
+      catalogItemId:'item',
+      description:'Item',
+      quantity:12,
+      unitAmount:0.18,
+      amount:2.16,
+      included:true,
+      rateId:billingRate.id,
+      rateRevision:2,
+      sourceDocumentLabel:'Supplier offer test',
+      createdBy:'admin',
+      createdAt:serverTimestamp(),
+    },
+    {
+      id:'2026-27__org__unified__r1__extra',
+      runId:unifiedRun.id,
+      runRevision:1,
+      seasonId:'2026-27',
+      organizationId:'org',
+      reportingAreaId:'area',
+      source:{type:'seasonal-extra',sourceId:seasonalExtra.id,sourceLabel:'Supplier offer jackets',sourceRevision:2},
+      description:'Jackets 2026',
+      quantity:2,
+      unitAmount:75,
+      amount:150,
+      included:true,
+      sourceDocumentLabel:'Supplier offer jackets',
+      createdBy:'admin',
+      createdAt:serverTimestamp(),
+    },
+  ];
+  const unifiedBatch1=writeBatch(admin);
+  unifiedBatch1.set(doc(admin,'billingRuns',unifiedRun.id),unifiedRun);
+  for(const row of unifiedLines) unifiedBatch1.set(doc(admin,'billingLines',row.id),row);
+  await assertSucceeds(unifiedBatch1.commit());
+
+  await assertFails(setDoc(doc(admin,'billingRuns',unifiedRun.id),{
+    ...unifiedRun,
+    status:'ready',
+    revision:2,
+    generatedAt:serverTimestamp(),
+    updatedAt:serverTimestamp(),
+  }));
+
+  const unifiedReady={
+    ...unifiedRun,
+    status:'ready',
+    revision:2,
+    sourceState:'complete',
+    sourceBlockingReasons:[],
+    generatedAt:serverTimestamp(),
+    updatedAt:serverTimestamp(),
+  };
+  const unifiedBatch2=writeBatch(admin);
+  unifiedBatch2.set(doc(admin,'billingRuns',unifiedRun.id),unifiedReady);
+  for(const row of unifiedLines){
+    const id=row.id.replace('__r1__','__r2__');
+    unifiedBatch2.set(doc(admin,'billingLines',id),{...row,id,runRevision:2,createdAt:serverTimestamp()});
+  }
+  await assertSucceeds(unifiedBatch2.commit());
+  await assertFails(setDoc(doc(admin,'billingRuns',unifiedRun.id),{
+    ...unifiedReady,
+    status:'draft',
+    revision:3,
+    generatedAt:serverTimestamp(),
+    updatedAt:serverTimestamp(),
+  }));
+
   const milestone={id:'2026-27__m1',seasonId:'2026-27',date:'2026-12-23',label:'Milestone 1',order:1,updatedBy:'admin',updatedAt:serverTimestamp()};
   await assertSucceeds(setDoc(doc(admin,'kpMilestones',milestone.id),milestone));
   await assertFails(setDoc(doc(seller,'kpMilestones','2026-27__m2'),{...milestone,id:'2026-27__m2',order:2,updatedBy:'seller'}));
@@ -218,5 +346,5 @@ try {
   await assertFails(setDoc(doc(admin,'ticketSales','2024-25__org__area__day__official__regular'),{...sale,id:'2024-25__org__area__day__official__regular',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketPricingConfigs','historic-price-2024'),{...price,id:'historic-price-2024',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketOrders','historic-order-2024'),{seasonId:'2024-25',organizationId:'org',category:'ticket',status:'draft'}));
-  console.log('Seasonal rules passed: scoped reads/writes, admin-only sourced billing rates and seasonal extras, revisioned immutable billing snapshots, read-only users, invalid quantities/amounts, immutable audit history, stale pricing and anonymous access.');
+  console.log('Seasonal rules passed: scoped reads/writes, sourced billing rates/extras, legacy and unified revisioned billing snapshots, READY completeness guards, read-only users, immutable audit history, stale pricing and anonymous access.');
 } finally { await env.cleanup(); }
