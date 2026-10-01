@@ -1,0 +1,25 @@
+name: Remove duplicated 2025-26 source-cell archive
+on:
+  push:
+    branches: [main]
+    paths: ['scripts/history/prune-source-archives.mjs', '.github/workflows/prune-history-source-archives.yml']
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: history-2025-26
+  cancel-in-progress: false
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+      - name: Remove duplicated original cells and verify history
+        run: node scripts/history/prune-source-archives.mjs

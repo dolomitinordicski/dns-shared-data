@@ -2,7 +2,7 @@ name: Import immutable 2025-26 history
 on:
   push:
     branches: [main]
-    paths: ['scripts/history/**', '.github/workflows/import-history-2025-26.yml']
+    paths: ['scripts/history/extract.py', 'scripts/history/import.mjs', '.github/workflows/import-history-2025-26.yml']
   workflow_dispatch:
 permissions:
   contents: read
