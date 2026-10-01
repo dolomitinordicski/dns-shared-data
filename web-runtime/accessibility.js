@@ -48,7 +48,7 @@ const COPY = {
     close: 'Chiudi',
     local: 'Le preferenze vengono salvate solo in questo browser.',
   },
-} as const;
+};
 
 function normalizeSettings(input = {}) {
   const scale = input.textScale === 115 || input.textScale === 130 ? input.textScale : 100;
