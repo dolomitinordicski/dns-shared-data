@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/data-contracts.ts
 // Keep this file synchronized with the canonical TypeScript catalog.
-export const DNS_DATA_CONTRACTS_VERSION = '0.1.0';
+export const DNS_DATA_CONTRACTS_VERSION = '0.2.0';
 
 export const DNS_DATA_CONTRACTS = [
   {
@@ -71,7 +71,21 @@ export const DNS_DATA_CONTRACTS = [
     write: 'Authorized contributors / DNS admin',
     read: 'Authorized order scope',
     fields: ['seasonId', 'organizationId', 'reportingAreaId', 'category', 'status', 'catalogItemId', 'quantity', 'pricing'],
-    relations: ['Organization → Order', 'Order → Order Lines', 'Order Line → Catalogue Item', 'Pocketfolder → Delivery location', 'Order → Billing preparation → XGLA4'],
+    relations: ['Organization → Order', 'Order → Order Lines', 'Order Line → Catalogue Item', 'Pocketfolder → Delivery location', 'Order → Billing preparation'],
+  },
+  {
+    id: 'billing-preparation',
+    label: 'Faktura / billing preparation',
+    status: 'foundation-defined',
+    owner: 'DNS Commercial',
+    runtime: 'DNS Commercial / target',
+    collections: ['billingRuns', 'billingLines', 'billingAdjustments'],
+    source: 'src/billing-preparation.ts',
+    schema: 'Billing Preparation v0.1',
+    write: 'Authorized DNS billing management',
+    read: 'Authorized DNS management',
+    fields: ['seasonId', 'organizationId', 'reportingAreaId', 'source.type', 'source.sourceId', 'description', 'quantity', 'unitAmount', 'amount', 'included', 'status'],
+    relations: ['FAIR result → Billing line', 'IDM Premium → Billing line', 'Order → Billing line', 'Seasonal extra → Billing line', 'Billing lines → Organization summary'],
   },
   {
     id: 'ticket-sales',
