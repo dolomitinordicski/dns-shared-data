@@ -60,6 +60,70 @@ try {
   await assertSucceeds(setDoc(doc(admin,'billingRateConfigs',billingRate.id),{...billingRate,billingUnitPrice:0.18,revision:2}));
   await assertFails(setDoc(doc(admin,'billingRateConfigs',billingRate.id),{...billingRate,billingUnitPrice:0.19,revision:4}));
 
+  const billingRun={
+    id:'2026-27__org',
+    seasonId:'2026-27',
+    organizationId:'org',
+    reportingAreaId:'area',
+    status:'draft',
+    revision:1,
+    sourceTypes:['order'],
+    sourceOrderStatuses:['submitted','confirmed','fulfilled'],
+    lineCount:1,
+    billedQuantity:12,
+    unpricedQuantity:0,
+    totalAmount:2.16,
+    generatedBy:'admin',
+    generatedAt:serverTimestamp(),
+    updatedAt:serverTimestamp(),
+  };
+  const billingLine={
+    id:'2026-27__org__r1__order__item',
+    runId:billingRun.id,
+    runRevision:1,
+    seasonId:'2026-27',
+    organizationId:'org',
+    reportingAreaId:'area',
+    source:{type:'order',sourceId:billingRate.id,sourceLabel:'Supplier offer test'},
+    catalogItemId:'item',
+    description:'Item',
+    quantity:12,
+    unitAmount:0.18,
+    amount:2.16,
+    included:true,
+    rateId:billingRate.id,
+    rateRevision:2,
+    sourceDocumentLabel:'Supplier offer test',
+    createdBy:'admin',
+    createdAt:serverTimestamp(),
+  };
+  const runBatch1=writeBatch(admin);
+  runBatch1.set(doc(admin,'billingRuns',billingRun.id),billingRun);
+  runBatch1.set(doc(admin,'billingLines',billingLine.id),billingLine);
+  await assertSucceeds(runBatch1.commit());
+  await assertSucceeds(getDoc(doc(admin,'billingRuns',billingRun.id)));
+  await assertSucceeds(getDoc(doc(admin,'billingLines',billingLine.id)));
+  await assertFails(getDoc(doc(seller,'billingRuns',billingRun.id)));
+  await assertFails(getDoc(doc(seller,'billingLines',billingLine.id)));
+  await assertFails(setDoc(doc(admin,'billingLines',billingLine.id),{...billingLine,amount:999}));
+  await assertFails(setDoc(doc(admin,'billingRuns',billingRun.id),{...billingRun,status:'ready',revision:2,unpricedQuantity:1,generatedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
+
+  const billingRun2={...billingRun,revision:2,totalAmount:2.4,generatedAt:serverTimestamp(),updatedAt:serverTimestamp()};
+  const billingLine2={...billingLine,id:'2026-27__org__r2__order__item',runRevision:2,unitAmount:0.2,amount:2.4,rateRevision:3,createdAt:serverTimestamp()};
+  const runBatch2=writeBatch(admin);
+  runBatch2.set(doc(admin,'billingRuns',billingRun.id),billingRun2);
+  runBatch2.set(doc(admin,'billingLines',billingLine2.id),billingLine2);
+  await assertSucceeds(runBatch2.commit());
+
+  const billingRunReady={...billingRun2,status:'ready',revision:3,totalAmount:2.4,unpricedQuantity:0,generatedAt:serverTimestamp(),updatedAt:serverTimestamp()};
+  const billingLine3={...billingLine2,id:'2026-27__org__r3__order__item',runRevision:3,createdAt:serverTimestamp()};
+  const runBatch3=writeBatch(admin);
+  runBatch3.set(doc(admin,'billingRuns',billingRun.id),billingRunReady);
+  runBatch3.set(doc(admin,'billingLines',billingLine3.id),billingLine3);
+  await assertSucceeds(runBatch3.commit());
+  await assertFails(setDoc(doc(admin,'billingRuns',billingRun.id),{...billingRunReady,status:'draft',revision:4,generatedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
+  await assertFails(setDoc(doc(admin,'billingLines','orphan-line'),{...billingLine,id:'orphan-line',runId:'missing-run',createdAt:serverTimestamp()}));
+
   const milestone={id:'2026-27__m1',seasonId:'2026-27',date:'2026-12-23',label:'Milestone 1',order:1,updatedBy:'admin',updatedAt:serverTimestamp()};
   await assertSucceeds(setDoc(doc(admin,'kpMilestones',milestone.id),milestone));
   await assertFails(setDoc(doc(seller,'kpMilestones','2026-27__m2'),{...milestone,id:'2026-27__m2',order:2,updatedBy:'seller'}));
@@ -129,5 +193,5 @@ try {
   await assertFails(setDoc(doc(admin,'ticketSales','2024-25__org__area__day__official__regular'),{...sale,id:'2024-25__org__area__day__official__regular',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketPricingConfigs','historic-price-2024'),{...price,id:'historic-price-2024',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketOrders','historic-order-2024'),{seasonId:'2024-25',organizationId:'org',category:'ticket',status:'draft'}));
-  console.log('Seasonal rules passed: scoped reads/writes, admin-only sourced billing rates, read-only users, invalid quantities/amounts, immutable audit history, stale pricing and anonymous access.');
+  console.log('Seasonal rules passed: scoped reads/writes, admin-only sourced billing rates, revisioned immutable billing snapshots, read-only users, invalid quantities/amounts, immutable audit history, stale pricing and anonymous access.');
 } finally { await env.cleanup(); }

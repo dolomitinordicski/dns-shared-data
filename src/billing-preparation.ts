@@ -1,6 +1,6 @@
 import type { OrganizationId, ReportingAreaId, SeasonId } from './canonical-data.js';
 
-export const DNS_BILLING_PREPARATION_VERSION = '0.3.0' as const;
+export const DNS_BILLING_PREPARATION_VERSION = '0.4.0' as const;
 
 export type BillingSourceType =
   | 'fair-membership'
@@ -42,15 +42,21 @@ export interface BillingSourceReference {
 
 export interface BillingPreparationLine {
   id: string;
+  runId: string;
+  runRevision: number;
   seasonId: SeasonId;
   organizationId: OrganizationId;
   reportingAreaId?: ReportingAreaId;
   source: BillingSourceReference;
+  catalogItemId?: string;
   description: string;
   quantity: number;
   unitAmount: number;
   amount: number;
   included: boolean;
+  rateId?: string;
+  rateRevision?: number;
+  sourceDocumentLabel?: string;
   notes?: string;
 }
 
@@ -60,8 +66,15 @@ export interface BillingPreparationRun {
   organizationId: OrganizationId;
   reportingAreaId?: ReportingAreaId;
   status: BillingPreparationStatus;
-  lines: readonly BillingPreparationLine[];
+  revision: number;
+  sourceTypes: readonly BillingSourceType[];
+  sourceOrderStatuses?: readonly string[];
+  lineCount: number;
+  billedQuantity: number;
+  unpricedQuantity: number;
   totalAmount: number;
+  generatedBy: string;
+  generatedAt?: string;
   updatedAt?: string;
 }
 
