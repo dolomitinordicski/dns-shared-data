@@ -113,7 +113,34 @@ export interface TicketPricingSnapshot {
  * Orders are operational distribution/billing-preparation facts.
  * They must never be interpreted as actual sales.
  */
-export type OrderCatalogCategory = 'ticket' | 'wristband';
+export type OrderCatalogCategory = 'ticket' | 'wristband' | 'pocketfolder';
+
+export interface PocketfolderEditionMetadata {
+  reportingAreaId: ReportingAreaId;
+  backLanguageOrder: 'de-it-en' | 'it-de-en';
+  sourceComparison2025: number;
+  sourceAreaTotal2026: number;
+  sourcePrinterTotal2026: number;
+  /** Recipients counted in the workbook's AREA total, including DNS office copies. */
+  areaTotalOrganizationIds: readonly OrganizationId[];
+}
+
+export type DeliveryLocationStatus = 'verified' | 'needs-confirmation' | 'incomplete';
+
+export interface DeliveryLocation {
+  id: string;
+  organizationId?: OrganizationId;
+  reportingAreaId?: ReportingAreaId;
+  label: string;
+  contactName?: string;
+  recipientName: string;
+  addressLine1?: string;
+  postalLocality?: string;
+  phone?: string;
+  status: DeliveryLocationStatus;
+  provenance: DataProvenance;
+  notes?: string;
+}
 
 export interface OrderCatalogItem {
   id: string;
@@ -141,6 +168,8 @@ export interface OrderCatalogItem {
   displayColorHex?: string;
   displayTextColorHex?: string;
   supplierColorReference?: string;
+  /** Pocketfolder edition metadata; absent for tickets and wristbands. */
+  pocketfolder?: PocketfolderEditionMetadata;
   provenance?: DataProvenance;
   notes?: string;
 }
@@ -194,10 +223,12 @@ export interface PublicOrderShareSnapshot {
     displayColorHex?: string;
     displayTextColorHex?: string;
     supplierColorReference?: string;
+    pocketfolder?: PocketfolderEditionMetadata;
   }>;
   organizations: ReadonlyArray<{
     organizationId: OrganizationId;
     sourceLabel: string;
+    deliveryLocation?: DeliveryLocation;
   }>;
   cells: ReadonlyArray<{
     organizationId: OrganizationId;
@@ -412,6 +443,8 @@ export const FIRESTORE_OPERATIONAL_COLLECTIONS = {
   orderCatalogItems: 'orderCatalogItems',
   orderSetupImports: 'orderSetupImports',
   publicOrderShares: 'publicOrderShares',
+  deliveryLocations: 'deliveryLocations',
+  pocketfolderSetupImports: 'pocketfolderSetupImports',
   orderFormConfigs: 'orderFormConfigs',
   ticketOrders: 'ticketOrders',
   ticketOrderLines: 'ticketOrderLines',
