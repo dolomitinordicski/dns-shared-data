@@ -311,6 +311,40 @@ service cloud.firestore {
         || hasGrant('reportingArea',parts[2],'ticketSales.read')));
     }
 
+    // DNS Faktura commercial rates. Rates are internal DNS Commercial
+    // configuration and always require a human-readable source document label.
+    match /billingRateConfigs/{document} {
+      allow read: if isAdmin();
+
+      allow create: if isAdmin()
+        && request.resource.data.seasonId is string
+        && request.resource.data.sourceType == 'order'
+        && request.resource.data.catalogItemId is string
+        && request.resource.data.billingUnitPrice is number
+        && request.resource.data.billingUnitPrice >= 0
+        && request.resource.data.currency == 'EUR'
+        && request.resource.data.source is map
+        && request.resource.data.source.documentLabel is string
+        && request.resource.data.source.documentLabel.size() > 0
+        && request.resource.data.active is bool
+        && request.resource.data.revision == 1;
+
+      allow update: if isAdmin()
+        && request.resource.data.seasonId == resource.data.seasonId
+        && request.resource.data.sourceType == resource.data.sourceType
+        && request.resource.data.catalogItemId == resource.data.catalogItemId
+        && request.resource.data.billingUnitPrice is number
+        && request.resource.data.billingUnitPrice >= 0
+        && request.resource.data.currency == 'EUR'
+        && request.resource.data.source is map
+        && request.resource.data.source.documentLabel is string
+        && request.resource.data.source.documentLabel.size() > 0
+        && request.resource.data.active is bool
+        && request.resource.data.revision == resource.data.revision + 1;
+
+      allow delete: if false;
+    }
+
     match /ticketSales/{document} {
       allow get: if (resource == null && canReadNewSalesDocument(document))
         || (resource != null && hasOrderPermission('ticketSales.read',resource.data));

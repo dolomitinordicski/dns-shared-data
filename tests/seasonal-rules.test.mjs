@@ -41,6 +41,25 @@ try {
   await assertSucceeds(setDoc(doc(verifier,'ticketOrders',pocketfolderOrder.id),{...pocketfolderOrder,status:'draft'}));
   await assertSucceeds(setDoc(doc(verifier,'ticketOrderLines',line.id),{...line,quantity:12}));
 
+  const billingRate={
+    id:'2026-27__order__item',
+    seasonId:'2026-27',
+    sourceType:'order',
+    catalogItemId:'item',
+    billingUnitPrice:0.17,
+    currency:'EUR',
+    source:{documentLabel:'Supplier offer test'},
+    active:true,
+    revision:1,
+  };
+  await assertSucceeds(setDoc(doc(admin,'billingRateConfigs',billingRate.id),billingRate));
+  await assertSucceeds(getDoc(doc(admin,'billingRateConfigs',billingRate.id)));
+  await assertFails(getDoc(doc(seller,'billingRateConfigs',billingRate.id)));
+  await assertFails(setDoc(doc(seller,'billingRateConfigs','seller-rate'),{...billingRate,id:'seller-rate'}));
+  await assertFails(setDoc(doc(admin,'billingRateConfigs','missing-source'),{...billingRate,id:'missing-source',source:{documentLabel:''}}));
+  await assertSucceeds(setDoc(doc(admin,'billingRateConfigs',billingRate.id),{...billingRate,billingUnitPrice:0.18,revision:2}));
+  await assertFails(setDoc(doc(admin,'billingRateConfigs',billingRate.id),{...billingRate,billingUnitPrice:0.19,revision:4}));
+
   const milestone={id:'2026-27__m1',seasonId:'2026-27',date:'2026-12-23',label:'Milestone 1',order:1,updatedBy:'admin',updatedAt:serverTimestamp()};
   await assertSucceeds(setDoc(doc(admin,'kpMilestones',milestone.id),milestone));
   await assertFails(setDoc(doc(seller,'kpMilestones','2026-27__m2'),{...milestone,id:'2026-27__m2',order:2,updatedBy:'seller'}));
@@ -110,5 +129,5 @@ try {
   await assertFails(setDoc(doc(admin,'ticketSales','2024-25__org__area__day__official__regular'),{...sale,id:'2024-25__org__area__day__official__regular',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketPricingConfigs','historic-price-2024'),{...price,id:'historic-price-2024',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketOrders','historic-order-2024'),{seasonId:'2024-25',organizationId:'org',category:'ticket',status:'draft'}));
-  console.log('Seasonal rules passed: scoped reads/writes, read-only users, invalid quantities/amounts, immutable audit history, stale pricing and anonymous access.');
+  console.log('Seasonal rules passed: scoped reads/writes, admin-only sourced billing rates, read-only users, invalid quantities/amounts, immutable audit history, stale pricing and anonymous access.');
 } finally { await env.cleanup(); }
