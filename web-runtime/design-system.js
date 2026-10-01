@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/design-system.ts
 // Keep this file synchronized with the canonical TypeScript contract.
-export const DNS_DESIGN_SYSTEM_VERSION = '1.11.0';
+export const DNS_DESIGN_SYSTEM_VERSION = '1.11.1';
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -510,6 +510,7 @@ export const DNS_DESIGN_SYSTEM = {
     },
     highContrast: {
       enabledByDefault: false,
+      textColor: '#000000',
     },
     relaxedSpacing: {
       enabledByDefault: false,

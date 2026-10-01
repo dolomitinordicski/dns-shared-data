@@ -105,9 +105,12 @@ function ensureStyles() {
 }
 html.dns-a11y-text-scale { font-size: calc(100% * var(--dns-a11y-text-scale)); }
 html.dns-a11y-high-contrast {
-  --color-dns-muted: var(--color-dns-deep, #0D4D5E);
-  --color-dns-border: rgba(13,77,94,.55);
-  --color-dns-subtle-border: rgba(13,77,94,.30);
+  --color-dns-deep: #000000;
+  --color-dns-mid: #000000;
+  --color-dns-muted: #000000;
+  --color-dns-dark-text: #000000;
+  --color-dns-border: rgba(0,0,0,.58);
+  --color-dns-subtle-border: rgba(0,0,0,.30);
 }
 html.dns-a11y-high-contrast body { background: #fff; }
 html.dns-a11y-high-contrast :is(.dns-card, input, select, textarea, button) {
