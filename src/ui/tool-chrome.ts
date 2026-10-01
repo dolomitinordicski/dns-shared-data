@@ -153,7 +153,66 @@ export function initDNSToolChromeRuntime(
     );
 
   if (!(header instanceof HTMLElement) || !(nav instanceof HTMLElement)) {
-    return noOpHandle();
+    let delegate: DNSToolChromeRuntimeHandle | null = null;
+    let disconnected = false;
+    let pendingActiveSection = '';
+
+    const tryInitialize = () => {
+      if (disconnected || delegate) return;
+
+      const lateHeader = documentRoot.querySelector<HTMLElement>(
+        options.headerSelector ?? DEFAULT_HEADER_SELECTOR,
+      );
+      const lateNav = documentRoot.querySelector<HTMLElement>(
+        options.navSelector ?? DEFAULT_NAV_SELECTOR,
+      );
+
+      if (!(lateHeader instanceof HTMLElement) || !(lateNav instanceof HTMLElement)) {
+        return;
+      }
+
+      observer.disconnect();
+      delegate = initDNSToolChromeRuntime({
+        ...options,
+        root: documentRoot,
+        header: lateHeader,
+        nav: lateNav,
+      });
+
+      if (pendingActiveSection) {
+        delegate.setActiveSection(pendingActiveSection);
+      }
+    };
+
+    const observer = new MutationObserver(tryInitialize);
+    observer.observe(documentRoot.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+
+    queueMicrotask(tryInitialize);
+
+    return {
+      get header() {
+        return delegate?.header ?? null;
+      },
+      get nav() {
+        return delegate?.nav ?? null;
+      },
+      refresh() {
+        delegate?.refresh();
+      },
+      setActiveSection(id: string) {
+        pendingActiveSection = id;
+        delegate?.setActiveSection(id);
+      },
+      disconnect() {
+        disconnected = true;
+        observer.disconnect();
+        delegate?.disconnect();
+        delegate = null;
+      },
+    };
   }
 
   header.dataset.dnsToolHeader = '';
