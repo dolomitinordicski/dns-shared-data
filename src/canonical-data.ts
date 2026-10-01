@@ -916,14 +916,17 @@ export function resolveReportingAreaId(
 const ORGANIZATION_ALIAS_ENTRIES: ReadonlyArray<
   readonly [string, OrganizationId]
 > = ORGANIZATIONS.flatMap((organization) => {
-  const values = new Set<string>([
-    organization.id,
-    organization.canonicalName,
-    organization.localizedName.de,
-    organization.localizedName.it,
-    organization.localizedName.en,
-    ...organization.aliases,
-  ]);
+  const record: Organization = organization;
+  const values = new Set<string>(
+    [
+      record.id,
+      record.canonicalName,
+      record.localizedName?.de,
+      record.localizedName?.it,
+      record.localizedName?.en,
+      ...(record.aliases ?? []),
+    ].filter((value): value is string => Boolean(value)),
+  );
 
   return [...values].map(
     (value) => [normalizeLegacyKey(value), organization.id] as const,
