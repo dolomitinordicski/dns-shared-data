@@ -8,6 +8,7 @@ import {
   POCKETFOLDER_SOURCE_CELLS_2026_27,
   POCKETFOLDER_SOURCE_FILE,
   POCKETFOLDER_SOURCE_ORGANIZATIONS_2026_27,
+  POCKETFOLDER_SOURCE_ROWS_2026_27,
   POCKETFOLDER_SOURCE_SHA256,
   POCKETFOLDER_SOURCE_TOTALS_2026_27,
 } from '../src/pocketfolder-setup-2026-27.js';
@@ -51,6 +52,10 @@ async function main() {
 
   for (const location of DELIVERY_LOCATIONS_2026_27) {
     batch.set(db.collection('deliveryLocations').doc(location.id), location, { merge: true });
+  }
+
+  for (const row of POCKETFOLDER_SOURCE_ROWS_2026_27) {
+    batch.set(db.collection('pocketfolderSourceRows').doc(row.id), row, { merge: true });
   }
 
   const markerRef = db.collection('pocketfolderSetupImports').doc(POCKETFOLDER_SETUP_SEASON_ID);
@@ -119,6 +124,7 @@ async function main() {
   console.log('✓ orderCatalogItems / Pocketfolder editions');
   console.log('✓ orderFormConfigs / pocketfolder');
   console.log('✓ deliveryLocations');
+  console.log(`✓ pocketfolderSourceRows (${POCKETFOLDER_SOURCE_ROWS_2026_27.length})`);
   console.log(marker.exists ? '✓ Pocketfolder quantities preserved' : '✓ Pocketfolder source quantities imported');
 }
 

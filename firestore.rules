@@ -136,6 +136,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /pocketfolderSourceRows/{document} {
+      allow read: if activeUser();
+      allow write: if false;
+    }
+
     // Operational order headers.
     match /ticketOrders/{document} {
       allow read: if hasOrderPermission('ticketOrders.read', resource.data);
