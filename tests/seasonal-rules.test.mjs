@@ -1,0 +1,53 @@
+import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
+import { doc, setDoc, getDoc, getDocs, collection, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const env = await initializeTestEnvironment({ projectId: 'demo-dns-core', firestore: { host: '127.0.0.1', port: 8088, rules: fs.readFileSync('firestore.rules', 'utf8') } });
+try {
+  await env.withSecurityRulesDisabled(async (context) => {
+    const db=context.firestore();
+    await setDoc(doc(db,'users','admin'),{active:true,globalRoles:['dns-admin']});
+    await setDoc(doc(db,'users','seller'),{active:true,globalRoles:[]});
+    await setDoc(doc(db,'users','reader'),{active:true,globalRoles:[]});
+    await setDoc(doc(db,'seasons','2026-27'),{status:'active'});
+    await setDoc(doc(db,'reportingAreas','area'),{canonicalName:'Area'});
+    await setDoc(doc(db,'organizations','org'),{reportingAreaIds:['area']});
+    for(const [uid,permissions] of [['seller',['ticketSales.read','ticketSales.write']],['reader',['ticketSales.read']]])
+      await setDoc(doc(db,'accessGrants',`${uid}__organization__org`),{active:true,permissions});
+  });
+  const admin=env.authenticatedContext('admin').firestore();
+  const seller=env.authenticatedContext('seller').firestore();
+  const reader=env.authenticatedContext('reader').firestore();
+  const price={id:'price',seasonId:'2026-27',scopeType:'reportingArea',scopeId:'area',productCode:'day',salesChannel:'official',salesPeriod:'regular',unitPrice:10,settlementUnitPrice:10,currency:'EUR',active:true,validFrom:'',validTo:'',notes:'',revision:1,provenance:{sourceSystem:'manual-data-entry',methodVersion:1,dataStatus:'draft'},updatedBy:'admin',updatedAt:serverTimestamp()};
+  await assertSucceeds(setDoc(doc(admin,'ticketPricingConfigs','price'),price));
+  await assertSucceeds(setDoc(doc(admin,'ticketPricingConfigs','price-weekly'),{...price,id:'price-weekly',productCode:'wk-area'}));
+  await assertFails(setDoc(doc(seller,'ticketPricingConfigs','other'),{...price,id:'other',updatedBy:'seller'}));
+  const saleId='2026-27__org__area__day__official__regular';
+  const sale={id:saleId,draftKey:'draft',seasonId:'2026-27',organizationId:'org',reportingAreaId:'area',productCode:'day',salesChannel:'official',salesPeriod:'regular',quantity:10,amountOverride:null,amountOverrideReason:'',pricing:{pricingConfigId:'price',unitPrice:10,settlementUnitPrice:10,currency:'EUR'},calculatedAmount:100,revision:1,provenance:{sourceSystem:'manual-data-entry',methodVersion:1,dataStatus:'draft'},updatedBy:'seller',updatedAt:serverTimestamp()};
+  await assertSucceeds(getDoc(doc(seller,'ticketSales','2026-27__org__area__day__official__regular')));
+  await assertFails(getDoc(doc(seller,'ticketSales','2026-27__other__other__day__official__regular')));
+  await assertSucceeds(setDoc(doc(seller,'ticketSales',saleId),sale));
+  await assertSucceeds(getDocs(query(collection(seller,'ticketSales'),where('seasonId','==','2026-27'),where('organizationId','==','org'),where('reportingAreaId','==','area'))));
+  await assertFails(getDocs(collection(seller,'ticketSales')));
+  await assertSucceeds(getDoc(doc(reader,'ticketSales',saleId)));
+  const newId='2026-27__org__area__wk-area__official__regular';
+  const newSale={...sale,id:newId,productCode:'wk-area',pricing:{...sale.pricing,pricingConfigId:'price-weekly'}};
+  await assertFails(setDoc(doc(reader,'ticketSales',newId),{...newSale,updatedBy:'reader'}));
+  await assertFails(setDoc(doc(seller,'ticketSales','wrong-area'),{...sale,id:'wrong-area',reportingAreaId:'unrelated'}));
+  await assertFails(setDoc(doc(seller,'ticketSales',newId),{...newSale,quantity:-1}));
+  await assertFails(setDoc(doc(seller,'ticketSales',newId),{...newSale,calculatedAmount:999}));
+  await assertFails(setDoc(doc(seller,'ticketSales',newId),{...newSale,amountOverride:90}));
+  await assertFails(setDoc(doc(seller,'ticketSales',saleId),{...sale,revision:2,quantity:11,calculatedAmount:110}));
+  const previous=(await getDoc(doc(seller,'ticketSales',saleId))).data();
+  const batch=writeBatch(seller);batch.set(doc(seller,'ticketSales',saleId,'revisions','1'),previous);batch.set(doc(seller,'ticketSales',saleId),{...sale,revision:2,quantity:11,calculatedAmount:110});
+  await assertSucceeds(batch.commit());
+  assert.equal((await getDoc(doc(seller,'ticketSales',saleId,'revisions','1'))).data().quantity,10);
+  await assertFails(setDoc(doc(seller,'ticketSales',saleId,'revisions','1'),{...previous,quantity:999}));
+  const oldPrice=(await getDoc(doc(admin,'ticketPricingConfigs','price'))).data();
+  const priceBatch=writeBatch(admin);priceBatch.set(doc(admin,'ticketPricingConfigs','price','revisions','1'),oldPrice);priceBatch.set(doc(admin,'ticketPricingConfigs','price'),{...price,revision:2,unitPrice:12,settlementUnitPrice:12});await assertSucceeds(priceBatch.commit());
+  const weeklyPrevious=(await getDoc(doc(admin,'ticketPricingConfigs','price-weekly'))).data();
+  const weeklyBatch=writeBatch(admin);weeklyBatch.set(doc(admin,'ticketPricingConfigs','price-weekly','revisions','1'),weeklyPrevious);weeklyBatch.set(doc(admin,'ticketPricingConfigs','price-weekly'),{...price,id:'price-weekly',productCode:'wk-area',revision:2,unitPrice:12,settlementUnitPrice:12});await assertSucceeds(weeklyBatch.commit());
+  await assertFails(setDoc(doc(seller,'ticketSales',newId),newSale));
+  await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'ticketSales',saleId)));
+  console.log('Seasonal rules passed: scoped reads/writes, read-only users, invalid quantities/amounts, immutable audit history, stale pricing and anonymous access.');
+} finally { await env.cleanup(); }

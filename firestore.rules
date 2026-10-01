@@ -175,6 +175,124 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    function validPricing(data) {
+      return data.keys().hasOnly(['id','seasonId','scopeType','scopeId','productCode','salesChannel','salesPeriod','unitPrice','settlementUnitPrice','currency','active','validFrom','validTo','notes','revision','provenance','updatedBy','updatedAt'])
+        && data.seasonId is string
+        && exists(/databases/$(database)/documents/seasons/$(data.seasonId))
+        && data.scopeType in ['network','reportingArea','organization']
+        && (data.scopeType != 'network' || data.scopeId == 'dolomiti-nordicski')
+        && (data.scopeType != 'reportingArea' || exists(/databases/$(database)/documents/reportingAreas/$(data.scopeId)))
+        && (data.scopeType != 'organization' || exists(/databases/$(database)/documents/organizations/$(data.scopeId)))
+        && data.productCode in ['day','wk-area','wk-dns','sk-area','sk-dns','sk-instructor']
+        && data.salesChannel in ['official','online','track','press','complimentary']
+        && data.salesPeriod in ['regular','presale']
+        && data.unitPrice is number && data.unitPrice >= 0
+        && data.settlementUnitPrice is number && data.settlementUnitPrice >= 0
+        && data.currency == 'EUR' && data.active == true
+        && data.revision is int && data.revision >= 1
+        && data.provenance.sourceSystem == 'manual-data-entry'
+        && data.provenance.methodVersion == 1 && data.provenance.dataStatus == 'draft'
+        && data.updatedBy == request.auth.uid && data.updatedAt == request.time;
+    }
+
+    function managePricing(data) {
+      return isAdmin() || hasGrant('network','dolomiti-nordicski','pricing.manage')
+        || hasGrant(data.scopeType,data.scopeId,'pricing.manage');
+    }
+
+    function validSales(data) {
+      return data.keys().hasOnly(['id','draftKey','seasonId','organizationId','reportingAreaId','productCode','salesChannel','salesPeriod','quantity','amountOverride','amountOverrideReason','pricing','calculatedAmount','revision','provenance','updatedBy','updatedAt'])
+        && data.id == data.seasonId + '__' + data.organizationId + '__' + data.reportingAreaId + '__' + data.productCode + '__' + data.salesChannel + '__' + data.salesPeriod
+        && data.seasonId is string
+        && exists(/databases/$(database)/documents/seasons/$(data.seasonId))
+        && data.reportingAreaId in get(/databases/$(database)/documents/organizations/$(data.organizationId)).data.reportingAreaIds
+        && data.quantity is int && data.quantity >= 0 && data.quantity <= 9007199254740991
+        && data.productCode in ['day','wk-area','wk-dns','sk-area','sk-dns','sk-instructor']
+        && data.salesChannel in ['official','online','track','press','complimentary']
+        && data.salesPeriod in ['regular','presale']
+        && data.pricing.currency == 'EUR'
+        && data.pricing.unitPrice is number && data.pricing.unitPrice >= 0
+        && data.pricing.settlementUnitPrice is number && data.pricing.settlementUnitPrice >= 0
+        && data.calculatedAmount is number && data.calculatedAmount >= 0
+        && data.calculatedAmount - data.quantity * data.pricing.unitPrice < 0.011
+        && data.quantity * data.pricing.unitPrice - data.calculatedAmount < 0.011
+        && (data.amountOverride == null || (data.amountOverride is number && data.amountOverride >= 0 && data.amountOverrideReason is string && data.amountOverrideReason.size() > 0))
+        && data.revision is int && data.revision >= 1
+        && data.provenance.sourceSystem == 'manual-data-entry'
+        && data.provenance.methodVersion == 1 && data.provenance.dataStatus == 'draft'
+        && data.updatedBy == request.auth.uid && data.updatedAt == request.time;
+    }
+
+    function salesPricingMatches(data) {
+      let config = get(/databases/$(database)/documents/ticketPricingConfigs/$(data.pricing.pricingConfigId)).data;
+      return config.active == true && config.seasonId == data.seasonId
+        && config.productCode == data.productCode && config.salesChannel == data.salesChannel && config.salesPeriod == data.salesPeriod
+        && config.unitPrice == data.pricing.unitPrice && config.settlementUnitPrice == data.pricing.settlementUnitPrice
+        && ((config.scopeType == 'network' && config.scopeId == 'dolomiti-nordicski')
+          || (config.scopeType == 'reportingArea' && config.scopeId == data.reportingAreaId)
+          || (config.scopeType == 'organization' && config.scopeId == data.organizationId));
+    }
+
+    function archived(collectionName, document) {
+      let revisionId = string(resource.data.revision);
+      return getAfter(/databases/$(database)/documents/$(collectionName)/$(document)/revisions/$(revisionId)).data == resource.data;
+    }
+
+    match /ticketPricingConfigs/{document} {
+      allow read: if activeUser();
+      allow create: if validPricing(request.resource.data) && managePricing(request.resource.data)
+        && request.resource.data.id == document && request.resource.data.revision == 1;
+      allow update: if validPricing(request.resource.data) && managePricing(resource.data)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.seasonId == resource.data.seasonId
+        && request.resource.data.scopeType == resource.data.scopeType && request.resource.data.scopeId == resource.data.scopeId
+        && request.resource.data.productCode == resource.data.productCode
+        && request.resource.data.salesChannel == resource.data.salesChannel && request.resource.data.salesPeriod == resource.data.salesPeriod
+        && resource.data.provenance.dataStatus == 'draft'
+        && request.resource.data.revision == resource.data.revision + 1 && archived('ticketPricingConfigs',document);
+      allow delete: if false;
+      match /revisions/{revision} {
+        allow read: if activeUser();
+        allow create: if managePricing(get(/databases/$(database)/documents/ticketPricingConfigs/$(document)).data)
+          && request.resource.data == get(/databases/$(database)/documents/ticketPricingConfigs/$(document)).data
+          && getAfter(/databases/$(database)/documents/ticketPricingConfigs/$(document)).data.revision == request.resource.data.revision + 1;
+        allow update, delete: if false;
+      }
+    }
+
+    function canReadNewSalesDocument(document) {
+      let parts = document.split('__');
+      return isAdmin() || (parts.size() == 6 && (
+        hasGrant('network','dolomiti-nordicski','ticketSales.read')
+        || hasGrant('organization',parts[1],'ticketSales.read')
+        || hasGrant('reportingArea',parts[2],'ticketSales.read')));
+    }
+
+    match /ticketSales/{document} {
+      allow get: if (resource == null && canReadNewSalesDocument(document))
+        || (resource != null && hasOrderPermission('ticketSales.read',resource.data));
+      allow list: if hasOrderPermission('ticketSales.read',resource.data);
+      allow create: if validSales(request.resource.data) && salesPricingMatches(request.resource.data)
+        && hasOrderPermission('ticketSales.write',request.resource.data)
+        && request.resource.data.id == document && request.resource.data.revision == 1;
+      allow update: if validSales(request.resource.data) && salesPricingMatches(request.resource.data)
+        && hasOrderPermission('ticketSales.write',resource.data)
+        && request.resource.data.id == resource.data.id && request.resource.data.draftKey == resource.data.draftKey
+        && request.resource.data.organizationId == resource.data.organizationId && request.resource.data.reportingAreaId == resource.data.reportingAreaId
+        && request.resource.data.seasonId == resource.data.seasonId && request.resource.data.productCode == resource.data.productCode
+        && request.resource.data.salesChannel == resource.data.salesChannel && request.resource.data.salesPeriod == resource.data.salesPeriod
+        && resource.data.provenance.dataStatus == 'draft'
+        && request.resource.data.revision == resource.data.revision + 1 && archived('ticketSales',document);
+      allow delete: if false;
+      match /revisions/{revision} {
+        allow read: if hasOrderPermission('ticketSales.read',get(/databases/$(database)/documents/ticketSales/$(document)).data);
+        allow create: if hasOrderPermission('ticketSales.write',get(/databases/$(database)/documents/ticketSales/$(document)).data)
+          && request.resource.data == get(/databases/$(database)/documents/ticketSales/$(document)).data
+          && getAfter(/databases/$(database)/documents/ticketSales/$(document)).data.revision == request.resource.data.revision + 1;
+        allow update, delete: if false;
+      }
+    }
+
     // Everything else remains closed until its domain rules are implemented.
     match /{document=**} {
       allow read, write: if false;
