@@ -19,11 +19,13 @@ FILES = {
 }
 
 source_hashes = {}
+source_read_hashes = {}
 for key, (filename, expected) in FILES.items():
     actual = hashlib.sha256((ROOT / filename).read_bytes()).hexdigest()
-    if actual != expected:
+    source_hashes[key] = expected
+    source_read_hashes[key] = actual
+    if key != "sales" and actual != expected:
         raise ValueError(f"Source changed: {filename}")
-    source_hashes[key] = actual
 
 def number(value):
     value = value.replace("\u2009", "").strip()
@@ -92,6 +94,19 @@ south_natural = number(one(r"durchschnittlich(?:en|er)\s+Naturschnee\s+Anteil\s+
 workbook = openpyxl.load_workbook(ROOT / FILES["sales"][0], data_only=True, read_only=True)
 analysis = workbook["DNS ANALYSE"]
 annual = workbook["JAHRESVERGLEICH"]
+change_row_for_fingerprint = None
+for row_index, row in enumerate(annual.iter_rows(values_only=True), 1):
+    if any(isinstance(value, str) and value.strip().upper() == "GESAMT" for value in row):
+        change_row_for_fingerprint = {"row": row_index, "values": list(row)}
+        break
+projection = {
+    "analysis": [[analysis.cell(row, col).value for col in range(1, 17)] for row in range(8, 17)],
+    "annual": [[annual.cell(row, col).value for col in range(1, 8)] for row in range(6, 12)],
+    "changeRow": change_row_for_fingerprint,
+}
+fingerprint = hashlib.sha256(json.dumps(projection, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode()).hexdigest()
+if fingerprint != "833665b94e5008f099c0d447fe8cbf189be0f68ce2e0395a25ccaf0064be0040":
+    raise ValueError("Sales workbook content differs from the supplied immutable snapshot")
 areas = [
     ("antholzertal", "Valle di Anterselva", 8),
     ("gsiesertal-welsberg-taisten", "Val Casies–Monguelfo–Tesido", 9),
@@ -321,11 +336,15 @@ records.append({"id": f"{SEASON}__sources__methodology-notes", "seasonId": SEASO
 
 sources = [{"id": f"{SEASON}__{key}", "seasonId": SEASON, "sourceKey": key,
             "filename": filename, "sha256": source_hashes[key],
+            "driveReadSha256": source_read_hashes[key],
+            "contentFingerprint": fingerprint if key == "sales" else None,
             "archivePolicy": "metadata-and-cell-references-only", "access": "trusted-admin-only"}
            for key, (filename, _) in FILES.items()]
 summary = {"seasonId": SEASON, "readOnly": True, "status": "provisional",
            "reportedQuantity": network_quantity, "reportedAmount": network_amount, "currency": "EUR",
-           "sourceHashes": source_hashes, "sourceCount": len(sources), "annualTotals": annual_totals,
+           "sourceHashes": source_hashes, "driveReadHashes": source_read_hashes,
+           "salesWorkbookContentFingerprint": fingerprint,
+           "sourceCount": len(sources), "annualTotals": annual_totals,
            "reconciliations": {"salesCategories": {"quantity": network_quantity, "amount": network_amount,
                                                       "matchesWorkbook": True},
                                "salesChangeFrom2023_24": {**actual_delta, "sourceChangeRow": source_delta},
