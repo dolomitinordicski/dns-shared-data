@@ -19,6 +19,7 @@ brand/regions/
 ├── consorzio-turistico-val-comelico.svg
 ├── cortina-dolomiti.svg
 ├── ahrntal-valle-aurina.svg
+├── biathlon-antholz-2027.svg
 ├── seiser-alm.svg
 └── val-gardena.svg
 ```
@@ -31,6 +32,7 @@ brand/regions/
 - Composite source marks are preserved as one asset when the visual identity is intentionally combined.
 - In particular, **Kronplatz + Antholzertal / Valle Anterselva is one composite asset**.
 - **Tourismusverein Sand in Taufers (`sand-in-taufers`) always uses the Ahrntal / Valle Aurina logo**; do not introduce a separate Sand in Taufers logo binding.
+- **Biathlon Antholz (`biathlon-antholz`) uses the supplied 2026/27 IBU World Cup composite logo**. This binding is organization-only; the `antholzertal` reporting area keeps its Antholzertal/Kronplatz asset.
 - SVG is preferred for web and print. PNG fallbacks may be added later if a target system requires raster output.
 
 ## Source quality and hosting

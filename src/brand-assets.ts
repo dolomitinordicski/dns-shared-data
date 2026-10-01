@@ -15,6 +15,8 @@ export interface DNSRegionLogoAsset {
   composite?: boolean;
   priority?: 'primary' | 'secondary';
   entityBindings: readonly DNSRegionLogoBinding[];
+  seasonIds?: readonly string[];
+  sourceFile?: string;
   notes?: string;
 }
 

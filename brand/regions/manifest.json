@@ -281,8 +281,28 @@
       "mimeType": "image/svg+xml",
       "sha256": "a824ed97c2562b2e326860e7a5f5709a6800a34bab3e481fe36879faab503e8d",
       "containsEmbeddedRaster": true
+    },
+    {
+      "id": "biathlon-antholz-2027",
+      "label": "Biathlon Antholz / IBU World Cup 2027",
+      "filename": "biathlon-antholz-2027.svg",
+      "priority": "primary",
+      "entityBindings": [
+        {
+          "entityType": "organization",
+          "entityId": "biathlon-antholz"
+        }
+      ],
+      "seasonIds": [
+        "2026-27"
+      ],
+      "sourceFile": "Composite_Logo_2027_IBU_CL_WC06_ANTHOLZ_26_27.pdf",
+      "notes": "Current 2026/27 composite mark supplied by DNS. Organization-only binding; do not use as the Antholzertal reporting-area logo.",
+      "mimeType": "image/svg+xml",
+      "sha256": "142799819892f3e96d0475240045f3a42e10ac60463f65baa3b9264f61c32078",
+      "containsEmbeddedRaster": true
     }
   ],
-  "assetVersion": "1",
+  "assetVersion": "2",
   "hosting": "repository"
 }
