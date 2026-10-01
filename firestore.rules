@@ -68,6 +68,21 @@ service cloud.firestore {
         && order.data.seasonId == data.seasonId;
     }
 
+    function canVerifyOrder(data) {
+      return isAdmin() || hasOrderPermission('ticketOrders.verify', data);
+    }
+
+    function contributorOrderTransitionAllowed(before, after) {
+      return before.status == 'draft'
+        && after.status in ['draft', 'submitted'];
+    }
+
+    function parentOrderEditableForLine(data) {
+      let orderPath = /databases/$(database)/documents/ticketOrders/$(data.ticketOrderId);
+      let order = getAfter(orderPath).data;
+      return order.status == 'draft' || canVerifyOrder(order);
+    }
+
     // Public canonical master data.
     match /reportingAreas/{document} {
       allow read: if true;
@@ -152,7 +167,13 @@ service cloud.firestore {
         && resource.data.organizationId == request.resource.data.organizationId
         && resource.data.seasonId == request.resource.data.seasonId
         && resource.data.category == request.resource.data.category
-        && hasOrderPermission('ticketOrders.write', request.resource.data);
+        && (
+          canVerifyOrder(request.resource.data)
+          || (
+            hasOrderPermission('ticketOrders.write', request.resource.data)
+            && contributorOrderTransitionAllowed(resource.data, request.resource.data)
+          )
+        );
 
       // Order headers are retained for audit; normal contributors do not delete them.
       allow delete: if isAdmin() && !historicalLocked(resource.data);
@@ -163,19 +184,23 @@ service cloud.firestore {
       allow read: if hasOrderPermission('ticketOrders.read', resource.data);
 
       allow create: if validOrderLine(request.resource.data)
-        && hasOrderPermission('ticketOrders.write', request.resource.data)
-        && lineMatchesOrder(request.resource.data);
+        && (hasOrderPermission('ticketOrders.write', request.resource.data) || canVerifyOrder(request.resource.data))
+        && lineMatchesOrder(request.resource.data)
+        && parentOrderEditableForLine(request.resource.data);
 
       allow update: if validOrderLine(request.resource.data)
         && resource.data.organizationId == request.resource.data.organizationId
         && resource.data.seasonId == request.resource.data.seasonId
         && resource.data.ticketOrderId == request.resource.data.ticketOrderId
         && resource.data.catalogItemId == request.resource.data.catalogItemId
-        && hasOrderPermission('ticketOrders.write', request.resource.data)
-        && lineMatchesOrder(request.resource.data);
+        && (hasOrderPermission('ticketOrders.write', request.resource.data) || canVerifyOrder(request.resource.data))
+        && lineMatchesOrder(request.resource.data)
+        && parentOrderEditableForLine(request.resource.data);
 
       // Clearing a matrix cell deletes only that organization's own line.
-      allow delete: if !historicalLocked(resource.data) && hasOrderPermission('ticketOrders.write', resource.data);
+      allow delete: if !historicalLocked(resource.data)
+        && (hasOrderPermission('ticketOrders.write', resource.data) || canVerifyOrder(resource.data))
+        && parentOrderEditableForLine(resource.data);
     }
 
     // Public supplier snapshots. Public clients can fetch one exact document
