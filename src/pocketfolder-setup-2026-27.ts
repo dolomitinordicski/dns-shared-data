@@ -2,6 +2,7 @@ import type {
   DeliveryLocation,
   OrderCatalogItem,
   OrderFormConfig,
+  PocketfolderSourceRow,
 } from './seasonal-operational-data.js';
 import type { OrganizationId, ReportingAreaId } from './canonical-data.js';
 
@@ -237,6 +238,94 @@ export const POCKETFOLDER_SOURCE_TOTALS_2026_27 = {
   areaTotal: 23200,
   printerTotal: 25150,
 } as const;
+
+const sourceRow = (
+  sourceRowNumber: number,
+  label: string,
+  comparison2025: number | '/' | null,
+  requested2026: number | '/' | null,
+  dnsCopies: number | '/' | null,
+  areaTotal2026: number | '/' | null,
+  printerTotal2026: number | '/' | null,
+  backLanguageNote: string,
+  rowKind: PocketfolderSourceRow['rowKind'],
+): PocketfolderSourceRow => ({
+  id: `${POCKETFOLDER_SETUP_SEASON_ID}__source-row-${String(sourceRowNumber).padStart(2, '0')}`,
+  seasonId: POCKETFOLDER_SETUP_SEASON_ID,
+  sourceRow: sourceRowNumber,
+  label,
+  comparison2025,
+  requested2026,
+  dnsCopies,
+  areaTotal2026,
+  printerTotal2026,
+  backLanguageNote,
+  rowKind,
+  provenance: {
+    sourceSystem: 'legacy-sheet',
+    sourceRecordId: `${POCKETFOLDER_SOURCE_FILE} / Folder-Brochure row ${sourceRowNumber}`,
+    methodVersion: 1,
+    dataStatus: 'draft',
+  },
+});
+
+export const POCKETFOLDER_SOURCE_ROWS_2026_27: readonly PocketfolderSourceRow[] = [
+  sourceRow(6, 'Antholzertal', 3500, 3000, 100, 4200, 4550, 'Rückseite dt-it-en', 'area'),
+  sourceRow(7, 'Biathlonzentrum', 0, 1000, 100, '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(8, 'Für Gsieser Tal', 300, 300, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(9, 'für TV Innichen', 50, 0, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(10, 'für TV Toblach', 100, 50, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(11, 'für TV Niederdorf', 100, null, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(12, 'für TV Pragsertal', 100, 0, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(13, 'Für Osttirol', 100, null, '/', '/', null, '', 'distribution'),
+
+  sourceRow(14, 'Gsieser Tal-Welsberg-Taisten', 3000, 5000, 200, 5200, 5500, 'Rückseite dt-it-en', 'area'),
+  sourceRow(15, 'Für Osttirol', 100, null, null, null, null, '', 'distribution'),
+  sourceRow(16, 'für TV Antholzertal', 100, 200, '/', '/', null, '', 'distribution'),
+  sourceRow(17, 'für TV innichen', 50, 0, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(18, 'für TV Toblach', 100, 100, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(19, 'für TV Niederdorf', 200, null, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(20, 'für TV Pragsertal', 300, 0, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+
+  sourceRow(21, '3 Zinnen Dolomites', 19400, null, 200, 11200, 12100, 'Rückseite dt-it-en', 'area'),
+  sourceRow(22, 'Toblach', 7500, 2000, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(23, 'Sexten', 6000, 6000, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(24, 'Innichen', 5000, 3000, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(25, 'Pragsertal', 2000, 0, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(26, 'Niederdorf', 1600, null, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(27, 'für TV Antholzertal', null, 200, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(28, 'für Gsieser Tal', 500, 700, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(29, 'für Osttirol', 100, null, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+
+  sourceRow(30, 'Osttirol', 7000, null, 200, 200, 250, 'Rückseite dt-it-en', 'area'),
+  sourceRow(31, 'für TV Innichen', 50, 0, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(32, 'für TV Toblach', 100, 50, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(33, 'für TV Pragsertal', 50, 0, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(34, 'für TV Niederdorf', 20, null, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+
+  sourceRow(35, 'Comelico', 1500, 1800, 200, 2000, 2000, 'retro it-dt-en', 'area'),
+  sourceRow(36, '', null, null, null, null, null, '', 'blank'),
+  sourceRow(37, 'Cortina', 0, null, 0, 0, 200, 'retro it-dt-en', 'area'),
+  sourceRow(38, 'für TV Gsiesertal', 50, 50, '/', '/', null, 'retro it-dt-en', 'distribution'),
+  sourceRow(39, 'für TV Antholzertal', 50, 100, '/', '/', null, 'retro it-dt-en', 'distribution'),
+  sourceRow(40, 'für-per TV Innichen San Candido', 50, 0, '/', '/', null, 'retro it-dt-en', 'distribution'),
+  sourceRow(41, 'für-per TV Toblach Dobbiaco', 100, 50, '/', '/', null, 'retro it-dt-en', 'distribution'),
+  sourceRow(42, 'für-per TV Pragsertal', 50, 0, '/', '/', null, 'retro it-dt-en', 'distribution'),
+  sourceRow(43, 'für-per TV Niederdorf Villabassa', 25, null, '/', '/', null, 'retro it-dt-en', 'distribution'),
+
+  sourceRow(44, 'TV AHRNTAL', 3750, null, 100, 200, 350, 'Rückseite dt-it-en', 'area'),
+  sourceRow(45, 'TV Sand in Taufers', 3750, null, 100, '/', null, 'Rückseite dt-it-en', 'area'),
+  sourceRow(46, 'fur TV Gsiesertal', 50, 50, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(47, 'für TV Antholzertal', 50, 100, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+  sourceRow(48, 'für Pragsertal', 50, 0, '/', '/', null, 'Rückseite dt-it-en', 'distribution'),
+
+  sourceRow(49, 'Gröden', 1000, null, 100, 100, 200, 'Rückseite dt-it-en', 'area'),
+  sourceRow(50, 'Seiser Alm', 5000, null, 100, 100, null, 'Rückseite dt-it-en', 'area'),
+  sourceRow(51, 'TOTALE', 72895, 23750, 1400, 23200, 25150, '', 'total'),
+  sourceRow(52, '', null, null, null, null, null, '', 'blank'),
+  sourceRow(53, '*jeweils 200 Stück für die Verteilung (Lieferung direkt an DNS Büro)', null, null, null, null, null, '', 'note'),
+  sourceRow(54, '* 200 x per la distribuzione (consegna ufficio DNS a Monguelfo)', null, null, null, null, null, '', 'note'),
+] as const;
 
 const provenance = (row: number) => ({
   sourceSystem: 'legacy-sheet' as const,
