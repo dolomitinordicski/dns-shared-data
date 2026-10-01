@@ -1,4 +1,4 @@
-export const DNS_DATA_CONTRACTS_VERSION = '0.2.0' as const;
+export const DNS_DATA_CONTRACTS_VERSION = '0.3.0' as const;
 
 export const DNS_DATA_CONTRACTS = [
   {
@@ -77,13 +77,13 @@ export const DNS_DATA_CONTRACTS = [
     status: 'foundation-defined',
     owner: 'DNS Commercial',
     runtime: 'DNS Commercial / target',
-    collections: ['billingRuns', 'billingLines', 'billingAdjustments'],
+    collections: ['billingRateConfigs', 'billingRuns', 'billingLines', 'billingAdjustments'],
     source: 'src/billing-preparation.ts',
-    schema: 'Billing Preparation v0.1',
+    schema: 'Billing Preparation v0.2',
     write: 'Authorized DNS billing management',
     read: 'Authorized DNS management',
-    fields: ['seasonId', 'organizationId', 'reportingAreaId', 'source.type', 'source.sourceId', 'description', 'quantity', 'unitAmount', 'amount', 'included', 'status'],
-    relations: ['FAIR result → Billing line', 'IDM Premium → Billing line', 'Order → Billing line', 'Seasonal extra → Billing line', 'Billing lines → Organization summary'],
+    fields: ['seasonId', 'catalogItemId', 'billingUnitPrice', 'source.documentLabel', 'organizationId', 'reportingAreaId', 'source.type', 'source.sourceId', 'description', 'quantity', 'unitAmount', 'amount', 'included', 'status'],
+    relations: ['Supplier offer/list → Billing rate', 'Order catalogue item → Billing rate', 'FAIR result → Billing line', 'IDM Premium → Billing line', 'Order → Billing line', 'Seasonal extra → Billing line', 'Billing lines → Organization summary'],
   },
   {
     id: 'ticket-sales',
