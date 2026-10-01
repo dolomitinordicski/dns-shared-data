@@ -287,3 +287,12 @@ All DNS tools with the shared header/navigation pattern must use this runtime fo
 The active section is determined against the actual measured sticky stack rather than a fixed `rootMargin` or pixel offset. This keeps the active underline aligned when the navigation wraps, the viewport changes, or header controls alter the header height.
 
 Tool-specific labels, modules and navigation destinations are allowed. Tool-specific implementations of sticky positioning, progress calculation or scroll-spy behavior are not.
+
+
+## Shared print runtime
+
+The canonical print implementation is `src/ui/print.ts`.
+
+All printable DNS tools must consume the shared print runtime and `DNS_DESIGN_SYSTEM.print` tokens. Applications may define which rows and columns are printed, but page geometry, print typography, table styling and the body-level `.dns-print-sheet` portal are Foundation-owned.
+
+Legacy popup/document-write print implementations are not part of the DNS architecture.

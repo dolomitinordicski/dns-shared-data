@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/design-system.ts
 // Keep this file synchronized with the canonical TypeScript contract.
-export const DNS_DESIGN_SYSTEM_VERSION = '1.12.1';
+export const DNS_DESIGN_SYSTEM_VERSION = '1.13.0';
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -479,6 +479,16 @@ export const DNS_DESIGN_SYSTEM = {
         'Shared JavaScript helpers must be versioned source code, never remote executable code.',
         'All motion helpers must respect prefers-reduced-motion.',
         'Hover transforms apply only to genuinely interactive elements.',
+      ],
+    },
+    printRuntime: {
+      codeSource: 'dns-shared-data/ui/print',
+      requiredForPrintableTools: true,
+      rules: [
+        'Printable DNS tools consume the shared print runtime and print tokens.',
+        'window.open/document.write print implementations are not allowed.',
+        'Printable documents render through a body-level dns-print-sheet portal.',
+        'Tool-specific print content is allowed; page geometry and print styling are Foundation-owned.',
       ],
     },
     printPortal: {

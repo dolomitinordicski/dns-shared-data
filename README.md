@@ -13,7 +13,7 @@ This repository contains:
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.3
-- **DNS Design System:** v1.12
+- **DNS Design System:** v1.13
 - **DNS Access Control:** v0.1
 
 ## Source of truth
@@ -61,7 +61,7 @@ firebase.json
 
 ## DNS Design System
 
-The current shared visual and interaction contract is **v1.12.0** and is documented in:
+The current shared visual and interaction contract is **v1.13.0** and is documented in:
 
 ```text
 docs/DNS-Design-System-v1.md
@@ -188,3 +188,12 @@ The runtime owns:
 - shared tab/navigation interaction geometry.
 
 DNS tools may vary navigation content, but not navigation behavior. Fixed sticky offsets and app-specific scroll-spy implementations are not allowed.
+
+
+## Shared print runtime
+
+Printable DNS tools use `@dolomitinordicski/dns-shared-data/ui/print`.
+
+The Foundation owns page size, orientation, margins, print header geometry, table typography, borders, totals, tabular numbers and body-level print-sheet behavior through `DNS_DESIGN_SYSTEM.print`.
+
+Tool-specific print content is allowed. Tool-specific print styling and `window.open/document.write` print implementations are not.
