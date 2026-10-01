@@ -2,6 +2,7 @@
 // Source of truth remains the TypeScript module in src/ui/navigation.ts.
 
 const STYLE_ID = 'dns-navigation-runtime-style';
+const NAVIGATION_INTENT_TIMEOUT_MS = 1200;
 
 function setNavigationVariables(root, navigation) {
   const tabs = navigation.tabs;
@@ -140,6 +141,8 @@ export function initDNSNavigationRuntime(options) {
 
   let frame = 0;
   let activeId = '';
+  let navigationIntentId = '';
+  let navigationIntentTimer = 0;
   const updateStickyMetrics = () => {
     const headerHeight = Math.ceil(options.header.getBoundingClientRect().height);
     const navHeight = Math.ceil(options.nav.getBoundingClientRect().height);
@@ -157,6 +160,24 @@ export function initDNSNavigationRuntime(options) {
       else tab.removeAttribute('aria-current');
     });
     options.onActiveSectionChange?.(id);
+  };
+
+  const clearNavigationIntent = () => {
+    navigationIntentId = '';
+    if (navigationIntentTimer) {
+      window.clearTimeout(navigationIntentTimer);
+      navigationIntentTimer = 0;
+    }
+  };
+
+  const holdNavigationIntent = (id) => {
+    navigationIntentId = id;
+    if (navigationIntentTimer) window.clearTimeout(navigationIntentTimer);
+    navigationIntentTimer = window.setTimeout(() => {
+      navigationIntentId = '';
+      navigationIntentTimer = 0;
+      requestRefresh();
+    }, NAVIGATION_INTENT_TIMEOUT_MS);
   };
 
   const updateProgress = () => {
@@ -179,6 +200,14 @@ export function initDNSNavigationRuntime(options) {
     }
     const atBottom = window.scrollY + window.innerHeight >= documentRoot.documentElement.scrollHeight - 2;
     if (atBottom) candidate = sections[sections.length - 1];
+    if (navigationIntentId) {
+      if (candidate?.id === navigationIntentId) {
+        clearNavigationIntent();
+      } else {
+        setActiveSection(navigationIntentId);
+        return;
+      }
+    }
     if (candidate?.id) setActiveSection(candidate.id);
   };
 
@@ -201,7 +230,10 @@ export function initDNSNavigationRuntime(options) {
   window.addEventListener('load', requestRefresh);
   tabs.forEach((tab) => tab.addEventListener('click', () => {
     const id = tab.dataset.section;
-    if (id) setActiveSection(id);
+    if (id) {
+      holdNavigationIntent(id);
+      setActiveSection(id);
+    }
   }));
 
   requestRefresh();
@@ -211,6 +243,7 @@ export function initDNSNavigationRuntime(options) {
     setActiveSection,
     disconnect() {
       observer.disconnect();
+      clearNavigationIntent();
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener('scroll', requestRefresh);
       window.removeEventListener('resize', requestRefresh);

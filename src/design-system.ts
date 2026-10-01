@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.13.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.13.1' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -250,7 +250,7 @@ export const DNS_DESIGN_SYSTEM = {
       runtime: {
         source: 'ui/navigation',
         stickyOffset: 'measured-header-height',
-        activeSection: 'measured-sticky-stack',
+        activeSection: 'click-priority-then-measured-sticky-stack',
         progress: 'document-scroll-ratio',
       },
     },
