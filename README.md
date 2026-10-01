@@ -13,7 +13,7 @@ This repository contains:
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.3
-- **DNS Design System:** v1.2
+- **DNS Design System:** v1.6
 - **DNS Access Control:** v0.1
 
 ## Source of truth
@@ -58,6 +58,18 @@ firebase.json
 .firebaserc
 ```
 
+
+## DNS Design System
+
+The current shared visual and interaction contract is **v1.6.0** and is documented in:
+
+```text
+docs/DNS-Design-System-v1.md
+```
+
+Its runtime source is `DNS_Core / designSystem/current`. Applications keep a local fallback and read the remote document for declarative tokens. Firestore contains configuration only; executable JavaScript remains versioned source code.
+
+The v1.6 contract includes shared motion, focus, hover/press, tab and reduced-motion behavior.
 
 ## Organization logos
 
