@@ -102,7 +102,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/fairmodel',
     phase: 'foundation-ui-aligned',
     firebaseProject: 'fair-modell · separate operational persistence',
-    datasetVersion: 'Foundation / Design System v1.12.1 · FAIR contract foundation-defined',
+    datasetVersion: 'Foundation / Design System v1.13.0 · FAIR contract foundation-defined',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -114,7 +114,7 @@ export const DNS_SYSTEM_STATUS = [
       dataContracts: 'partial',
       accessibility: 'adopted',
     },
-    note: 'Foundation shell, canonical navigation runtime, shared web logo, canonical regional-logo manifest, motion/interaction and Accessibility v1 are adopted. FAIR calculation logic and existing fair-modell persistence remain unchanged; the FAIR Data Contract is still foundation-defined pending data-domain integration.',
+    note: 'Foundation shell, canonical navigation, shared print runtime/tokens, shared web logo, canonical regional-logo manifest, motion/interaction and Accessibility v1 are adopted. FAIR uses Tailwind v4/Vite with legacy popup printing, local logo copies, Tailwind v3/PostCSS config and the vanilla-JS backup removed. FAIR calculation logic and existing fair-modell persistence remain unchanged; the FAIR Data Contract is still foundation-defined pending data-domain integration.',
   },
   {
     id: 'analytics',
