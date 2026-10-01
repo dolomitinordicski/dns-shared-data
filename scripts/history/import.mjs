@@ -5,14 +5,27 @@ import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { createHash, privateDecrypt, createDecipheriv, constants } from 'node:crypto';
 
 const apply = process.argv.includes('--apply');
 const local = process.argv.find(arg => arg.startsWith('--file='))?.slice(7);
 const directory = await mkdtemp(join(tmpdir(), 'dns-history-'));
 try {
  let payloadPath=local;
- if (!local) {
+ if (!payloadPath) {
+  try {
+   const encrypted=JSON.parse(await readFile('scripts/history/2025-26.encrypted.json','utf8'));
+   const credentials=JSON.parse(await readFile(process.env.GOOGLE_APPLICATION_CREDENTIALS,'utf8'));
+   const key=privateDecrypt({key:credentials.private_key,padding:constants.RSA_PKCS1_OAEP_PADDING,oaepHash:'sha256'},Buffer.from(encrypted.wrappedKey,'base64'));
+   const decipher=createDecipheriv('aes-256-gcm',key,Buffer.from(encrypted.iv,'base64'));
+   decipher.setAuthTag(Buffer.from(encrypted.tag,'base64'));
+   const plaintext=Buffer.concat([decipher.update(Buffer.from(encrypted.ciphertext,'base64')),decipher.final()]);
+   if(createHash('sha256').update(plaintext).digest('hex')!==encrypted.payloadSha256)throw new Error('Encrypted source digest mismatch');
+   payloadPath=join(directory,'history.json');await writeFile(payloadPath,plaintext);
+  } catch(error) {if(error.code!=='ENOENT')throw error;}
+ }
+
+ if (!payloadPath) {
   const auth = new GoogleAuth({scopes:['https://www.googleapis.com/auth/drive.readonly']});
   const credentials=await auth.getCredentials();
   console.log(`Source access account: ${credentials.client_email}`);
