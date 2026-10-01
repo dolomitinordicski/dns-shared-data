@@ -71,6 +71,8 @@ Its runtime source is `DNS_Core / designSystem/current`. Applications keep a loc
 
 The v1.6 contract includes shared motion, focus, hover/press, tab and reduced-motion behavior.
 
+The GitHub Pages architecture overview is also the visual reference implementation of this contract. It consumes the canonical tokens at runtime, prefers `DNS_Core / designSystem/current`, falls back to the versioned package mirror, and uses the shared motion/interaction behavior. The committed `web-runtime/design-system.js` browser mirror is CI-checked against `src/design-system.ts` to prevent silent drift.
+
 ## Shared UI runtime
 
 DNS motion and interaction behavior is implemented as versioned, framework-agnostic source code in:
