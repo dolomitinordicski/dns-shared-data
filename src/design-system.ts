@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.13.1' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.13.2' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -229,7 +229,7 @@ export const DNS_DESIGN_SYSTEM = {
       activeTextColor: '#FFFFFF',
       hoverTextColor: 'rgba(255,255,255,.85)',
       activeIndicator: 'bottom-border',
-      activeIndicatorColor: '#FFFFFF',
+      activeIndicatorColor: '#AAD0D1',
       activeIndicatorWidthPx: 3,
       buttonBackground: 'transparent',
       buttonRadiusPx: 0,
