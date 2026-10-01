@@ -1,4 +1,4 @@
-export const DNS_SYSTEM_STATUS_VERSION = '0.6.0' as const;
+export const DNS_SYSTEM_STATUS_VERSION = '0.7.0' as const;
 export const DNS_SYSTEM_STATUS_VERIFIED_AT = '2026-10-01' as const;
 
 export type DNSAdoptionState = 'adopted' | 'partial' | 'notYet' | 'na' | 'pending';
@@ -90,7 +90,7 @@ export const DNS_SYSTEM_STATUS = [
       auth: 'pending',
       sharedAssets: 'partial',
       regionLogos: 'partial',
-      motion: 'notYet',
+      motion: 'adopted',
       dataContracts: 'notYet',
       accessibility: 'notYet',
     },
@@ -140,9 +140,9 @@ export const DNS_SYSTEM_STATUS = [
     id: 'faktura',
     label: 'DNS Faktura / Commercial',
     repo: 'dolomitinordicski/DNS-Faktura',
-    phase: 'foundation-shell',
-    firebaseProject: 'dns-core · authenticated Orders read · billing persistence pending',
-    datasetVersion: 'F.2 · Billing Preparation v0.1 · Live Orders source · Shared Design System v1.13.2',
+    phase: 'commercial-rates',
+    firebaseProject: 'dns-core · authenticated Orders read · billingRateConfigs implemented · billing runs pending',
+    datasetVersion: 'F.2.1 · Billing Preparation v0.2 · sourced Commercial Rates · Shared Design System v1.13.2',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -154,7 +154,7 @@ export const DNS_SYSTEM_STATUS = [
       dataContracts: 'adopted',
       accessibility: 'adopted',
     },
-    note: 'F.2 implemented in DNS-Faktura: DNS-admin authentication and live read-only Orders integration from ticketOrders, ticketOrderLines and orderCatalogItems are adopted. Canonical entities/logos remain shared. Order quantities are shown live while billing rates intentionally remain unset until commercial source rates are defined. FAIR, IDM Premium, seasonal extras and billing persistence remain pending. Official invoices, payments and accounting integration remain out of scope.',
+    note: 'F.2.1 implemented in DNS-Faktura: exact Foundation header/language switch/responsive/season-selector/interaction/motion/print patterns are adopted; DNS-admin authentication and live read-only Orders integration remain active; admin-only billingRateConfigs now store sourced commercial rates by catalogue item with revision control and mandatory source document labels. No rates are seeded or inferred. FAIR, IDM Premium, seasonal extras and billing-run persistence remain pending. Official invoices, payments and accounting integration remain out of scope.',
   },
   {
     id: 'partner-portal',
