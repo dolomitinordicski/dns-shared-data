@@ -9,3 +9,19 @@ if (typeof runtime.initDNSNavigationRuntime !== 'function') {
 }
 
 console.log('✓ browser navigation runtime parses and exports initDNSNavigationRuntime');
+
+
+const chromeUrl = pathToFileURL(process.cwd() + '/web-runtime/tool-chrome.js').href + '?check=' + Date.now();
+const chrome = await import(chromeUrl);
+
+if (typeof chrome.initDNSToolChromeRuntime !== 'function') {
+  console.error('Browser Tool Chrome runtime does not export initDNSToolChromeRuntime');
+  process.exit(1);
+}
+
+if (typeof chrome.setDNSToolChromeActiveSection !== 'function') {
+  console.error('Browser Tool Chrome runtime does not export setDNSToolChromeActiveSection');
+  process.exit(1);
+}
+
+console.log('✓ browser Tool Chrome runtime parses and exports canonical helpers');
