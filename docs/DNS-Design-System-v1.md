@@ -298,6 +298,29 @@ All printable DNS tools must consume the shared print runtime and `DNS_DESIGN_SY
 Legacy popup/document-write print implementations are not part of the DNS architecture.
 
 
+## Canonical Header shell
+
+Foundation v1.15 defines the DNS Data Entry header as the canonical shell for all DNS tools.
+
+Required structure:
+- DNS web logo, 40 px desktop / 32 px mobile;
+- `DNS` bold + tool name regular, uppercase, 22 px desktop;
+- Roboto subtitle, uppercase, 11 px;
+- optional account context where authentication exists;
+- shared accessibility control;
+- DE / IT language switch;
+- optional session action where authentication exists;
+- DNS_Core live status at desktop wide breakpoint using the exact shared wording and counts.
+
+Applications use the shared `dns-tool-header-*` class contract and must not redefine header geometry, status colors, responsive visibility, or spacing locally.
+
+Scroll behavior is Foundation-owned:
+- scroll down past the activation threshold hides the corporate header;
+- the tool menu remains sticky and moves to the top edge;
+- meaningful scroll up reveals the corporate header;
+- the menu moves back below the revealed header;
+- reduced-motion preferences disable animated transforms.
+
 ## Canonical Tool Chrome runtime
 
 The shared header/navigation behavior is mounted through `src/ui/tool-chrome.ts`.
