@@ -10,6 +10,8 @@ type WidenToken<T> =
 
 export type DNSNavigationTokens = WidenToken<typeof DNS_DESIGN_SYSTEM.navigation>;
 export type DNSResponsiveTokens = WidenToken<typeof DNS_DESIGN_SYSTEM.responsive>;
+export type DNSHeaderTokens = WidenToken<typeof DNS_DESIGN_SYSTEM.header>;
+export type DNSMotionTokens = WidenToken<typeof DNS_DESIGN_SYSTEM.motion>;
 
 export interface DNSNavigationRuntimeOptions {
   root?: Document;
@@ -21,6 +23,8 @@ export interface DNSNavigationRuntimeOptions {
   sectionElements?: readonly HTMLElement[];
   navigation?: DNSNavigationTokens;
   responsive?: DNSResponsiveTokens;
+  headerTokens?: DNSHeaderTokens;
+  motion?: DNSMotionTokens;
   activeClassName?: string;
   activationOffsetPx?: number;
   onActiveSectionChange?: (id: string) => void;
@@ -38,6 +42,8 @@ const NAVIGATION_INTENT_TIMEOUT_MS = 1200;
 function setNavigationVariables(
   root: HTMLElement,
   navigation: DNSNavigationTokens,
+  header: DNSHeaderTokens,
+  motion: DNSMotionTokens,
 ) {
   const tabs = navigation.tabs;
   root.style.setProperty('--dns-tab-bg', tabs.containerBackground);
@@ -54,6 +60,9 @@ function setNavigationVariables(
   root.style.setProperty('--dns-scroll-progress-height', `${tabs.scrollProgress?.heightPx ?? 0}px`);
   root.style.setProperty('--dns-scroll-progress-color', tabs.scrollProgress?.color ?? '#AAD0D1');
   root.style.setProperty('--dns-scroll-progress-track', tabs.scrollProgress?.track ?? 'transparent');
+  root.style.setProperty('--dns-header-reveal-duration', `${motion.headerReveal?.durationMs ?? motion.fastMs ?? 200}ms`);
+  root.style.setProperty('--dns-header-reveal-easing', motion.headerReveal?.easing ?? motion.easing ?? 'ease');
+  root.style.setProperty('--dns-header-hide-percent', String(header.scrollBehavior?.hiddenTranslatePercent ?? -100));
 }
 
 function ensureNavigationStyles(
@@ -75,9 +84,20 @@ function ensureNavigationStyles(
   const mobileTabs = responsive.tabs.mobile;
 
   style.textContent = `
+.dns-foundation-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  transform: translateY(0);
+  transition: transform var(--dns-header-reveal-duration, 220ms) var(--dns-header-reveal-easing, ease);
+  will-change: transform;
+}
+.dns-foundation-header[data-dns-scroll-state="hidden"] {
+  transform: translateY(calc(var(--dns-header-hide-percent, -100) * 1%));
+}
 .dns-tab-nav {
   position: sticky;
-  top: var(--dns-header-height, 0px);
+  top: var(--dns-header-visible-height, var(--dns-header-height, 0px));
   z-index: 25;
   background: var(--dns-nav-surface-bg);
   backdrop-filter: blur(var(--dns-nav-backdrop-blur));
@@ -86,6 +106,7 @@ function ensureNavigationStyles(
   overflow-y: hidden;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
+  transition: top var(--dns-header-reveal-duration, 220ms) var(--dns-header-reveal-easing, ease);
 }
 
 .dns-scroll-progress-track {
@@ -171,6 +192,13 @@ function ensureNavigationStyles(
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .dns-foundation-header,
+  .dns-tab-nav {
+    transition-duration: 0ms !important;
+  }
+}
+
 @media (max-width: ${mobileMax}px) {
   .dns-tab-nav {
     scroll-snap-type: x proximity;
@@ -208,26 +236,68 @@ export function initDNSNavigationRuntime(
 
   const navigation = options.navigation ?? DNS_DESIGN_SYSTEM.navigation;
   const responsive = options.responsive ?? DNS_DESIGN_SYSTEM.responsive;
+  const headerTokens = options.headerTokens ?? DNS_DESIGN_SYSTEM.header;
+  const motion = options.motion ?? DNS_DESIGN_SYSTEM.motion;
   const activeClassName = options.activeClassName ?? 'dns-tab-active';
   const activationOffsetPx = options.activationOffsetPx ?? 16;
   const tabs = Array.from(options.sectionTabs ?? []);
   const sections = Array.from(options.sectionElements ?? []);
 
-  setNavigationVariables(documentRoot.documentElement, navigation);
+  setNavigationVariables(documentRoot.documentElement, navigation, headerTokens, motion);
   ensureNavigationStyles(documentRoot, navigation, responsive);
+
+  options.header.classList.add('dns-foundation-header');
+  options.header.dataset.dnsScrollState = 'shown';
 
   let frame = 0;
   let activeId = '';
   let navigationIntentId = '';
   let navigationIntentTimer = 0;
   let stickyObserver: ResizeObserver | null = null;
+  let lastScrollY = Math.max(0, window.scrollY);
+  let headerVisible = true;
+
+  const setHeaderVisible = (visible: boolean) => {
+    if (headerVisible === visible) return;
+    headerVisible = visible;
+    options.header.dataset.dnsScrollState = visible ? 'shown' : 'hidden';
+  };
+
+  const updateHeaderVisibility = () => {
+    const behavior = headerTokens.scrollBehavior;
+    if (!behavior?.enabled || !behavior.hideOnScrollDown) {
+      setHeaderVisible(true);
+      lastScrollY = Math.max(0, window.scrollY);
+      return;
+    }
+
+    const y = Math.max(0, window.scrollY);
+    if (y <= (behavior.topRevealPx ?? 12)) {
+      setHeaderVisible(true);
+      lastScrollY = y;
+      return;
+    }
+
+    const delta = y - lastScrollY;
+    if (Math.abs(delta) < (behavior.directionDeltaPx ?? 6)) return;
+
+    if (delta > 0 && y > (behavior.hideAfterPx ?? 72)) {
+      setHeaderVisible(false);
+    } else if (delta < 0 && behavior.revealOnScrollUp !== false) {
+      setHeaderVisible(true);
+    }
+
+    lastScrollY = y;
+  };
 
   const updateStickyMetrics = () => {
     const headerHeight = Math.ceil(options.header.getBoundingClientRect().height);
     const navHeight = Math.ceil(options.nav.getBoundingClientRect().height);
+    const visibleHeaderHeight = headerVisible ? headerHeight : 0;
     const root = documentRoot.documentElement;
     root.style.setProperty('--dns-header-height', `${headerHeight}px`);
-    root.style.setProperty('--dns-sticky-stack-height', `${headerHeight + navHeight}px`);
+    root.style.setProperty('--dns-header-visible-height', `${visibleHeaderHeight}px`);
+    root.style.setProperty('--dns-sticky-stack-height', `${visibleHeaderHeight + navHeight}px`);
   };
 
   const setActiveSection = (id: string) => {
@@ -273,7 +343,7 @@ export function initDNSNavigationRuntime(
   const updateActiveSection = () => {
     if (!sections.length) return;
 
-    const headerHeight = options.header.getBoundingClientRect().height;
+    const headerHeight = headerVisible ? options.header.getBoundingClientRect().height : 0;
     const navHeight = options.nav.getBoundingClientRect().height;
     const activationLine = window.scrollY + headerHeight + navHeight + activationOffsetPx;
 
@@ -303,6 +373,7 @@ export function initDNSNavigationRuntime(
 
   const refreshNow = () => {
     frame = 0;
+    updateHeaderVisibility();
     updateStickyMetrics();
     updateProgress();
     updateActiveSection();
@@ -339,6 +410,8 @@ export function initDNSNavigationRuntime(
     disconnect() {
       stickyObserver?.disconnect();
       clearNavigationIntent();
+      options.header.classList.remove('dns-foundation-header');
+      delete options.header.dataset.dnsScrollState;
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener('scroll', requestRefresh);
       window.removeEventListener('resize', requestRefresh);
