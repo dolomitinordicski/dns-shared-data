@@ -858,6 +858,107 @@
       font-size: 9px;
       line-height: 1.2;
     }
+
+    .dns-status-progress {
+      overflow: hidden;
+      height: 10px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--color-dns-mid) 10%, white);
+    }
+    .dns-status-progress > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--color-dns-light);
+      transition: width var(--dns-motion-reveal) var(--dns-motion-easing);
+    }
+    .dns-status-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--color-dns-subtle-border);
+      border-radius: var(--dns-card-radius);
+      background: var(--color-dns-surface);
+      box-shadow: var(--dns-card-shadow);
+    }
+    .dns-status-table {
+      width: 100%;
+      min-width: 1180px;
+      border-collapse: collapse;
+      font-family: var(--font-alt);
+      font-size: 10px;
+    }
+    .dns-status-table th,
+    .dns-status-table td {
+      padding: .75rem .7rem;
+      border-bottom: 1px solid var(--color-dns-subtle-border);
+      vertical-align: middle;
+      text-align: left;
+    }
+    .dns-status-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: var(--color-dns-bg);
+      color: var(--color-dns-mid);
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .dns-status-table tbody tr:last-child td { border-bottom: 0; }
+    .dns-status-table tbody tr:hover { background: color-mix(in srgb, var(--color-dns-light) 8%, white); }
+    .dns-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      border-radius: 999px;
+      padding: .24rem .48rem;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .dns-status-badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: .7;
+    }
+    .dns-status-badge.is-adopted {
+      background: color-mix(in srgb, var(--color-dns-light) 35%, white);
+      color: var(--color-dns-deep);
+    }
+    .dns-status-badge.is-partial {
+      border: 1px solid var(--color-dns-border);
+      background: var(--color-dns-bg);
+      color: var(--color-dns-mid);
+    }
+    .dns-status-badge.is-notYet {
+      background: rgba(153,60,29,.08);
+      color: var(--color-dns-negative);
+    }
+    .dns-status-badge.is-na,
+    .dns-status-badge.is-pending {
+      border: 1px dashed var(--color-dns-border);
+      background: white;
+      color: var(--color-dns-muted);
+    }
+    .dns-status-mini-progress {
+      width: 92px;
+      height: 6px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--color-dns-mid) 10%, white);
+    }
+    .dns-status-mini-progress > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--color-dns-light);
+    }
     @media (max-width: 1023px) {
       .dns-tab-nav-inner { padding: 0 1rem; }
       .dns-tab { padding-left: .95rem; padding-right: .95rem; }
@@ -931,6 +1032,9 @@
       </a>
       <a href="#data-contracts" class="dns-tab" data-section="data-contracts">
         <span class="lang-de">07 · Data Contracts</span><span class="lang-it">07 · Data Contracts</span>
+      </a>
+      <a href="#system-status" class="dns-tab" data-section="system-status">
+        <span class="lang-de">08 · System Status</span><span class="lang-it">08 · System Status</span>
       </a>
     </div>
   </nav>
@@ -1952,6 +2056,88 @@
       </div>
     </section>
 
+    <section id="system-status" class="dns-page-shell section-anchor mx-auto max-w-[1440px] px-5 py-5 md:px-8">
+      <div class="dns-editorial-heading mb-8 max-w-3xl">
+        <div class="lang-de">
+          <p class="dns-kicker">08 · System Status</p>
+          <h2 class="mt-1 font-semibold tracking-[-.02em] text-dns-deep">Foundation-Adoption und System-Health auf einen Blick</h2>
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
+            Heute zeigt diese Ansicht den Migrationsfortschritt. Sobald das System vollständig aktiv ist, bleibt sie als Alignment- und Health-Check bestehen: Versionen, Firebase-Domains, Auth, Assets und gemeinsame Verträge.
+          </p>
+        </div>
+        <div class="lang-it">
+          <p class="dns-kicker">08 · System Status</p>
+          <h2 class="mt-1 font-semibold tracking-[-.02em] text-dns-deep">Adozione della Foundation e system health in un colpo d’occhio</h2>
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
+            Oggi questa vista mostra l’avanzamento della migrazione. Quando il sistema sarà pienamente attivo resterà come controllo di allineamento e health: versioni, domini Firebase, Auth, asset e contratti condivisi.
+          </p>
+        </div>
+      </div>
+
+      <div class="dns-card dns-card-primary p-5 md:p-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p class="dns-kicker">Foundation adoption</p>
+            <div class="mt-1 flex items-baseline gap-3">
+              <strong id="system-status-global-percent" class="text-[34px] tracking-[-.03em] text-dns-deep">—</strong>
+              <span id="system-status-global-count" class="font-alt text-[11px] text-dns-muted">calculating…</span>
+            </div>
+          </div>
+          <div class="font-alt text-[10px] text-dns-muted">
+            <span class="lang-de">Verifiziert am</span><span class="lang-it">Verificato il</span>
+            <strong id="system-status-verified-at" class="ml-1 text-dns-deep">—</strong>
+          </div>
+        </div>
+        <div class="dns-status-progress mt-4" aria-label="Global foundation adoption">
+          <span id="system-status-global-bar" style="width:0%"></span>
+        </div>
+        <p class="mt-3 font-alt text-[10px] leading-relaxed text-dns-muted">
+          <span class="lang-de">Berechnung: Adopted = 1, Partial = 0,5, Not yet = 0. N/A und Pending audit werden nicht in den Nenner aufgenommen.</span>
+          <span class="lang-it">Calcolo: Adopted = 1, Partial = 0,5, Not yet = 0. N/A e Pending audit non entrano nel denominatore.</span>
+        </p>
+      </div>
+
+      <div class="mt-5 flex flex-wrap gap-2">
+        <span class="dns-status-badge is-adopted">Adopted</span>
+        <span class="dns-status-badge is-partial">Partial</span>
+        <span class="dns-status-badge is-notYet">Not yet</span>
+        <span class="dns-status-badge is-pending">Pending audit</span>
+        <span class="dns-status-badge is-na">N/A</span>
+      </div>
+
+      <div class="dns-status-table-wrap mt-5">
+        <table class="dns-status-table">
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Progress</th>
+              <th>Design System</th>
+              <th>Shared Data</th>
+              <th>Firebase</th>
+              <th>Auth</th>
+              <th>Shared Assets</th>
+              <th>Region Logos</th>
+              <th>Motion</th>
+              <th>Data Contracts</th>
+              <th>Dataset / Schema</th>
+            </tr>
+          </thead>
+          <tbody id="system-status-body">
+            <tr><td colspan="11" class="text-dns-muted">Loading system status registry…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="dns-context-soft mt-5 rounded-lg border px-5 py-4">
+        <div class="lang-de font-alt text-[11px] leading-relaxed text-dns-mid">
+          <strong class="text-dns-deep">Langfristig:</strong> Wenn alle Tools 100% Foundation-aligned sind, verschwindet diese Sektion nicht. Sie wird zum Drift-Monitor: eine veraltete Version oder lokale Kopie wird wieder sichtbar.
+        </div>
+        <div class="lang-it font-alt text-[11px] leading-relaxed text-dns-mid">
+          <strong class="text-dns-deep">A regime:</strong> quando tutti i tool saranno 100% Foundation-aligned, questa sezione non scompare. Diventa un monitor del drift: una versione obsoleta o una copia locale torna subito visibile.
+        </div>
+      </div>
+    </section>
+
     <section class="dns-page-shell mx-auto max-w-[1440px] px-5 py-5 md:px-8">
       <div class="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
         <article class="dns-card p-5 md:p-6">
@@ -2378,6 +2564,11 @@
   <script type="module">
     import { DNS_DESIGN_SYSTEM } from './web-runtime/design-system.js';
     import { DNS_DATA_CONTRACTS, DNS_DATA_CONTRACTS_VERSION } from './web-runtime/data-contracts.js';
+    import {
+      DNS_SYSTEM_STATUS,
+      DNS_SYSTEM_STATUS_CRITERIA,
+      DNS_SYSTEM_STATUS_VERIFIED_AT,
+    } from './web-runtime/system-status.js';
     import { initDNSRevealRuntime, initDNSInteractionRuntime } from './web-runtime/runtime.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
     import { doc, getDoc, getFirestore } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
@@ -2453,6 +2644,98 @@
     }
 
     renderDataContracts();
+
+    function statusScore(state) {
+      if (state === 'adopted') return { score: 1, applicable: 1 };
+      if (state === 'partial') return { score: .5, applicable: 1 };
+      if (state === 'notYet') return { score: 0, applicable: 1 };
+      return { score: 0, applicable: 0 };
+    }
+
+    function statusLabel(state) {
+      return {
+        adopted: 'Adopted',
+        partial: 'Partial',
+        notYet: 'Not yet',
+        pending: 'Pending audit',
+        na: 'N/A',
+      }[state] ?? state;
+    }
+
+    function toolProgress(entry) {
+      let score = 0;
+      let applicable = 0;
+      for (const criterion of DNS_SYSTEM_STATUS_CRITERIA) {
+        const result = statusScore(entry.criteria[criterion.id]);
+        score += result.score;
+        applicable += result.applicable;
+      }
+      return {
+        score,
+        applicable,
+        percent: applicable ? Math.round((score / applicable) * 100) : 0,
+      };
+    }
+
+    function renderSystemStatus() {
+      const body = document.getElementById('system-status-body');
+      if (!body) return;
+
+      let globalScore = 0;
+      let globalApplicable = 0;
+      body.innerHTML = '';
+
+      DNS_SYSTEM_STATUS.forEach((entry) => {
+        const progress = toolProgress(entry);
+        globalScore += progress.score;
+        globalApplicable += progress.applicable;
+
+        const row = document.createElement('tr');
+        const cells = DNS_SYSTEM_STATUS_CRITERIA.map((criterion) => {
+          const state = entry.criteria[criterion.id];
+          return `<td><span class="dns-status-badge is-${state}">${statusLabel(state)}</span></td>`;
+        }).join('');
+
+        const scoreText = Number.isInteger(progress.score)
+          ? String(progress.score)
+          : progress.score.toFixed(1);
+
+        row.innerHTML = `
+          <td>
+            <div class="font-semibold text-dns-deep">${entry.label}</div>
+            <div class="mt-1 text-[8px] uppercase tracking-[.05em] text-dns-muted">${entry.phase.replaceAll('-', ' ')}</div>
+          </td>
+          <td>
+            <div class="flex items-center gap-2">
+              <div class="dns-status-mini-progress"><span style="width:${progress.percent}%"></span></div>
+              <strong class="text-dns-deep">${progress.percent}%</strong>
+            </div>
+            <div class="mt-1 text-[8px] text-dns-muted">${scoreText}/${progress.applicable} audited controls</div>
+          </td>
+          ${cells}
+          <td>
+            <div class="max-w-[230px] leading-relaxed text-dns-deep">${entry.datasetVersion}</div>
+            <div class="mt-1 text-[8px] text-dns-muted">${entry.firebaseProject}</div>
+          </td>
+        `;
+        body.appendChild(row);
+      });
+
+      const globalPercent = globalApplicable
+        ? Math.round((globalScore / globalApplicable) * 100)
+        : 0;
+      const globalScoreText = Number.isInteger(globalScore)
+        ? String(globalScore)
+        : globalScore.toFixed(1);
+
+      document.getElementById('system-status-global-percent').textContent = `${globalPercent}%`;
+      document.getElementById('system-status-global-count').textContent =
+        `${globalScoreText} of ${globalApplicable} audited controls adopted`;
+      document.getElementById('system-status-global-bar').style.width = `${globalPercent}%`;
+      document.getElementById('system-status-verified-at').textContent = DNS_SYSTEM_STATUS_VERIFIED_AT;
+    }
+
+    renderSystemStatus();
 
     function isPlainObject(value) {
       return value && typeof value === 'object' && !Array.isArray(value);

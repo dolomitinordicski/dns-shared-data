@@ -9,6 +9,7 @@ on:
       - 'index.html'
       - 'scripts/check-web-design-system.mjs'
       - 'scripts/check-web-data-contracts.mjs'
+      - 'scripts/check-web-system-status.mjs'
       - 'package.json'
       - 'tsconfig.json'
       - 'tsconfig.package.json'
@@ -20,6 +21,7 @@ on:
       - 'index.html'
       - 'scripts/check-web-design-system.mjs'
       - 'scripts/check-web-data-contracts.mjs'
+      - 'scripts/check-web-system-status.mjs'
       - 'package.json'
       - 'tsconfig.json'
       - 'tsconfig.package.json'
@@ -58,3 +60,6 @@ jobs:
 
       - name: Verify browser Data Contracts mirror
         run: node scripts/check-web-data-contracts.mjs
+
+      - name: Verify browser System Status mirror
+        run: node scripts/check-web-system-status.mjs
