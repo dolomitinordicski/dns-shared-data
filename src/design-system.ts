@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.6.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.7.0' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -420,6 +420,22 @@ export const DNS_DESIGN_SYSTEM = {
       rule:
         'Render the print document outside the application root so hidden web layout never contributes phantom pages.',
     },
+  },
+  semanticAccent: {
+    colorToken: 'colors.light',
+    meaning: ['shared', 'connected', 'contextual'],
+    usage: {
+      primaryCardAccent: true,
+      editorialMicroAccent: true,
+      contextualSelectionBackground: true,
+      diagramSecondaryConnections: true,
+    },
+    avoid: [
+      'large decorative fills',
+      'default body backgrounds',
+      'passive-card hover effects',
+      'primary-action replacement',
+    ],
   },
   behavior: {
     bilingualPattern: 'de-it',
