@@ -1,0 +1,46 @@
+name: Validate DNS Shared Package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'tsconfig.json'
+      - 'tsconfig.package.json'
+      - '.github/workflows/validate-shared-package.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'tsconfig.json'
+      - 'tsconfig.package.json'
+      - '.github/workflows/validate-shared-package.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies and run prepare
+        run: npm install
+
+      - name: Build package
+        run: npm run build:package
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Verify package contents
+        run: npm pack --dry-run
