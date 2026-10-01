@@ -6,52 +6,25 @@
   <meta name="description" content="DNS Shared Data — Architektur, Datenmodell und Firebase-System von Dolomiti NordicSki." />
   <title>DNS Shared Data — System Architecture</title>
 
-  <!--
-    DNS Design System runtime contract
-    Runtime source: DNS_Core / Firestore / designSystem/current
-    The values below are the v1.5 local fallback required by the shared contract.
-  -->
+  <!-- DNS Data Entry reference implementation: local fallback + DNS_Core runtime tokens -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --dns-deep: #0D4D5E;
-      --dns-mid: #417483;
-      --dns-light: #AAD0D1;
-      --dns-background: #F4F8F9;
-      --dns-surface: #FFFFFF;
-      --dns-dark-text: #313131;
-      --dns-gray: #DDDDDD;
-      --dns-primary-dark: #08343F;
-      --dns-secondary-dark: #7BBABC;
-      --dns-muted-text: #5A7F8A;
-      --dns-positive: #0F6E56;
-      --dns-negative: #993C1D;
-      --dns-border: rgba(65,116,131,.20);
-      --dns-subtle-border: rgba(65,116,131,.08);
-
-      --dns-font-primary: "Be Vietnam Pro", Arial, sans-serif;
-      --dns-font-secondary: "Roboto", Arial, sans-serif;
-
+      --color-dns-deep: #0D4D5E;
+      --color-dns-mid: #417483;
+      --color-dns-light: #AAD0D1;
+      --color-dns-bg: #F4F8F9;
+      --color-dns-surface: #FFFFFF;
+      --color-dns-muted: #718990;
+      --font-display: "Be Vietnam Pro", sans-serif;
+      --font-alt: "Roboto", sans-serif;
       --dns-card-radius: 10px;
       --dns-control-radius: 6px;
-      --dns-badge-radius: 20px;
-
       --dns-card-shadow: 0 1px 4px rgba(13,77,94,.07);
       --dns-header-shadow: 0 1px 0 rgba(255,255,255,.08);
-      --dns-floating-shadow: 0 4px 6px rgba(0,0,0,.10);
-
-      --dns-header-background: #0D4D5E;
-      --dns-header-title: #FFFFFF;
-      --dns-header-subtitle: #AAD0D1;
-      --dns-footer-background: #0D4D5E;
-      --dns-footer-text: rgba(255,255,255,.62);
-
-      --dns-motion-fast: 200ms;
-      --dns-motion-standard: 300ms;
-      --dns-motion-easing: ease;
     }
   </style>
 
@@ -62,24 +35,23 @@
         extend: {
           colors: {
             dns: {
-              deep: 'var(--dns-deep)',
-              primary: 'var(--dns-deep)',
-              mid: 'var(--dns-mid)',
-              light: 'var(--dns-light)',
-              ice: 'var(--dns-light)',
-              snow: 'var(--dns-background)',
-              paper: 'var(--dns-surface)',
-              text: 'var(--dns-dark-text)',
-              muted: 'var(--dns-muted-text)',
-              border: 'var(--dns-border)',
-              positive: 'var(--dns-positive)',
-              negative: 'var(--dns-negative)'
+              deep: 'var(--color-dns-deep)',
+              primary: 'var(--color-dns-deep)',
+              mid: 'var(--color-dns-mid)',
+              light: 'var(--color-dns-light)',
+              ice: 'var(--color-dns-light)',
+              bg: 'var(--color-dns-bg)',
+              snow: 'var(--color-dns-bg)',
+              surface: 'var(--color-dns-surface)',
+              paper: 'var(--color-dns-surface)',
+              muted: 'var(--color-dns-muted)',
+              border: 'rgba(65,116,131,.20)'
             }
           },
           fontFamily: {
-            sans: ['"Be Vietnam Pro"', 'Arial', 'sans-serif'],
-            data: ['Roboto', 'Arial', 'sans-serif'],
-            mono: ['"SFMono-Regular"', 'Consolas', '"Liberation Mono"', 'monospace']
+            sans: ['"Be Vietnam Pro"', 'sans-serif'],
+            alt: ['Roboto', 'sans-serif'],
+            mono: ['Roboto', 'sans-serif']
           },
           boxShadow: {
             soft: 'var(--dns-card-shadow)'
@@ -90,49 +62,128 @@
   </script>
 
   <style>
+    * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
-      background: var(--dns-background);
-      color: var(--dns-dark-text);
-      font-family: var(--dns-font-primary);
+      margin: 0;
+      background: var(--color-dns-bg);
+      color: var(--color-dns-deep);
+      font-family: var(--font-display);
     }
-
+    button, input, select { font: inherit; }
+    .font-alt { font-family: var(--font-alt); }
     .lang-it { display: none; }
 
-    .dns-site-header {
-      background: var(--dns-header-background);
-      color: var(--dns-header-title);
-      box-shadow: var(--dns-header-shadow);
+    .dns-card {
+      background: var(--color-dns-surface, #fff);
+      border-radius: var(--dns-card-radius);
+      box-shadow: var(--dns-card-shadow);
     }
 
-    .dns-site-header .dns-header-subtitle { color: var(--dns-header-subtitle); }
-
-    .dns-site-footer {
-      background: var(--dns-footer-background);
-      color: var(--dns-footer-text);
+    .dns-section-title {
+      color: var(--color-dns-deep);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
     }
 
-    .dns-site-footer .dns-footer-brand { color: #fff; }
+    .dns-kicker {
+      color: var(--color-dns-mid);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .dns-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      border: 1px solid rgba(65,116,131,.20);
+      border-radius: 9999px;
+      background: #fff;
+      padding: .375rem .75rem;
+      color: var(--color-dns-mid);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .dns-tab-nav {
+      position: sticky;
+      top: 68px;
+      z-index: 25;
+      background: var(--color-dns-mid);
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .dns-tab-nav-inner {
+      display: flex;
+      align-items: center;
+      min-width: max-content;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+    }
+
+    .dns-tab-season {
+      flex: 0 0 auto;
+      margin-right: .5rem;
+      padding: .65rem .8rem .62rem 0;
+      color: rgba(255,255,255,.82);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .dns-tab {
+      flex: 0 0 auto;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      border-radius: 0;
+      background: transparent;
+      padding: .65rem 1.2rem .62rem;
+      color: rgba(255,255,255,.60);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-decoration: none;
+      text-transform: uppercase;
+      white-space: nowrap;
+      transition: color .2s ease, border-color .2s ease;
+      scroll-snap-align: start;
+    }
+
+    .dns-tab:hover { color: rgba(255,255,255,.85); }
+    .dns-tab-active {
+      color: #fff;
+      border-bottom-color: #fff;
+    }
 
     .dns-lang-button {
-      border: 1px solid rgba(255,255,255,.32);
-      border-radius: var(--dns-control-radius);
+      border: 0;
+      border-bottom: 2px solid transparent;
       background: transparent;
+      padding: .25rem;
       color: #fff;
-      padding: .375rem .75rem;
-      font-size: .75rem;
+      font-size: 10px;
       font-weight: 700;
-      transition:
-        background-color var(--dns-motion-standard) var(--dns-motion-easing),
-        color var(--dns-motion-standard) var(--dns-motion-easing),
-        border-color var(--dns-motion-standard) var(--dns-motion-easing);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      transition: opacity .2s ease, border-color .2s ease;
     }
-
-    .dns-lang-button:hover { border-color: rgba(255,255,255,.72); }
+    .dns-lang-button:not(.is-active) { opacity: .60; }
     .dns-lang-button.is-active {
-      background: #fff;
-      border-color: #fff;
-      color: var(--dns-deep);
+      border-bottom-color: #fff;
+      opacity: 1;
     }
 
     .rounded-3xl,
@@ -140,90 +191,104 @@
     .rounded-xl {
       border-radius: var(--dns-card-radius) !important;
     }
-
     .shadow-soft { box-shadow: var(--dns-card-shadow) !important; }
 
     .diagram-arrow::after {
       content: "↓";
       display: block;
-      text-align: center;
+      margin: .6rem 0;
+      color: var(--color-dns-mid);
       font-size: 1.4rem;
       line-height: 1;
-      color: var(--dns-mid);
-      margin: .6rem 0;
+      text-align: center;
     }
-
     .diagram-arrow-horizontal::after {
       content: "→";
-      color: var(--dns-mid);
+      margin: 0 .45rem;
+      color: var(--color-dns-mid);
       font-size: 1.4rem;
       line-height: 1;
-      margin: 0 .45rem;
     }
 
-    .fine-grid {
-      background-image:
-        linear-gradient(to right, rgba(65,116,131,.07) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(65,116,131,.07) 1px, transparent 1px);
-      background-size: 28px 28px;
+    .section-anchor { scroll-margin-top: 116px; }
+
+    @media (max-width: 1023px) {
+      .dns-tab-nav-inner { padding: 0 1rem; }
+      .dns-tab { padding-left: .95rem; padding-right: .95rem; }
     }
 
-    .section-anchor { scroll-margin-top: 90px; }
+    @media (max-width: 767px) {
+      .dns-tab-nav {
+        top: 62px;
+        scroll-snap-type: x proximity;
+      }
+      .dns-tab-nav-inner { padding: 0 .9rem; }
+      .dns-tab-season {
+        padding-top: .55rem;
+        padding-bottom: .52rem;
+      }
+      .dns-tab {
+        padding: .55rem .8rem .52rem;
+        font-size: 10px;
+      }
+    }
   </style>
 </head>
 
-<body class="text-dns-text antialiased" data-dns-design-source="fallback" data-dns-design-version="1.5.0">
-  <header class="dns-site-header sticky top-0 z-50 border-b border-white/10 backdrop-blur">
-    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-      <a href="#top" class="flex min-w-0 items-center gap-4">
+<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.0.0">
+  <header class="sticky top-0 z-30 bg-dns-deep text-white shadow-[0_1px_0_rgba(255,255,255,.08)]">
+    <div class="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-6 px-5 py-3.5 md:px-8">
+      <a href="#top" class="flex min-w-0 items-center gap-4 text-white no-underline">
         <img
-          src="https://raw.githubusercontent.com/dolomitinordicski/hub/main/logo.png"
+          src="https://raw.githubusercontent.com/dolomitinordicski/dns-shared-data/main/brand/logo-web.png"
           alt="Dolomiti NordicSki"
-          class="h-10 w-auto shrink-0"
+          class="h-10 w-auto shrink-0 object-contain"
         />
-        <div class="hidden min-w-0 sm:block">
-          <div class="truncate text-sm uppercase tracking-[0.18em]">
-            <span class="font-extrabold">DNS</span>
-            <span class="font-medium"> Shared Data</span>
+        <div>
+          <div class="text-[22px] uppercase tracking-[.035em] leading-none">
+            <strong>DNS</strong> <span class="font-normal">SHARED DATA</span>
           </div>
-          <div class="dns-header-subtitle text-[11px] font-medium">
+          <div class="mt-1.5 font-alt text-[11px] uppercase tracking-[.06em] text-dns-light">
             Foundation v1.2 · Canonical Dataset v1.1
           </div>
         </div>
       </a>
 
-      <div class="flex items-center gap-2">
-        <button
-          id="btn-de"
-          class="dns-lang-button is-active"
-          onclick="setLang('de')"
-          aria-label="Deutsch"
-        >DE</button>
-        <button
-          id="btn-it"
-          class="dns-lang-button"
-          onclick="setLang('it')"
-          aria-label="Italiano"
-        >IT</button>
+      <div class="flex gap-3 text-[10px] font-bold uppercase tracking-[.06em]">
+        <button id="btn-de" type="button" class="dns-lang-button is-active" onclick="setLang('de')" aria-label="Deutsch">DE</button>
+        <button id="btn-it" type="button" class="dns-lang-button" onclick="setLang('it')" aria-label="Italiano">IT</button>
       </div>
     </div>
   </header>
 
+  <nav class="dns-tab-nav" aria-label="DNS Shared Data">
+    <div class="dns-tab-nav-inner">
+      <div class="dns-tab-season">DNS Foundation</div>
+      <a href="#overview" class="dns-tab dns-tab-active" data-section="overview">
+        <span class="lang-de">Gesamtsystem</span><span class="lang-it">Sistema generale</span>
+      </a>
+      <a href="#datasets" class="dns-tab" data-section="datasets">
+        <span class="lang-de">Datenkategorien</span><span class="lang-it">Categorie dati</span>
+      </a>
+      <a href="#firebase" class="dns-tab" data-section="firebase">Firebase & Apps</a>
+      <a href="#flows" class="dns-tab" data-section="flows">
+        <span class="lang-de">Datenflüsse</span><span class="lang-it">Flussi dati</span>
+      </a>
+    </div>
+  </nav>
+
   <main id="top">
-    <section class="fine-grid border-b border-dns-border bg-gradient-to-b from-white to-dns-snow">
-      <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
+    <section class="border-b border-dns-mid/10 bg-dns-bg">
+      <div class="mx-auto w-full max-w-[1440px] px-5 py-8 md:px-8">
         <div class="max-w-4xl">
-          <div class="mb-5 flex flex-wrap gap-2">
-            <span class="rounded-full bg-dns-primary px-3 py-1 text-[11px] font-bold uppercase tracking-[.16em] text-white">DNS Foundation v1.2</span>
-            <span class="rounded-full border border-dns-muted/30 bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[.16em] text-dns-primary">Canonical Dataset v1.1</span>
-          </div>
+          <div class="dns-kicker">DNS Foundation v1.2 · Canonical Dataset v1.1</div>
 
           <div class="lang-de">
-            <p class="mb-3 text-sm font-bold uppercase tracking-[.18em] text-dns-muted">Dolomiti NordicSki Digital Platform</p>
-            <h1 class="max-w-4xl text-4xl font-extrabold leading-[1.04] tracking-[-.035em] sm:text-5xl lg:text-6xl">
+            <p class="dns-kicker mt-3">Dolomiti NordicSki Digital Platform</p>
+            <h1 class="mt-1 max-w-4xl text-[27px] font-semibold tracking-[-.02em] text-dns-deep">
               Ein gemeinsames Datensystem für alle DNS-Tools.
             </h1>
-            <p class="mt-6 max-w-3xl text-base leading-7 text-dns-muted sm:text-lg">
+            <p class="mt-3 max-w-3xl font-alt text-[12px] leading-relaxed text-dns-muted">
               Diese Seite zeigt in einfacher Form, wie gemeinsame Stammdaten, Firebase, Partner Portal,
               FAIR, Analytics, Polls, Ticket Orders und XGLA4 zusammenarbeiten — ohne dieselben Daten
               mehrfach und widersprüchlich zu speichern.
@@ -231,11 +296,11 @@
           </div>
 
           <div class="lang-it">
-            <p class="mb-3 text-sm font-bold uppercase tracking-[.18em] text-dns-muted">Dolomiti NordicSki Digital Platform</p>
-            <h1 class="max-w-4xl text-4xl font-extrabold leading-[1.04] tracking-[-.035em] sm:text-5xl lg:text-6xl">
+            <p class="dns-kicker mt-3">Dolomiti NordicSki Digital Platform</p>
+            <h1 class="mt-1 max-w-4xl text-[27px] font-semibold tracking-[-.02em] text-dns-deep">
               Un unico sistema dati per tutti i tool DNS.
             </h1>
-            <p class="mt-6 max-w-3xl text-base leading-7 text-dns-muted sm:text-lg">
+            <p class="mt-3 max-w-3xl font-alt text-[12px] leading-relaxed text-dns-muted">
               Questa pagina mostra in modo semplice come dati master condivisi, Firebase, Partner Portal,
               FAIR, Analytics, Polls, Ticket Orders e XGLA4 lavorano insieme — evitando copie incoerenti
               dello stesso dato.
@@ -243,32 +308,10 @@
           </div>
         </div>
 
-        <div class="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <a href="#overview" class="rounded-2xl border border-dns-border bg-white p-4 shadow-soft transition hover:-translate-y-0.5">
-            <div class="text-xs font-bold uppercase tracking-[.14em] text-dns-muted">01</div>
-            <div class="lang-de mt-2 font-bold">Gesamtsystem</div>
-            <div class="lang-it mt-2 font-bold">Sistema generale</div>
-          </a>
-          <a href="#datasets" class="rounded-2xl border border-dns-border bg-white p-4 shadow-soft transition hover:-translate-y-0.5">
-            <div class="text-xs font-bold uppercase tracking-[.14em] text-dns-muted">02</div>
-            <div class="lang-de mt-2 font-bold">Datenkategorien</div>
-            <div class="lang-it mt-2 font-bold">Categorie dati</div>
-          </a>
-          <a href="#firebase" class="rounded-2xl border border-dns-border bg-white p-4 shadow-soft transition hover:-translate-y-0.5">
-            <div class="text-xs font-bold uppercase tracking-[.14em] text-dns-muted">03</div>
-            <div class="lang-de mt-2 font-bold">Firebase & Apps</div>
-            <div class="lang-it mt-2 font-bold">Firebase & App</div>
-          </a>
-          <a href="#flows" class="rounded-2xl border border-dns-border bg-white p-4 shadow-soft transition hover:-translate-y-0.5">
-            <div class="text-xs font-bold uppercase tracking-[.14em] text-dns-muted">04</div>
-            <div class="lang-de mt-2 font-bold">Datenflüsse</div>
-            <div class="lang-it mt-2 font-bold">Flussi dati</div>
-          </a>
-        </div>
       </div>
     </section>
 
-    <section id="overview" class="section-anchor mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+    <section id="overview" class="section-anchor mx-auto max-w-[1440px] px-5 py-5 md:px-8">
       <div class="mb-8 max-w-3xl">
         <div class="lang-de">
           <p class="text-xs font-bold uppercase tracking-[.18em] text-dns-muted">01 · Gesamtsystem</p>
@@ -358,7 +401,7 @@
     </section>
 
     <section id="datasets" class="section-anchor border-y border-dns-border bg-white">
-      <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-[1440px] px-5 py-5 md:px-8">
         <div class="mb-8 max-w-3xl">
           <div class="lang-de">
             <p class="text-xs font-bold uppercase tracking-[.18em] text-dns-muted">02 · Datenkategorien</p>
@@ -515,7 +558,7 @@
       </div>
     </section>
 
-    <section id="firebase" class="section-anchor mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+    <section id="firebase" class="section-anchor mx-auto max-w-[1440px] px-5 py-5 md:px-8">
       <div class="mb-8 max-w-3xl">
         <div class="lang-de">
           <p class="text-xs font-bold uppercase tracking-[.18em] text-dns-muted">03 · Firebase & Apps</p>
@@ -615,7 +658,7 @@
     </section>
 
     <section id="flows" class="section-anchor border-y border-dns-border bg-dns-deep text-white">
-      <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-[1440px] px-5 py-5 md:px-8">
         <div class="mb-8 max-w-3xl">
           <div class="lang-de">
             <p class="text-xs font-bold uppercase tracking-[.18em] text-dns-ice">04 · Datenflüsse</p>
@@ -724,7 +767,7 @@
       </div>
     </section>
 
-    <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+    <section class="mx-auto max-w-[1440px] px-5 py-5 md:px-8">
       <div class="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
         <article class="rounded-3xl border border-dns-border bg-white p-6 shadow-soft sm:p-8">
           <div class="lang-de">
@@ -798,14 +841,14 @@
     </section>
   </main>
 
-  <footer class="dns-site-footer border-t border-white/10">
-    <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-7 text-xs text-dns-muted sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-      <div>
-        <span class="dns-footer-brand font-extrabold">DNS</span>
-        <span class="font-medium"> Shared Data</span>
-        <span> · Foundation v1.2 · Canonical Dataset v1.1</span>
+  <footer class="mt-6 bg-dns-deep text-white">
+    <div class="mx-auto flex w-full max-w-[1440px] flex-col gap-1 px-5 py-5 md:flex-row md:items-center md:justify-between md:px-8">
+      <div class="text-[11px] font-semibold uppercase tracking-[.05em] text-white/80">
+        Dolomiti NordicSki · DNS Shared Data
       </div>
-      <div class="font-mono">dolomitinordicski/dns-shared-data</div>
+      <div class="font-alt text-[10px] uppercase tracking-[.04em] text-white/60">
+        Foundation v1.2 · Canonical Dataset v1.1 · © 2026
+      </div>
     </div>
   </footer>
 
@@ -835,154 +878,118 @@
 
     const savedLang = localStorage.getItem('dns-shared-data-lang');
     setLang(savedLang === 'it' ? 'it' : 'de');
+
+    const tabs = Array.from(document.querySelectorAll('.dns-tab[data-section]'));
+    const sections = tabs
+      .map((tab) => document.getElementById(tab.dataset.section))
+      .filter(Boolean);
+
+    function setActiveTab(id) {
+      tabs.forEach((tab) => {
+        tab.classList.toggle('dns-tab-active', tab.dataset.section === id);
+      });
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible?.target?.id) setActiveTab(visible.target.id);
+      },
+      { rootMargin: '-120px 0px -55% 0px', threshold: [0.05, 0.2, 0.5] }
+    );
+
+    sections.forEach((section) => observer.observe(section));
   </script>
-  <script>
-    // DNS Design System: Firestore runtime source with v1.5 fallback.
-    // Public read is allowed by DNS_Core Firestore rules; client writes remain denied.
-    const DNS_DESIGN_SYSTEM_URL =
-      'https://firestore.googleapis.com/v1/projects/dns-core/databases/(default)/documents/designSystem/current';
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
+    import { doc, getDoc, getFirestore } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
 
-    function decodeFirestoreValue(value) {
-      if (!value || typeof value !== 'object') return null;
-      if ('stringValue' in value) return value.stringValue;
-      if ('booleanValue' in value) return value.booleanValue;
-      if ('integerValue' in value) return Number(value.integerValue);
-      if ('doubleValue' in value) return Number(value.doubleValue);
-      if ('timestampValue' in value) return value.timestampValue;
-      if ('nullValue' in value) return null;
-      if ('arrayValue' in value) {
-        return (value.arrayValue.values || []).map(decodeFirestoreValue);
-      }
-      if ('mapValue' in value) {
-        return decodeFirestoreFields(value.mapValue.fields || {});
-      }
-      return null;
+    const firebaseConfig = {
+      apiKey: 'AIzaSyAgxv6Z45-AfrusbFnCSyvYChRUBu6-vXc',
+      authDomain: 'dns-core.firebaseapp.com',
+      projectId: 'dns-core',
+      storageBucket: 'dns-core.firebasestorage.app',
+      messagingSenderId: '387653285986',
+      appId: '1:387653285986:web:27ad6f2e9a41ea1aebb93b',
+      measurementId: 'G-2G56PRYNME',
+    };
+
+    const DNS_DESIGN_FALLBACK = {
+      version: '1.0.0',
+      colors: {
+        deep: '#0D4D5E',
+        mid: '#417483',
+        light: '#AAD0D1',
+        background: '#F4F8F9',
+        surface: '#FFFFFF',
+        mutedText: '#5A7F8A',
+      },
+      typography: {
+        primaryFamily: 'Be Vietnam Pro',
+        secondaryFamily: 'Roboto',
+      },
+      shape: {
+        cardRadiusPx: 10,
+        controlRadiusPx: 6,
+      },
+      shadow: {
+        card: '0 1px 4px rgba(13,77,94,.07)',
+        header: '0 1px 0 rgba(255,255,255,.08)',
+      },
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function applyVariables(payload) {
+      const root = document.documentElement;
+      const colors = { ...DNS_DESIGN_FALLBACK.colors, ...(payload.colors ?? {}) };
+      const typography = { ...DNS_DESIGN_FALLBACK.typography, ...(payload.typography ?? {}) };
+      const shape = { ...DNS_DESIGN_FALLBACK.shape, ...(payload.shape ?? {}) };
+      const shadow = { ...DNS_DESIGN_FALLBACK.shadow, ...(payload.shadow ?? {}) };
+
+      root.style.setProperty('--color-dns-deep', colors.deep);
+      root.style.setProperty('--color-dns-mid', colors.mid);
+      root.style.setProperty('--color-dns-light', colors.light);
+      root.style.setProperty('--color-dns-bg', colors.background);
+      root.style.setProperty('--color-dns-surface', colors.surface);
+      root.style.setProperty('--color-dns-muted', colors.mutedText);
+
+      root.style.setProperty('--font-display', `"${typography.primaryFamily}", sans-serif`);
+      root.style.setProperty('--font-alt', `"${typography.secondaryFamily}", sans-serif`);
+
+      root.style.setProperty('--dns-card-radius', `${shape.cardRadiusPx}px`);
+      root.style.setProperty('--dns-control-radius', `${shape.controlRadiusPx}px`);
+      root.style.setProperty('--dns-card-shadow', shadow.card);
+      root.style.setProperty('--dns-header-shadow', shadow.header);
     }
 
-    function decodeFirestoreFields(fields) {
-      return Object.fromEntries(
-        Object.entries(fields || {}).map(([key, value]) => [key, decodeFirestoreValue(value)])
-      );
-    }
+    async function loadAndApplyDNSDesignSystem() {
+      applyVariables(DNS_DESIGN_FALLBACK);
 
-    function validDesignSystem(ds) {
-      return Boolean(
-        ds &&
-        typeof ds.version === 'string' &&
-        ds.colors &&
-        typeof ds.colors.deep === 'string' &&
-        typeof ds.colors.mid === 'string' &&
-        typeof ds.colors.light === 'string' &&
-        typeof ds.colors.background === 'string' &&
-        typeof ds.colors.surface === 'string' &&
-        ds.typography &&
-        typeof ds.typography.primaryFamily === 'string' &&
-        typeof ds.typography.secondaryFamily === 'string' &&
-        ds.shape &&
-        Number.isFinite(Number(ds.shape.cardRadiusPx)) &&
-        Number.isFinite(Number(ds.shape.controlRadiusPx)) &&
-        ds.shadow &&
-        typeof ds.shadow.card === 'string' &&
-        ds.header &&
-        typeof ds.header.background === 'string' &&
-        ds.footer &&
-        typeof ds.footer.background === 'string'
-      );
-    }
-
-    function cssVar(name, value) {
-      if (value !== undefined && value !== null && value !== '') {
-        document.documentElement.style.setProperty(name, String(value));
-      }
-    }
-
-    function fontStack(family, fallback = 'Arial, sans-serif') {
-      const safe = String(family).replace(/["']/g, '').trim();
-      return '"' + safe + '", ' + fallback;
-    }
-
-    function applyDesignSystem(ds) {
-      const c = ds.colors || {};
-      const t = ds.typography || {};
-      const shape = ds.shape || {};
-      const shadow = ds.shadow || {};
-      const header = ds.header || {};
-      const footer = ds.footer || {};
-      const motion = ds.motion || {};
-
-      cssVar('--dns-deep', c.deep);
-      cssVar('--dns-mid', c.mid);
-      cssVar('--dns-light', c.light);
-      cssVar('--dns-background', c.background);
-      cssVar('--dns-surface', c.surface);
-      cssVar('--dns-dark-text', c.darkText);
-      cssVar('--dns-gray', c.gray);
-      cssVar('--dns-primary-dark', c.primaryDark);
-      cssVar('--dns-secondary-dark', c.secondaryDark);
-      cssVar('--dns-muted-text', c.mutedText);
-      cssVar('--dns-positive', c.positive);
-      cssVar('--dns-negative', c.negative);
-      cssVar('--dns-border', c.border);
-      cssVar('--dns-subtle-border', c.subtleBorder);
-
-      cssVar('--dns-font-primary', fontStack(t.primaryFamily));
-      cssVar('--dns-font-secondary', fontStack(t.secondaryFamily));
-
-      cssVar('--dns-card-radius', Number(shape.cardRadiusPx) + 'px');
-      cssVar('--dns-control-radius', Number(shape.controlRadiusPx) + 'px');
-      cssVar('--dns-badge-radius', Number(shape.badgeRadiusPx) + 'px');
-
-      cssVar('--dns-card-shadow', shadow.card);
-      cssVar('--dns-header-shadow', shadow.header);
-      cssVar('--dns-floating-shadow', shadow.floatingControl);
-
-      cssVar('--dns-header-background', header.background);
-      cssVar('--dns-header-title', header.titleColor);
-      cssVar('--dns-header-subtitle', header.subtitleColor);
-      cssVar('--dns-footer-background', footer.background);
-      cssVar('--dns-footer-text', footer.textColor);
-
-      if (Number.isFinite(Number(motion.fastMs))) {
-        cssVar('--dns-motion-fast', Number(motion.fastMs) + 'ms');
-      }
-      if (Number.isFinite(Number(motion.standardMs))) {
-        cssVar('--dns-motion-standard', Number(motion.standardMs) + 'ms');
-      }
-      cssVar('--dns-motion-easing', motion.easing);
-
-      document.body.dataset.dnsDesignSource = 'firebase';
-      document.body.dataset.dnsDesignVersion = ds.version;
-      window.DNS_DESIGN_SYSTEM = ds;
-    }
-
-    async function loadDnsDesignSystem() {
       try {
-        const response = await fetch(DNS_DESIGN_SYSTEM_URL, {
-          headers: { Accept: 'application/json' },
-          cache: 'no-store'
-        });
-
-        if (!response.ok) {
-          throw new Error('Firestore returned HTTP ' + response.status);
+        const snapshot = await getDoc(doc(db, 'designSystem', 'current'));
+        if (!snapshot.exists()) {
+          document.body.dataset.dnsDesignSource = 'fallback';
+          document.body.dataset.dnsDesignVersion = DNS_DESIGN_FALLBACK.version;
+          return;
         }
 
-        const documentSnapshot = await response.json();
-        const designSystem = decodeFirestoreFields(documentSnapshot.fields || {});
-
-        if (!validDesignSystem(designSystem)) {
-          throw new Error('Invalid designSystem/current payload');
-        }
-
-        applyDesignSystem(designSystem);
+        const payload = snapshot.data();
+        applyVariables(payload);
+        document.body.dataset.dnsDesignSource = 'dns-core';
+        document.body.dataset.dnsDesignVersion =
+          payload.version ?? DNS_DESIGN_FALLBACK.version;
       } catch (error) {
-        console.warn(
-          'DNS Design System: Firebase unavailable or invalid; using bundled v1.5 fallback.',
-          error
-        );
+        console.warn('DNS Design System remote load failed; using local fallback.', error);
+        document.body.dataset.dnsDesignSource = 'fallback';
+        document.body.dataset.dnsDesignVersion = DNS_DESIGN_FALLBACK.version;
       }
     }
 
-    loadDnsDesignSystem();
+    void loadAndApplyDNSDesignSystem();
   </script>
 
 </body>
