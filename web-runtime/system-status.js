@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/system-status.ts
 // Keep this file synchronized with the canonical TypeScript registry.
-export const DNS_SYSTEM_STATUS_VERSION = '0.9.0';
+export const DNS_SYSTEM_STATUS_VERSION = '0.10.0';
 export const DNS_SYSTEM_STATUS_VERIFIED_AT = '2026-10-01';
 
 export const DNS_SYSTEM_STATUS_CRITERIA = [
@@ -140,9 +140,9 @@ export const DNS_SYSTEM_STATUS = [
     id: 'faktura',
     label: 'DNS Faktura / Commercial',
     repo: 'dolomitinordicski/DNS-Faktura',
-    phase: 'seasonal-extras',
-    firebaseProject: 'dns-core · Orders/rates/extras/snapshots · FAIR source read from fair-modell',
-    datasetVersion: 'F.4 · Billing Preparation v0.5 · FAIR + IDM + Orders + Seasonal Extras · Foundation v1.14',
+    phase: 'unified-billing-snapshots',
+    firebaseProject: 'dns-core · rates/extras/unified snapshots · FAIR source read from fair-modell · allocation keys in DNS_Core',
+    datasetVersion: 'F.5 · Billing Preparation v0.6 · Unified FAIR + IDM + Orders + Extras snapshots · Foundation v1.15',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -154,7 +154,7 @@ export const DNS_SYSTEM_STATUS = [
       dataContracts: 'adopted',
       accessibility: 'adopted',
     },
-    note: 'F.4 implemented in DNS-Faktura: documented Order rates and live quantities are calculated by organisation; FAIR annual contributions are consumed from the FAIR source; IDM Premium is distributed using FAIR organisation keys; sourced seasonal extras are admin-managed in billingSeasonalExtras with revision control. Foundation v1.14 is adopted. Existing F.2.3 billingRuns remain explicitly Orders-only snapshots; a unified all-source billing snapshot is still pending. Official invoices, payments and accounting integration remain out of scope.',
+    note: 'F.5 implemented in DNS-Faktura: FAIR, IDM, Orders and Seasonal Extras are combined into revisioned unified billingRuns with immutable multi-source billingLines and source provenance. Legacy F.2.3 Orders-only snapshots remain untouched. Unified DRAFT snapshots may be saved while sources are incomplete; READY requires complete sources, zero unpriced Orders and an explicitly approved/final FAIR status. Foundation v1.15 and centralized DNS_Core allocation keys are adopted. Official invoices, payments and accounting integration remain out of scope.',
   },
   {
     id: 'partner-portal',
