@@ -127,16 +127,18 @@ export interface PocketfolderEditionMetadata {
 
 export type DeliveryLocationStatus = 'verified' | 'needs-confirmation' | 'incomplete';
 
+export type PocketfolderSourceCell = number | '/' | null;
+
 export interface PocketfolderSourceRow {
   id: string;
   seasonId: SeasonId;
   sourceRow: number;
   label: string;
-  comparison2025: number | null;
-  requested2026: number | null;
-  dnsCopies: number | null;
-  areaTotal2026: number | null;
-  printerTotal2026: number | null;
+  comparison2025: PocketfolderSourceCell;
+  requested2026: PocketfolderSourceCell;
+  dnsCopies: PocketfolderSourceCell;
+  areaTotal2026: PocketfolderSourceCell;
+  printerTotal2026: PocketfolderSourceCell;
   backLanguageNote: string;
   rowKind: 'area' | 'distribution' | 'total' | 'note' | 'blank';
   provenance: DataProvenance;
