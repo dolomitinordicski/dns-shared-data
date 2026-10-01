@@ -224,3 +224,12 @@ DNS tool navigation may use a lightly translucent sticky surface rather than a f
 The progress indicator sits at the top edge of the sticky navigation, visually occupying the separation between header and navigation. It communicates reading/navigation position only; it is not decorative motion. The value is derived from the current document scroll position and must remain understandable with reduced-motion preferences.
 
 Desktop navigation wraps when necessary. Tablet and mobile retain horizontal scrolling.
+
+
+## Runtime first-paint rule
+
+DNS applications must render from the canonical local Design System fallback immediately. Reading `DNS_Core / designSystem/current` is a runtime enhancement and must not delay first paint, navigation or motion initialization.
+
+When the remote document exposes the same semantic version already shipped locally, applications should avoid reapplying an identical token set. Motion/interaction runtimes should be restarted only when their relevant token groups actually differ.
+
+This prevents visible second-pass layout/reveal behavior while preserving the remote configuration layer.
