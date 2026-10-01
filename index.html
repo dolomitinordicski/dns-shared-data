@@ -1040,7 +1040,7 @@
 </head>
 
 <body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.14.0">
-  <header id="dns-site-header" class="dns-site-header sticky top-0 z-30 text-white">
+  <header data-dns-tool-header id="dns-site-header" class="dns-site-header text-white">
     <div class="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-6 px-5 py-3.5 md:px-8">
       <a id="dns-home-link" href="#top" class="flex min-w-0 items-center gap-4 text-white no-underline" aria-label="DNS Shared Data · page top">
         <img
@@ -1072,7 +1072,7 @@
     </div>
   </header>
 
-  <nav id="dns-tab-nav" class="dns-tab-nav" aria-label="DNS Shared Data">
+  <nav data-dns-tool-nav id="dns-tab-nav" class="dns-tab-nav" aria-label="DNS Shared Data">
     <div
       id="dns-scroll-progress"
       class="dns-scroll-progress-track"
@@ -2697,7 +2697,7 @@
       DNS_SYSTEM_STATUS_VERIFIED_AT,
     } from './web-runtime/system-status.js';
     import { initDNSRevealRuntime, initDNSInteractionRuntime } from './web-runtime/runtime.js';
-    import { initDNSNavigationRuntime } from './web-runtime/navigation.js';
+    import { initDNSToolChromeRuntime } from './web-runtime/tool-chrome.js';
     import { initDNSAccessibilityRuntime } from './web-runtime/accessibility.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
     import { collection, doc, getDoc, getDocs, getFirestore } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
@@ -2722,20 +2722,7 @@
       storageKey: DNS_DESIGN_SYSTEM.accessibility.storageKey,
     });
 
-    const siteHeader = document.getElementById('dns-site-header');
-    const tabNav = document.getElementById('dns-tab-nav');
-    const tabs = Array.from(document.querySelectorAll('.dns-tab[data-section]'));
-    const sections = tabs
-      .map((tab) => document.getElementById(tab.dataset.section))
-      .filter(Boolean);
-
-    const navigationRuntime = initDNSNavigationRuntime({
-      header: siteHeader,
-      nav: tabNav,
-      progressTrack: document.getElementById('dns-scroll-progress'),
-      progressBar: document.getElementById('dns-scroll-progress-bar'),
-      sectionTabs: tabs,
-      sectionElements: sections,
+    const navigationRuntime = initDNSToolChromeRuntime({
       navigation: DNS_DESIGN_SYSTEM.navigation,
       responsive: DNS_DESIGN_SYSTEM.responsive,
       headerTokens: DNS_DESIGN_SYSTEM.header,
