@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/system-status.ts
 // Keep this file synchronized with the canonical TypeScript registry.
-export const DNS_SYSTEM_STATUS_VERSION = '0.5.0';
+export const DNS_SYSTEM_STATUS_VERSION = '0.6.0';
 export const DNS_SYSTEM_STATUS_VERIFIED_AT = '2026-10-01';
 
 export const DNS_SYSTEM_STATUS_CRITERIA = [
@@ -141,20 +141,20 @@ export const DNS_SYSTEM_STATUS = [
     label: 'DNS Faktura / Commercial',
     repo: 'dolomitinordicski/DNS-Faktura',
     phase: 'foundation-shell',
-    firebaseProject: 'dns-core reference probe · billing persistence pending',
-    datasetVersion: 'F.1 · Billing Preparation v0.1 · Shared Design System v1.13.2',
+    firebaseProject: 'dns-core · authenticated Orders read · billing persistence pending',
+    datasetVersion: 'F.2 · Billing Preparation v0.1 · Live Orders source · Shared Design System v1.13.2',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
       firebase: 'partial',
-      auth: 'notYet',
+      auth: 'adopted',
       sharedAssets: 'adopted',
       regionLogos: 'adopted',
       motion: 'notYet',
       dataContracts: 'adopted',
       accessibility: 'adopted',
     },
-    note: 'F.1 shell implemented in DNS-Faktura: canonical seasons/organizations/reporting areas, shared logos, navigation, accessibility, DNS_Core connectivity probe and internal print view are adopted. Monetary source integration and billing persistence remain F.2. Official invoices, payments and accounting integration remain out of scope.',
+    note: 'F.2 implemented in DNS-Faktura: DNS-admin authentication and live read-only Orders integration from ticketOrders, ticketOrderLines and orderCatalogItems are adopted. Canonical entities/logos remain shared. Order quantities are shown live while billing rates intentionally remain unset until commercial source rates are defined. FAIR, IDM Premium, seasonal extras and billing persistence remain pending. Official invoices, payments and accounting integration remain out of scope.',
   },
   {
     id: 'partner-portal',
