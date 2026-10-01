@@ -5,7 +5,7 @@
 **Data-tool reference:** DNS Analytics  
 **Target:** all DNS digital tools  
 **Runtime source:** DNS_Core / Firestore  
-**Current semantic version:** 1.12.0
+**Current semantic version:** 1.15.0
 
 ## Principle
 
@@ -161,7 +161,7 @@ designSystem/v1
 designSystem/current
 ```
 
-The document keeps a semantic `version` field, currently `1.12.0`.
+The document keeps a semantic `version` field, currently `1.15.0`.
 
 Applications should:
 
