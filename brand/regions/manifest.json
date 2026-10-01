@@ -1,0 +1,245 @@
+{
+  "version": 1,
+  "source": "Logos DNS.pdf",
+  "format": "svg",
+  "basePath": "brand/regions",
+  "assets": [
+    {
+      "id": "suedtirol",
+      "label": "Südtirol",
+      "filename": "suedtirol.svg",
+      "entityBindings": [],
+      "notes": "Umbrella destination/brand asset; not a canonical DNS reporting area."
+    },
+    {
+      "id": "dolomiti-bellunesi",
+      "label": "Dolomiti Bellunesi",
+      "filename": "dolomiti-bellunesi.svg",
+      "entityBindings": [],
+      "notes": "External/umbrella brand asset; no direct canonical DNS entity binding in v1."
+    },
+    {
+      "id": "osttirol",
+      "label": "Osttirol",
+      "filename": "osttirol.svg",
+      "entityBindings": [
+        {
+          "entityType": "reportingArea",
+          "entityId": "osttirol"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "osttirol"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "tvb-osttirol"
+        }
+      ]
+    },
+    {
+      "id": "antholzertal-kronplatz",
+      "label": "Kronplatz + Antholzertal / Valle Anterselva",
+      "filename": "antholzertal-kronplatz.svg",
+      "composite": true,
+      "entityBindings": [
+        {
+          "entityType": "reportingArea",
+          "entityId": "antholzertal"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "antholzertal"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "antholzertal"
+        }
+      ],
+      "notes": "Kronplatz and Antholzertal are intentionally one visual asset/entity in this source."
+    },
+    {
+      "id": "gsiesertal-welsberg-taisten",
+      "label": "Gsiesertal Welsberg Taisten",
+      "filename": "gsiesertal-welsberg-taisten.svg",
+      "entityBindings": [
+        {
+          "entityType": "reportingArea",
+          "entityId": "gsiesertal-welsberg-taisten"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "gsiesertal"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "welsberg-taisten"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "gsiesertal-welsberg-taisten"
+        }
+      ]
+    },
+    {
+      "id": "drei-zinnen-dolomites",
+      "label": "3 Zinnen Dolomites",
+      "filename": "drei-zinnen-dolomites.svg",
+      "entityBindings": [
+        {
+          "entityType": "reportingArea",
+          "entityId": "drei-zinnen"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "toblach"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "innichen"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "sexten"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "niederdorf"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "prags"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "tv-toblach"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "tv-innichen"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "tv-sexten"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "tv-niederdorf"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "tv-prags"
+        }
+      ]
+    },
+    {
+      "id": "val-comelico",
+      "label": "Val Comelico",
+      "filename": "val-comelico.svg",
+      "priority": "primary",
+      "entityBindings": [
+        {
+          "entityType": "reportingArea",
+          "entityId": "val-comelico"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "val-comelico"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "val-comelico"
+        }
+      ]
+    },
+    {
+      "id": "consorzio-turistico-val-comelico",
+      "label": "Consorzio Turistico Val Comelico",
+      "filename": "consorzio-turistico-val-comelico.svg",
+      "priority": "secondary",
+      "entityBindings": [
+        {
+          "entityType": "organization",
+          "entityId": "val-comelico"
+        }
+      ],
+      "notes": "Secondary organizational logo for Val Comelico."
+    },
+    {
+      "id": "cortina-dolomiti",
+      "label": "Cortina Dolomiti",
+      "filename": "cortina-dolomiti.svg",
+      "entityBindings": [
+        {
+          "entityType": "reportingArea",
+          "entityId": "cortina-d-ampezzo"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "cortina-d-ampezzo"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "servizi-ampezzo"
+        }
+      ]
+    },
+    {
+      "id": "ahrntal-valle-aurina",
+      "label": "Ahrntal / Valle Aurina",
+      "filename": "ahrntal-valle-aurina.svg",
+      "entityBindings": [
+        {
+          "entityType": "reportingArea",
+          "entityId": "ahrntal"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "ahrntal"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "ahrntal"
+        }
+      ]
+    },
+    {
+      "id": "seiser-alm",
+      "label": "Dolomites Seiser Alm",
+      "filename": "seiser-alm.svg",
+      "entityBindings": [
+        {
+          "entityType": "reportingArea",
+          "entityId": "seiser-alm-dolomites-val-gardena"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "seiser-alm"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "seiser-alm-marketing"
+        }
+      ]
+    },
+    {
+      "id": "val-gardena",
+      "label": "Dolomites Val Gardena",
+      "filename": "val-gardena.svg",
+      "entityBindings": [
+        {
+          "entityType": "reportingArea",
+          "entityId": "seiser-alm-dolomites-val-gardena"
+        },
+        {
+          "entityType": "destination",
+          "entityId": "val-gardena"
+        },
+        {
+          "entityType": "organization",
+          "entityId": "val-gardena"
+        }
+      ]
+    }
+  ]
+}
