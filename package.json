@@ -70,6 +70,10 @@
       "types": "./dist/ui/navigation.d.ts",
       "import": "./dist/ui/navigation.js"
     },
+    "./ui/tool-chrome": {
+      "types": "./dist/ui/tool-chrome.d.ts",
+      "import": "./dist/ui/tool-chrome.js"
+    },
     "./ui/print": {
       "types": "./dist/ui/print.d.ts",
       "import": "./dist/ui/print.js"
