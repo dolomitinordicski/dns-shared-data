@@ -975,9 +975,8 @@
     sections.forEach((section) => observer.observe(section));
   </script>
   <script type="module">
-    import { DNS_DESIGN_SYSTEM } from './dist/design-system.js';
-    import { initDNSRevealRuntime } from './dist/ui/motion.js';
-    import { initDNSInteractionRuntime } from './dist/ui/interaction.js';
+    import { DNS_DESIGN_SYSTEM } from './web-runtime/design-system.js';
+    import { initDNSRevealRuntime, initDNSInteractionRuntime } from './web-runtime/runtime.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
     import { doc, getDoc, getFirestore } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
 
