@@ -33,6 +33,7 @@ export interface DNSNavigationRuntimeHandle {
 }
 
 const STYLE_ID = 'dns-navigation-runtime-style';
+const NAVIGATION_INTENT_TIMEOUT_MS = 1200;
 
 function setNavigationVariables(
   root: HTMLElement,
@@ -217,6 +218,8 @@ export function initDNSNavigationRuntime(
 
   let frame = 0;
   let activeId = '';
+  let navigationIntentId = '';
+  let navigationIntentTimer = 0;
   let stickyObserver: ResizeObserver | null = null;
 
   const updateStickyMetrics = () => {
@@ -239,6 +242,24 @@ export function initDNSNavigationRuntime(
     });
 
     options.onActiveSectionChange?.(id);
+  };
+
+  const clearNavigationIntent = () => {
+    navigationIntentId = '';
+    if (navigationIntentTimer) {
+      window.clearTimeout(navigationIntentTimer);
+      navigationIntentTimer = 0;
+    }
+  };
+
+  const holdNavigationIntent = (id: string) => {
+    navigationIntentId = id;
+    if (navigationIntentTimer) window.clearTimeout(navigationIntentTimer);
+    navigationIntentTimer = window.setTimeout(() => {
+      navigationIntentId = '';
+      navigationIntentTimer = 0;
+      requestRefresh();
+    }, NAVIGATION_INTENT_TIMEOUT_MS);
   };
 
   const updateProgress = () => {
@@ -268,6 +289,15 @@ export function initDNSNavigationRuntime(
 
     if (atBottom) candidate = sections[sections.length - 1];
 
+    if (navigationIntentId) {
+      if (candidate?.id === navigationIntentId) {
+        clearNavigationIntent();
+      } else {
+        setActiveSection(navigationIntentId);
+        return;
+      }
+    }
+
     if (candidate?.id) setActiveSection(candidate.id);
   };
 
@@ -294,7 +324,10 @@ export function initDNSNavigationRuntime(
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => {
       const id = tab.dataset.section;
-      if (id) setActiveSection(id);
+      if (id) {
+        holdNavigationIntent(id);
+        setActiveSection(id);
+      }
     });
   });
 
@@ -305,6 +338,7 @@ export function initDNSNavigationRuntime(
     setActiveSection,
     disconnect() {
       stickyObserver?.disconnect();
+      clearNavigationIntent();
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener('scroll', requestRefresh);
       window.removeEventListener('resize', requestRefresh);
