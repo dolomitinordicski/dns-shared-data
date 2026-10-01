@@ -27,12 +27,22 @@ try {
       ['1HoewTHS9ij3r0Bv0tEZwz8ZRAwxPtZhLfpdutycf_Bc', '03-VERKAUFSTATISTIK-STATISTICHE-DI-VENDITA-2024-25.xlsx'],
     ];
     for (const [id, filename] of sources) {
-      const response = await fetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media&supportsAllDrives=true`, {
+      const metadataResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${id}?fields=mimeType&supportsAllDrives=true`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!metadataResponse.ok) throw new Error(`Cannot inspect source ${filename}: HTTP ${metadataResponse.status}. No source data has been written.`);
+      const metadata = await metadataResponse.json();
+      const nativeSpreadsheet = metadata.mimeType === 'application/vnd.google-apps.spreadsheet';
+      const sourceUrl = nativeSpreadsheet
+        ? `https://www.googleapis.com/drive/v3/files/${id}/export?mimeType=application%2Fvnd.openxmlformats-officedocument.spreadsheetml.sheet`
+        : `https://www.googleapis.com/drive/v3/files/${id}?alt=media&supportsAllDrives=true`;
+      const response = await fetch(sourceUrl, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
         throw new Error(`Cannot read source ${filename}: HTTP ${response.status}. Share the original file with the source access account printed above; no source data has been written.`);
       }
+      if (nativeSpreadsheet) console.log('Exported the native Google Sheet to XLSX; the extractor will verify the immutable data fingerprint.');
       await writeFile(join(directory, filename), Buffer.from(await response.arrayBuffer()));
     }
     payloadPath = join(directory, 'history.json');
