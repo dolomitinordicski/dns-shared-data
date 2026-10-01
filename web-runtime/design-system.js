@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/design-system.ts
 // Keep this file synchronized with the canonical TypeScript contract.
-export const DNS_DESIGN_SYSTEM_VERSION = '1.7.0';
+export const DNS_DESIGN_SYSTEM_VERSION = '1.8.0';
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -8,7 +8,7 @@ export const DNS_DESIGN_SYSTEM = {
   version: DNS_DESIGN_SYSTEM_VERSION,
   status: 'active',
   brandSources: {
-    colors: 'DNS Partner Portal',
+    colors: 'Dolomiti NordicSki Corporate Design',
     interaction: 'Dolomiti NordicSki public website',
     dataUi: 'DNS Analytics',
   },
@@ -27,6 +27,49 @@ export const DNS_DESIGN_SYSTEM = {
     negative: '#993C1D',
     border: 'rgba(65,116,131,.20)',
     subtleBorder: 'rgba(65,116,131,.08)',
+  },
+  corporateColors: {
+    frostedIceBlue: {
+      token: 'colors.deep',
+      hex: '#0D4D5E',
+      name: 'Frosted Ice Blue',
+      role: 'structure-primary',
+      description: {
+        de: 'Primäre Strukturfarbe für Header, starke Hierarchie, zentrale Flächen und Hauptaktionen.',
+        it: 'Colore strutturale primario per header, gerarchie forti, superfici principali e azioni primarie.',
+      },
+    },
+    nordicSkyBlue: {
+      token: 'colors.mid',
+      hex: '#417483',
+      name: 'Nordic Sky Blue',
+      role: 'interaction-secondary',
+      description: {
+        de: 'Sekundäre Interaktionsfarbe für Navigation, Labels, Fokus, unterstützende Texte und UI-Hierarchie.',
+        it: 'Colore secondario di interazione per navigazione, label, focus, testi di supporto e gerarchia UI.',
+      },
+    },
+    deepGlacierBlue: {
+      token: 'colors.light',
+      hex: '#AAD0D1',
+      name: 'Deep Glacier Blue',
+      role: 'shared-connected-contextual',
+      description: {
+        de: 'Semantischer Akzent für gemeinsame, verbundene und kontextuelle Elemente, Mikro-Akzente und sekundäre Beziehungen.',
+        it: 'Accento semantico per elementi condivisi, connessi e contestuali, micro-accenti e relazioni secondarie.',
+      },
+    },
+  },
+  uiNeutrals: {
+    background: {
+      token: 'colors.background',
+      hex: '#F4F8F9',
+      role: 'application-canvas',
+      description: {
+        de: 'Neutraler Anwendungshintergrund. Trennt Flächen, ohne mit den drei Corporate Blues zu konkurrieren.',
+        it: 'Sfondo neutro dell’applicazione. Separa le superfici senza competere con i tre blu corporate.',
+      },
+    },
   },
   typography: {
     primaryFamily: 'Be Vietnam Pro',
@@ -425,6 +468,7 @@ export const DNS_DESIGN_SYSTEM = {
   },
   semanticAccent: {
     colorToken: 'colors.light',
+    corporateColor: 'Deep Glacier Blue',
     meaning: ['shared', 'connected', 'contextual'],
     usage: {
       primaryCardAccent: true,

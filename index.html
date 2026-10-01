@@ -518,13 +518,65 @@
 
 
     .dns-token-swatch {
-      min-height: 92px;
+      position: relative;
+      min-height: 118px;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
+      overflow: hidden;
       border: 1px solid var(--color-dns-subtle-border);
       border-radius: var(--dns-control-radius);
       padding: .75rem;
+      text-align: left;
+      cursor: help;
+    }
+    .dns-token-swatch::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(8,52,63,.88);
+      opacity: 0;
+      transition: opacity var(--dns-motion-standard) var(--dns-motion-easing);
+    }
+    .dns-token-swatch[data-tone="light"]::after,
+    .dns-token-swatch[data-tone="neutral"]::after {
+      background: rgba(255,255,255,.94);
+    }
+    .dns-token-swatch-description {
+      position: absolute;
+      inset: .75rem;
+      z-index: 2;
+      display: flex;
+      align-items: flex-end;
+      color: #fff;
+      font-family: var(--font-alt);
+      font-size: 11px;
+      line-height: 1.45;
+      opacity: 0;
+      transform: translateY(5px);
+      transition:
+        opacity var(--dns-motion-standard) var(--dns-motion-easing),
+        transform var(--dns-motion-standard) var(--dns-motion-easing);
+      pointer-events: none;
+    }
+    .dns-token-swatch[data-tone="light"] .dns-token-swatch-description,
+    .dns-token-swatch[data-tone="neutral"] .dns-token-swatch-description {
+      color: var(--color-dns-deep);
+    }
+    .dns-token-swatch:hover .dns-token-swatch-description,
+    .dns-token-swatch:focus-visible .dns-token-swatch-description {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .dns-token-swatch:hover::after,
+    .dns-token-swatch:focus-visible::after {
+      opacity: 1;
+    }
+    .dns-token-swatch:hover .dns-token-swatch-label,
+    .dns-token-swatch:hover .dns-token-swatch-value,
+    .dns-token-swatch:focus-visible .dns-token-swatch-label,
+    .dns-token-swatch:focus-visible .dns-token-swatch-value {
+      opacity: 0;
     }
     .dns-token-swatch-label {
       font-family: var(--font-alt);
@@ -619,7 +671,7 @@
   </style>
 </head>
 
-<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.7.0">
+<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.8.0">
   <header class="dns-site-header sticky top-0 z-30 text-white">
     <div class="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-6 px-5 py-3.5 md:px-8">
       <a href="#top" class="flex min-w-0 items-center gap-4 text-white no-underline">
@@ -1336,35 +1388,51 @@
               <p class="dns-kicker">Foundation</p>
               <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">Color & typography</h3>
             </div>
-            <span class="dns-pill">v<span data-design-value="version">1.7.0</span></span>
+            <span class="dns-pill">v<span data-design-value="version">1.8.0</span></span>
           </div>
 
           <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div class="dns-token-swatch text-white" style="background:var(--color-dns-deep)">
-              <div class="dns-token-swatch-label">Deep</div>
-              <div class="dns-token-swatch-value" data-design-value="colors.deep">#0D4D5E</div>
-            </div>
-            <div class="dns-token-swatch text-white" style="background:var(--color-dns-mid)">
-              <div class="dns-token-swatch-label">Mid</div>
-              <div class="dns-token-swatch-value" data-design-value="colors.mid">#417483</div>
-            </div>
-            <div class="dns-token-swatch text-dns-deep" style="background:var(--color-dns-light)">
-              <div class="dns-token-swatch-label">Light</div>
-              <div class="dns-token-swatch-value" data-design-value="colors.light">#AAD0D1</div>
-            </div>
-            <div class="dns-token-swatch text-dns-deep" style="background:var(--color-dns-bg)">
-              <div class="dns-token-swatch-label">Background</div>
-              <div class="dns-token-swatch-value" data-design-value="colors.background">#F4F8F9</div>
-            </div>
+            <button type="button" class="dns-token-swatch text-white" style="background:var(--color-dns-deep)" aria-describedby="color-desc-frosted">
+              <div class="dns-token-swatch-label" data-design-value="corporateColors.frostedIceBlue.name">Frosted Ice Blue</div>
+              <div class="dns-token-swatch-value" data-design-value="corporateColors.frostedIceBlue.hex">#0D4D5E</div>
+              <div class="dns-token-swatch-description" id="color-desc-frosted">
+                <span class="lang-de" data-design-value="corporateColors.frostedIceBlue.description.de">Primäre Strukturfarbe.</span>
+                <span class="lang-it" data-design-value="corporateColors.frostedIceBlue.description.it">Colore strutturale primario.</span>
+              </div>
+            </button>
+            <button type="button" class="dns-token-swatch text-white" style="background:var(--color-dns-mid)" aria-describedby="color-desc-nordic">
+              <div class="dns-token-swatch-label" data-design-value="corporateColors.nordicSkyBlue.name">Nordic Sky Blue</div>
+              <div class="dns-token-swatch-value" data-design-value="corporateColors.nordicSkyBlue.hex">#417483</div>
+              <div class="dns-token-swatch-description" id="color-desc-nordic">
+                <span class="lang-de" data-design-value="corporateColors.nordicSkyBlue.description.de">Sekundäre Interaktionsfarbe.</span>
+                <span class="lang-it" data-design-value="corporateColors.nordicSkyBlue.description.it">Colore secondario di interazione.</span>
+              </div>
+            </button>
+            <button type="button" class="dns-token-swatch text-dns-deep" data-tone="light" style="background:var(--color-dns-light)" aria-describedby="color-desc-glacier">
+              <div class="dns-token-swatch-label" data-design-value="corporateColors.deepGlacierBlue.name">Deep Glacier Blue</div>
+              <div class="dns-token-swatch-value" data-design-value="corporateColors.deepGlacierBlue.hex">#AAD0D1</div>
+              <div class="dns-token-swatch-description" id="color-desc-glacier">
+                <span class="lang-de" data-design-value="corporateColors.deepGlacierBlue.description.de">Shared / connected / contextual.</span>
+                <span class="lang-it" data-design-value="corporateColors.deepGlacierBlue.description.it">Shared / connected / contextual.</span>
+              </div>
+            </button>
+            <button type="button" class="dns-token-swatch text-dns-deep" data-tone="neutral" style="background:var(--color-dns-bg)" aria-describedby="color-desc-background">
+              <div class="dns-token-swatch-label">UI Background</div>
+              <div class="dns-token-swatch-value" data-design-value="uiNeutrals.background.hex">#F4F8F9</div>
+              <div class="dns-token-swatch-description" id="color-desc-background">
+                <span class="lang-de" data-design-value="uiNeutrals.background.description.de">Neutraler Anwendungshintergrund.</span>
+                <span class="lang-it" data-design-value="uiNeutrals.background.description.it">Sfondo neutro dell’applicazione.</span>
+              </div>
+            </button>
           </div>
 
           <div class="dns-context-soft mt-4 rounded-lg border px-4 py-3">
             <div class="dns-kicker">Light · semantic accent</div>
             <div class="lang-de mt-1 font-alt text-[11px] leading-relaxed text-dns-mid">
-              #AAD0D1 steht für shared / connected / contextual: primäre Kartenakzente, Mikro-Akzente, leichte Auswahlzustände und sekundäre Diagrammverbindungen. Nicht als dekorative Großfläche.
+              Deep Glacier Blue (#AAD0D1) steht für shared / connected / contextual: primäre Kartenakzente, Mikro-Akzente, leichte Auswahlzustände und sekundäre Diagrammverbindungen. Nicht als dekorative Großfläche.
             </div>
             <div class="lang-it mt-1 font-alt text-[11px] leading-relaxed text-dns-mid">
-              #AAD0D1 indica shared / connected / contextual: accenti sulle card principali, micro-accenti, selezioni leggere e connessioni secondarie nei diagrammi. Non come grande riempimento decorativo.
+              Deep Glacier Blue (#AAD0D1) indica shared / connected / contextual: accenti sulle card principali, micro-accenti, selezioni leggere e connessioni secondarie nei diagrammi. Non come grande riempimento decorativo.
             </div>
           </div>
 

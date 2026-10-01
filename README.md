@@ -13,7 +13,7 @@ This repository contains:
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.3
-- **DNS Design System:** v1.6
+- **DNS Design System:** v1.8
 - **DNS Access Control:** v0.1
 
 ## Source of truth
@@ -61,7 +61,7 @@ firebase.json
 
 ## DNS Design System
 
-The current shared visual and interaction contract is **v1.6.0** and is documented in:
+The current shared visual and interaction contract is **v1.8.0** and is documented in:
 
 ```text
 docs/DNS-Design-System-v1.md
@@ -69,7 +69,7 @@ docs/DNS-Design-System-v1.md
 
 Its runtime source is `DNS_Core / designSystem/current`. Applications keep a local fallback and read the remote document for declarative tokens. Firestore contains configuration only; executable JavaScript remains versioned source code.
 
-The v1.6 contract includes shared motion, focus, hover/press, tab and reduced-motion behavior.
+The v1.8 contract includes shared motion, focus, hover/press, tab and reduced-motion behavior, plus official DNS corporate color names and semantic color roles.
 
 The GitHub Pages architecture overview is also the visual reference implementation of this contract. It consumes the canonical tokens at runtime, prefers `DNS_Core / designSystem/current`, falls back to the versioned package mirror, and uses the shared motion/interaction behavior. The committed `web-runtime/design-system.js` browser mirror is CI-checked against `src/design-system.ts` to prevent silent drift.
 
