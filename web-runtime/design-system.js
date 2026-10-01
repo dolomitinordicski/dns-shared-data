@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/design-system.ts
 // Keep this file synchronized with the canonical TypeScript contract.
-export const DNS_DESIGN_SYSTEM_VERSION = '1.9.0';
+export const DNS_DESIGN_SYSTEM_VERSION = '1.10.0';
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -165,6 +165,15 @@ export const DNS_DESIGN_SYSTEM = {
     links: {
       underlineBehavior: 'hover-or-focus-visible',
       transitionMs: 200,
+      surfaceOpacity: 0.94,
+      surfaceBackground: 'rgba(65,116,131,.94)',
+      backdropBlurPx: 6,
+      scrollProgress: {
+        enabled: true,
+        heightPx: 3,
+        color: '#AAD0D1',
+        track: 'transparent',
+      },
     },
     tabs: {
       transitionMs: 200,
@@ -279,9 +288,9 @@ export const DNS_DESIGN_SYSTEM = {
     },
     tabs: {
       desktop: {
-        layout: 'horizontal',
+        layout: 'wrapped-horizontal',
         overflowX: 'visible',
-        wrap: false,
+        wrap: true,
         sticky: true,
         tabPaddingXRem: 1.2,
         tabPaddingYRem: 0.65,

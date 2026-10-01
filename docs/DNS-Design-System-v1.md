@@ -5,7 +5,7 @@
 **Data-tool reference:** DNS Analytics  
 **Target:** all DNS digital tools  
 **Runtime source:** DNS_Core / Firestore  
-**Current semantic version:** 1.9.0
+**Current semantic version:** 1.10.0
 
 ## Principle
 
@@ -161,7 +161,7 @@ designSystem/v1
 designSystem/current
 ```
 
-The document keeps a semantic `version` field, currently `1.9.0`.
+The document keeps a semantic `version` field, currently `1.10.0`.
 
 Applications should:
 
@@ -195,7 +195,7 @@ The canonical tool navigation follows DNS Analytics:
 - uppercase compact labels;
 - sticky navigation where appropriate.
 
-Desktop keeps all tabs in one horizontal row. Tablet and mobile use horizontal scrolling without wrapping. Mobile does not replace tool tabs with a hamburger and does not stack tabs vertically.
+Desktop navigation may wrap naturally onto multiple rows when the tool contains many sections; horizontal scrolling is reserved for tablet and mobile. Mobile does not replace tool tabs with a hamburger and does not stack tabs vertically.
 
 ### Layout
 
@@ -209,3 +209,18 @@ Desktop keeps all tabs in one horizontal row. Tablet and mobile use horizontal s
 ## Context selectors
 
 Selectors that change the operational context of a screen — such as region, reporting area or season — use **Deep Glacier Blue** as the persistent selected-state background. Text remains Frosted Ice Blue, focus remains Nordic Sky Blue, and ordinary form fields stay neutral. This pattern is reserved for context selection, not general input styling.
+
+
+## Sticky navigation & scroll progress
+
+DNS tool navigation may use a lightly translucent sticky surface rather than a fully opaque bar. The current shared tokens are:
+
+- navigation surface opacity: `0.94`;
+- backdrop blur: `6 px`;
+- scroll-progress height: `3 px`;
+- scroll-progress color: **Deep Glacier Blue** (`#AAD0D1`);
+- progress track: transparent.
+
+The progress indicator sits at the top edge of the sticky navigation, visually occupying the separation between header and navigation. It communicates reading/navigation position only; it is not decorative motion. The value is derived from the current document scroll position and must remain understandable with reduced-motion preferences.
+
+Desktop navigation wraps when necessary. Tablet and mobile retain horizontal scrolling.

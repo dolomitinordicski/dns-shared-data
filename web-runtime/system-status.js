@@ -21,7 +21,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/dns-shared-data',
     phase: 'foundation-source',
     firebaseProject: 'dns-core',
-    datasetVersion: 'Canonical v1.6 · Operational schema 4 · Design System v1.9',
+    datasetVersion: 'Canonical v1.6 · Operational schema 4 · Design System v1.10',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -40,9 +40,9 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/DNS-Data-Entry',
     phase: 'foundation-aligned',
     firebaseProject: 'dns-core',
-    datasetVersion: 'Shared package pinned through Design System v1.9',
+    datasetVersion: 'Shared package pinned through Design System v1.9 · current shared v1.10',
     criteria: {
-      designSystem: 'adopted',
+      designSystem: 'partial',
       sharedData: 'adopted',
       firebase: 'adopted',
       auth: 'adopted',
