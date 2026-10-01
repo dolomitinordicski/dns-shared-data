@@ -5,7 +5,7 @@
 **Data-tool reference:** DNS Analytics  
 **Target:** all DNS digital tools  
 **Runtime source:** DNS_Core / Firestore  
-**Current semantic version:** 1.8.0
+**Current semantic version:** 1.9.0
 
 ## Principle
 
@@ -161,7 +161,7 @@ designSystem/v1
 designSystem/current
 ```
 
-The document keeps a semantic `version` field, currently `1.8.0`.
+The document keeps a semantic `version` field, currently `1.9.0`.
 
 Applications should:
 
@@ -205,3 +205,7 @@ Desktop keeps all tabs in one horizontal row. Tablet and mobile use horizontal s
 - Tables never collapse semantic columns; tablet/mobile use horizontal scrolling.
 - Header becomes progressively more compact; mobile hides secondary status/subtitle content before hiding core identity.
 - Footer switches from horizontal to stacked on mobile.
+
+## Context selectors
+
+Selectors that change the operational context of a screen — such as region, reporting area or season — use **Deep Glacier Blue** as the persistent selected-state background. Text remains Frosted Ice Blue, focus remains Nordic Sky Blue, and ordinary form fields stay neutral. This pattern is reserved for context selection, not general input styling.

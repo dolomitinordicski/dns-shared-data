@@ -85,6 +85,10 @@
       --dns-control-primary-hover: #417483;
       --dns-control-secondary-bg: #FFFFFF;
       --dns-control-secondary-text: #0D4D5E;
+      --dns-context-selected-bg: #AAD0D1;
+      --dns-context-selected-text: #0D4D5E;
+      --dns-context-selected-border: #417483;
+      --dns-context-hover-bg: rgba(170,208,209,.35);
 
       --dns-tab-bg: #417483;
       --dns-tab-text: rgba(255,255,255,.60);
@@ -639,6 +643,18 @@
       padding: 1rem;
       cursor: pointer;
     }
+    .dns-context-selector-demo {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      border: 1px solid var(--dns-context-selected-border);
+      border-radius: var(--dns-control-radius);
+      background: var(--dns-context-selected-bg);
+      padding: .55rem .75rem;
+      color: var(--dns-context-selected-text);
+      font-size: 11px;
+      font-weight: 600;
+    }
     .dns-ds-icon {
       width: 20px;
       height: 20px;
@@ -671,7 +687,7 @@
   </style>
 </head>
 
-<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.8.0">
+<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.9.0">
   <header class="dns-site-header sticky top-0 z-30 text-white">
     <div class="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-6 px-5 py-3.5 md:px-8">
       <a href="#top" class="flex min-w-0 items-center gap-4 text-white no-underline">
@@ -1388,7 +1404,7 @@
               <p class="dns-kicker">Foundation</p>
               <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">Color & typography</h3>
             </div>
-            <span class="dns-pill">v<span data-design-value="version">1.8.0</span></span>
+            <span class="dns-pill">v<span data-design-value="version">1.9.0</span></span>
           </div>
 
           <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -1471,7 +1487,7 @@
       <div class="mt-5 grid gap-5 lg:grid-cols-3">
         <article class="dns-card p-5 md:p-6">
           <p class="dns-kicker">Controls</p>
-          <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">Buttons & focus</h3>
+          <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">Buttons, focus & context</h3>
           <div class="mt-5 flex flex-wrap gap-3">
             <button type="button" class="dns-ds-button-primary" data-dns-hover data-dns-press>Primary action</button>
             <button type="button" class="dns-ds-button-secondary" data-dns-hover data-dns-press>Secondary</button>
@@ -1480,6 +1496,18 @@
             <span class="lang-de">Hover nur auf interaktiven Elementen. Fokus bleibt immer sichtbar.</span>
             <span class="lang-it">Hover solo sugli elementi interattivi. Il focus rimane sempre visibile.</span>
           </p>
+          <div class="mt-4 border-t border-dns-mid/10 pt-4">
+            <div class="dns-ds-label">Context selector · selected</div>
+            <div class="mt-2">
+              <span class="dns-context-selector-demo">
+                <span>Region</span><strong>Osttirol</strong>
+              </span>
+            </div>
+            <p class="mt-2 font-alt text-[10px] leading-relaxed text-dns-muted">
+              <span class="lang-de">Deep Glacier Blue markiert dauerhaft den aktiven operativen Kontext.</span>
+              <span class="lang-it">Deep Glacier Blue identifica in modo persistente il contesto operativo attivo.</span>
+            </p>
+          </div>
         </article>
 
         <article class="dns-card p-5 md:p-6">
@@ -1978,7 +2006,7 @@
 
     function applyVariables(ds) {
       const root = document.documentElement;
-      const { colors, typography, shape, spacing, shadow, motion, interaction, header, footer, cards, controls, navigation } = ds;
+      const { colors, typography, shape, spacing, shadow, motion, interaction, header, footer, cards, controls, navigation, contextSelector } = ds;
       const vars = {
         '--color-dns-deep': colors.deep,
         '--color-dns-mid': colors.mid,
@@ -2052,6 +2080,10 @@
         '--dns-control-primary-hover': controls.primaryHoverBackground,
         '--dns-control-secondary-bg': controls.secondaryBackground,
         '--dns-control-secondary-text': controls.secondaryText,
+        '--dns-context-selected-bg': contextSelector?.selected?.background ?? colors.light,
+        '--dns-context-selected-text': contextSelector?.selected?.text ?? colors.deep,
+        '--dns-context-selected-border': contextSelector?.selected?.border ?? colors.mid,
+        '--dns-context-hover-bg': contextSelector?.hover?.background ?? 'rgba(170,208,209,.35)',
 
         '--dns-tab-bg': navigation.tabs.containerBackground,
         '--dns-tab-text': navigation.tabs.textColor,
