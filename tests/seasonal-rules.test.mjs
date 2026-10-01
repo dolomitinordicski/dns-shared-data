@@ -49,5 +49,19 @@ try {
   const weeklyBatch=writeBatch(admin);weeklyBatch.set(doc(admin,'ticketPricingConfigs','price-weekly','revisions','1'),weeklyPrevious);weeklyBatch.set(doc(admin,'ticketPricingConfigs','price-weekly'),{...price,id:'price-weekly',productCode:'wk-area',revision:2,unitPrice:12,settlementUnitPrice:12});await assertSucceeds(weeklyBatch.commit());
   await assertFails(setDoc(doc(seller,'ticketSales',newId),newSale));
   await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'ticketSales',saleId)));
+  const historical={seasonId:'2025-26',domain:'sales',organizationId:'org',reportingAreaId:'area',facts:[{quantity:5,amount:50}]};
+  await env.withSecurityRulesDisabled(async context=>{
+    await setDoc(doc(context.firestore(),'historicalSeasonRecords','history'),historical);
+    await setDoc(doc(context.firestore(),'historicalSeasonImports','2025-26'),{seasonId:'2025-26'});
+    await setDoc(doc(context.firestore(),'seasons','2025-26'),{status:'closed'});
+  });
+  await assertSucceeds(getDocs(query(collection(seller,'historicalSeasonRecords'),where('seasonId','==','2025-26'),where('domain','==','sales'),where('organizationId','==','org'))));
+  await assertFails(getDocs(collection(seller,'historicalSeasonRecords')));
+  await assertFails(setDoc(doc(admin,'historicalSeasonRecords','history'),historical));
+  await assertFails(setDoc(doc(admin,'historicalSeasonImports','2025-26'),{seasonId:'2025-26'}));
+  await assertFails(getDoc(doc(seller,'historicalSeasonImports','2025-26')));
+  await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'historicalSeasonRecords','history')));
+  await assertFails(setDoc(doc(admin,'ticketPricingConfigs','historic-price'),{...price,id:'historic-price',seasonId:'2025-26'}));
+  await assertFails(setDoc(doc(admin,'ticketOrders','historic-order'),{seasonId:'2025-26',organizationId:'org',category:'ticket',status:'draft'}));
   console.log('Seasonal rules passed: scoped reads/writes, read-only users, invalid quantities/amounts, immutable audit history, stale pricing and anonymous access.');
 } finally { await env.cleanup(); }
