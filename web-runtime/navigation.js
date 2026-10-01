@@ -31,6 +31,9 @@ function ensureNavigationStyles(documentRoot, navigation, responsive) {
 
   const desktop = responsive.breakpointsPx.desktopMin;
   const mobileMax = responsive.breakpointsPx.mobileMax;
+  const desktopTabs = responsive.tabs.desktop;
+  const tabletTabs = responsive.tabs.tablet;
+  const mobileTabs = responsive.tabs.mobile;
 
   style.textContent = `
 .dns-tab-nav {
@@ -82,6 +85,7 @@ function ensureNavigationStyles(documentRoot, navigation, responsive) {
   letter-spacing: var(--dns-tab-tracking);
   text-transform: uppercase;
   white-space: nowrap;
+  padding: ${desktopTabs.tabPaddingYRem}rem ${desktopTabs.tabPaddingXRem}rem calc(${desktopTabs.tabPaddingYRem}rem - .03rem);
   transition: color ${navigation.tabs.transitionMs}ms ease, border-color ${navigation.tabs.transitionMs}ms ease;
 }
 .dns-tab:hover { color: var(--dns-tab-hover); }
@@ -105,6 +109,9 @@ function ensureNavigationStyles(documentRoot, navigation, responsive) {
     flex-wrap: nowrap;
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+  .dns-tab {
+    padding: ${tabletTabs.tabPaddingYRem}rem ${tabletTabs.tabPaddingXRem}rem calc(${tabletTabs.tabPaddingYRem}rem - .03rem);
   }
 }
 @media (max-width: ${mobileMax}px) {

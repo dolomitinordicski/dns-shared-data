@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.12.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.12.1' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
