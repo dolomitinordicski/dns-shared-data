@@ -742,6 +742,122 @@
       border-radius: 50%;
       background: var(--color-dns-mid);
     }
+
+    .dns-contract-flow {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      overflow-x: auto;
+      padding-bottom: .25rem;
+      scrollbar-width: thin;
+    }
+    .dns-contract-flow-node {
+      flex: 0 0 auto;
+      border: 1px solid var(--color-dns-border);
+      border-radius: var(--dns-control-radius);
+      background: var(--color-dns-surface);
+      padding: .55rem .75rem;
+      color: var(--color-dns-deep);
+      font-size: 10px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .dns-contract-flow-node.is-shared {
+      border-color: var(--dns-context-selected-border);
+      background: var(--dns-context-selected-bg);
+    }
+    .dns-contract-flow-arrow {
+      flex: 0 0 auto;
+      color: var(--color-dns-mid);
+      font-size: 14px;
+    }
+    .dns-contract {
+      overflow: hidden;
+      border: 1px solid var(--color-dns-subtle-border);
+      border-radius: var(--dns-card-radius);
+      background: var(--color-dns-surface);
+      box-shadow: var(--dns-card-shadow);
+    }
+    .dns-contract summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: .8rem;
+      align-items: start;
+      padding: 1rem;
+      cursor: pointer;
+      list-style: none;
+    }
+    .dns-contract summary::-webkit-details-marker { display: none; }
+    .dns-contract summary::after {
+      content: "+";
+      display: grid;
+      width: 24px;
+      height: 24px;
+      place-items: center;
+      border: 1px solid var(--color-dns-border);
+      border-radius: 50%;
+      color: var(--color-dns-mid);
+      font-size: 14px;
+      transition: transform var(--dns-motion-fast) var(--dns-motion-easing);
+    }
+    .dns-contract[open] summary::after { transform: rotate(45deg); }
+    .dns-contract summary:hover {
+      background: color-mix(in srgb, var(--color-dns-light) 12%, white);
+    }
+    .dns-contract-body {
+      border-top: 1px solid var(--color-dns-subtle-border);
+      padding: 1rem;
+    }
+    .dns-contract-status {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      border-radius: var(--dns-badge-radius);
+      padding: .22rem .5rem;
+      font-family: var(--font-alt);
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .dns-contract-status.is-implemented {
+      background: color-mix(in srgb, var(--color-dns-light) 32%, white);
+      color: var(--color-dns-deep);
+    }
+    .dns-contract-status.is-foundation {
+      border: 1px solid var(--color-dns-border);
+      background: var(--color-dns-bg);
+      color: var(--color-dns-mid);
+    }
+    .dns-contract-grid {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: .45rem .75rem;
+      font-family: var(--font-alt);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+    .dns-contract-key {
+      color: var(--color-dns-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .dns-contract-value {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: var(--color-dns-deep);
+    }
+    .dns-contract-chip {
+      display: inline-flex;
+      margin: .12rem .22rem .12rem 0;
+      border: 1px solid var(--color-dns-border);
+      border-radius: var(--dns-badge-radius);
+      background: var(--color-dns-bg);
+      padding: .18rem .45rem;
+      color: var(--color-dns-deep);
+      font-size: 9px;
+      line-height: 1.2;
+    }
     @media (max-width: 1023px) {
       .dns-tab-nav-inner { padding: 0 1rem; }
       .dns-tab { padding-left: .95rem; padding-right: .95rem; }
@@ -812,6 +928,9 @@
       </a>
       <a href="#shared-assets" class="dns-tab" data-section="shared-assets">
         <span class="lang-de">06 · Shared Assets</span><span class="lang-it">06 · Shared Assets</span>
+      </a>
+      <a href="#data-contracts" class="dns-tab" data-section="data-contracts">
+        <span class="lang-de">07 · Data Contracts</span><span class="lang-it">07 · Data Contracts</span>
       </a>
     </div>
   </nav>
@@ -1777,6 +1896,62 @@
       </div>
     </section>
 
+    <section id="data-contracts" class="dns-page-shell section-anchor mx-auto max-w-[1440px] px-5 py-5 md:px-8">
+      <div class="dns-editorial-heading mb-8 max-w-3xl">
+        <div class="lang-de">
+          <p class="dns-kicker">07 · Data Contracts / Schemas</p>
+          <h2 class="mt-1 font-semibold tracking-[-.02em] text-dns-deep">Wer besitzt welche Daten — und wie hängen sie zusammen?</h2>
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
+            Ein lesbarer Katalog der gemeinsamen Datenverträge. Er zeigt nicht die komplette TypeScript-Struktur, sondern Owner, Runtime, Collections, Schreib-/Leserechte, Schlüsselfelder und Beziehungen.
+          </p>
+        </div>
+        <div class="lang-it">
+          <p class="dns-kicker">07 · Data Contracts / Schemas</p>
+          <h2 class="mt-1 font-semibold tracking-[-.02em] text-dns-deep">Chi possiede quali dati — e come sono collegati?</h2>
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
+            Un catalogo leggibile dei contratti dati condivisi. Non mostra tutta la struttura TypeScript, ma owner, runtime, collection, diritti di scrittura/lettura, campi chiave e relazioni.
+          </p>
+        </div>
+      </div>
+
+      <div class="dns-card p-5 md:p-6">
+        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p class="dns-kicker">Core relationships</p>
+            <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">Master → Operations → Analytics → FAIR</h3>
+          </div>
+          <span class="dns-pill">Contract catalog v<span id="data-contract-version">0.1.0</span></span>
+        </div>
+        <div class="dns-contract-flow mt-5" aria-label="DNS data relationship flow">
+          <span class="dns-contract-flow-node is-shared">Reporting Area</span><span class="dns-contract-flow-arrow">→</span>
+          <span class="dns-contract-flow-node is-shared">Destination</span><span class="dns-contract-flow-arrow">→</span>
+          <span class="dns-contract-flow-node is-shared">Organization</span><span class="dns-contract-flow-arrow">→</span>
+          <span class="dns-contract-flow-node">Season</span><span class="dns-contract-flow-arrow">→</span>
+          <span class="dns-contract-flow-node">Pricing</span><span class="dns-contract-flow-arrow">→</span>
+          <span class="dns-contract-flow-node">Orders / Sales / KP</span><span class="dns-contract-flow-arrow">→</span>
+          <span class="dns-contract-flow-node">Analytics</span><span class="dns-contract-flow-arrow">→</span>
+          <span class="dns-contract-flow-node">FAIR</span>
+        </div>
+        <p class="lang-de mt-4 font-alt text-[10px] leading-relaxed text-dns-muted">
+          Die Pfeile zeigen Abhängigkeit bzw. Datenfluss, nicht Eigentumsübertragung. Analytics bleibt Owner analytischer Fakten; FAIR bleibt Owner seiner Parameter und Ergebnisse.
+        </p>
+        <p class="lang-it mt-4 font-alt text-[10px] leading-relaxed text-dns-muted">
+          Le frecce indicano dipendenza o flusso dati, non trasferimento di ownership. Analytics resta owner dei fatti analitici; FAIR resta owner dei propri parametri e risultati.
+        </p>
+      </div>
+
+      <div class="mt-5 flex flex-wrap items-center gap-2">
+        <span class="dns-contract-status is-implemented">Implemented</span>
+        <span class="font-alt text-[10px] text-dns-muted"><span class="lang-de">Vertrag und Runtime-Struktur existieren.</span><span class="lang-it">Contratto e struttura runtime esistono.</span></span>
+        <span class="dns-contract-status is-foundation ml-2">Foundation defined</span>
+        <span class="font-alt text-[10px] text-dns-muted"><span class="lang-de">Ownership ist definiert; Collection-Vertrag folgt beim Refactor.</span><span class="lang-it">Ownership definita; il contratto delle collection arriverà con il refactor.</span></span>
+      </div>
+
+      <div id="data-contract-grid" class="mt-5 grid gap-4 lg:grid-cols-2" aria-live="polite">
+        <div class="dns-card p-5 font-alt text-[11px] text-dns-muted">Loading data contract catalog…</div>
+      </div>
+    </section>
+
     <section class="dns-page-shell mx-auto max-w-[1440px] px-5 py-5 md:px-8">
       <div class="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
         <article class="dns-card p-5 md:p-6">
@@ -2202,6 +2377,7 @@
   </script>
   <script type="module">
     import { DNS_DESIGN_SYSTEM } from './web-runtime/design-system.js';
+    import { DNS_DATA_CONTRACTS, DNS_DATA_CONTRACTS_VERSION } from './web-runtime/data-contracts.js';
     import { initDNSRevealRuntime, initDNSInteractionRuntime } from './web-runtime/runtime.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
     import { doc, getDoc, getFirestore } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
@@ -2218,6 +2394,65 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
+    function renderDataContracts() {
+      const grid = document.getElementById('data-contract-grid');
+      const version = document.getElementById('data-contract-version');
+      if (!grid) return;
+      if (version) version.textContent = DNS_DATA_CONTRACTS_VERSION;
+
+      grid.innerHTML = '';
+      DNS_DATA_CONTRACTS.forEach((contract, index) => {
+        const details = document.createElement('details');
+        details.className = 'dns-contract';
+        if (index === 0) details.open = true;
+
+        const statusClass = contract.status === 'implemented'
+          ? 'is-implemented'
+          : 'is-foundation';
+        const statusLabel = contract.status === 'implemented'
+          ? 'Implemented'
+          : 'Foundation defined';
+        const collections = contract.collections.length
+          ? contract.collections.map((item) => `<span class="dns-contract-chip">${item}</span>`).join('')
+          : '<span class="dns-contract-chip">Collection contract pending</span>';
+        const fields = contract.fields.map((item) =>
+          `<span class="dns-contract-chip">${item}</span>`
+        ).join('');
+        const relations = contract.relations.map((item) =>
+          `<div class="mt-1">→ ${item}</div>`
+        ).join('');
+
+        details.innerHTML = `
+          <summary>
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="dns-kicker">${contract.runtime}</span>
+                <span class="dns-contract-status ${statusClass}">${statusLabel}</span>
+              </div>
+              <div class="mt-1 text-[16px] font-semibold text-dns-deep">${contract.label}</div>
+              <div class="mt-1 font-alt text-[10px] text-dns-muted">${contract.owner}</div>
+            </div>
+          </summary>
+          <div class="dns-contract-body">
+            <div class="dns-contract-grid">
+              <div class="dns-contract-key">Owner</div><div class="dns-contract-value">${contract.owner}</div>
+              <div class="dns-contract-key">Runtime</div><div class="dns-contract-value">${contract.runtime}</div>
+              <div class="dns-contract-key">Schema</div><div class="dns-contract-value">${contract.schema}</div>
+              <div class="dns-contract-key">Source</div><div class="dns-contract-value"><code>${contract.source}</code></div>
+              <div class="dns-contract-key">Collections</div><div class="dns-contract-value">${collections}</div>
+              <div class="dns-contract-key">Write</div><div class="dns-contract-value">${contract.write}</div>
+              <div class="dns-contract-key">Read</div><div class="dns-contract-value">${contract.read}</div>
+              <div class="dns-contract-key">Key fields</div><div class="dns-contract-value">${fields}</div>
+              <div class="dns-contract-key">Relations</div><div class="dns-contract-value">${relations}</div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(details);
+      });
+    }
+
+    renderDataContracts();
 
     function isPlainObject(value) {
       return value && typeof value === 'object' && !Array.isArray(value);
