@@ -303,9 +303,9 @@ service cloud.firestore {
 
     function hasKpPermission(permission, data) {
       return isAdmin()
-        || hasGrant('network','dolomiti-nordicski',permission)
+        || (data.entityType == 'organization' && hasGrant('organization',data.entityId,permission))
         || hasGrant('reportingArea',data.reportingAreaId,permission)
-        || (data.entityType == 'organization' && hasGrant('organization',data.entityId,permission));
+        || hasGrant('network','dolomiti-nordicski',permission);
     }
 
     function validKpMilestone(data) {
@@ -324,7 +324,6 @@ service cloud.firestore {
     function validKpMilestoneValue(value, seasonId) {
       return value.keys().hasOnly(['milestoneId','naturalSnowKm','artificialSnowKm'])
         && value.milestoneId is string
-        && exists(/databases/$(database)/documents/kpMilestones/$(value.milestoneId))
         && get(/databases/$(database)/documents/kpMilestones/$(value.milestoneId)).data.seasonId == seasonId
         && value.naturalSnowKm is number && value.naturalSnowKm >= 0
         && value.artificialSnowKm is number && value.artificialSnowKm >= 0;
