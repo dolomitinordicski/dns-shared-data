@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" data-lang="de">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -63,7 +63,8 @@
     }
     button, input, select { font: inherit; }
     .font-alt { font-family: var(--font-alt); }
-    .lang-it { display: none; }
+    html[data-lang="de"] .lang-it { display: none !important; }
+    html[data-lang="it"] .lang-de { display: none !important; }
 
     .dns-card {
       background: var(--color-dns-surface, #fff);
@@ -272,7 +273,7 @@
             <h1 class="mt-1 max-w-4xl text-[27px] font-semibold tracking-[-.02em] text-dns-deep">
               Ein gemeinsames Datensystem für alle DNS-Tools.
             </h1>
-            <p class="mt-3 max-w-3xl font-alt text-[12px] leading-relaxed text-dns-muted">
+            <p class="mt-3 max-w-3xl font-alt text-[12px] leading-relaxed text-dns-mid">
               Diese Seite zeigt in einfacher Form, wie gemeinsame Stammdaten, Firebase, Partner Portal,
               FAIR, Analytics, Polls, Ticket Orders und XGLA4 zusammenarbeiten — ohne dieselben Daten
               mehrfach und widersprüchlich zu speichern.
@@ -284,7 +285,7 @@
             <h1 class="mt-1 max-w-4xl text-[27px] font-semibold tracking-[-.02em] text-dns-deep">
               Un unico sistema dati per tutti i tool DNS.
             </h1>
-            <p class="mt-3 max-w-3xl font-alt text-[12px] leading-relaxed text-dns-muted">
+            <p class="mt-3 max-w-3xl font-alt text-[12px] leading-relaxed text-dns-mid">
               Questa pagina mostra in modo semplice come dati master condivisi, Firebase, Partner Portal,
               FAIR, Analytics, Polls, Ticket Orders e XGLA4 lavorano insieme — evitando copie incoerenti
               dello stesso dato.
@@ -300,14 +301,14 @@
         <div class="lang-de">
           <p class="dns-kicker">01 · Gesamtsystem</p>
           <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Vier klar getrennte Ebenen</h2>
-          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
             Das System trennt Definition, operative Speicherung, Anwendungen und Buchhaltung.
           </p>
         </div>
         <div class="lang-it">
           <p class="dns-kicker">01 · Sistema generale</p>
           <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Quattro livelli chiaramente separati</h2>
-          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
             Il sistema separa definizione, persistenza operativa, applicazioni e contabilità.
           </p>
         </div>
@@ -317,10 +318,10 @@
         <article class="dns-card p-5 md:p-6">
           <div class="dns-kicker">Source of truth</div>
           <h3 class="mt-2 text-[16px] font-semibold text-dns-deep">dns-shared-data</h3>
-          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
             Definiert IDs, Gebiete, Destinationen, Organisationen, Seasons, Aliases und Architekturregeln.
           </div>
-          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
             Definisce ID, aree, destinazioni, organizzazioni, stagioni, alias e regole architetturali.
           </div>
         </article>
@@ -328,10 +329,10 @@
         <article class="dns-card p-5 md:p-6">
           <div class="dns-kicker">Operational data</div>
           <h3 class="mt-2 text-[16px] font-semibold text-dns-deep">Firebase</h3>
-          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
             Speichert operative Daten, Nutzer, Berechtigungen, Analytics-Werte, FAIR-Daten, Orders und Poll-Antworten.
           </div>
-          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
             Conserva dati operativi, utenti, permessi, valori Analytics, dati FAIR, ordini e risposte Polls.
           </div>
         </article>
@@ -339,10 +340,10 @@
         <article class="dns-card p-5 md:p-6">
           <div class="dns-kicker">Applications</div>
           <h3 class="mt-2 text-[16px] font-semibold text-dns-deep">DNS Tools</h3>
-          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
             Portal, FAIR, Analytics, Flyer Studio und weitere Tools lesen und schreiben nur die Daten, die sie wirklich besitzen.
           </div>
-          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
             Portal, FAIR, Analytics, Flyer Studio e gli altri tool leggono e scrivono solo i dati di cui sono realmente responsabili.
           </div>
         </article>
@@ -350,10 +351,10 @@
         <article class="dns-card p-5 md:p-6">
           <div class="dns-kicker">External authority</div>
           <h3 class="mt-2 text-[16px] font-semibold text-dns-deep">XGLA4</h3>
-          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
             Bleibt das offizielle System für Rechnungen, Buchhaltung und Zahlungen.
           </div>
-          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
             Rimane il sistema ufficiale per fatture, contabilità e pagamenti.
           </div>
         </article>
@@ -390,14 +391,14 @@
           <div class="lang-de">
             <p class="dns-kicker">02 · Datenkategorien</p>
             <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Nicht alle Daten gehören in denselben Topf</h2>
-            <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">
+            <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
               Jede Datenart hat einen eindeutigen Eigentümer und einen klaren Speicherort.
             </p>
           </div>
           <div class="lang-it">
             <p class="dns-kicker">02 · Categorie dati</p>
             <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Non tutti i dati appartengono allo stesso contenitore</h2>
-            <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">
+            <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
               Ogni categoria ha un proprietario chiaro e una collocazione precisa.
             </p>
           </div>
@@ -406,12 +407,12 @@
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <article class="dns-card p-5 md:p-6">
             <div class="lang-de">
-              <h3 class="text-[14px] font-semibold text-dns-deep">Master Data</h3>
-              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">Gemeinsame Identitäten und Strukturen.</p>
+              <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">Master Data</h3>
+              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">Gemeinsame Identitäten und Strukturen.</p>
             </div>
             <div class="lang-it">
-              <h3 class="text-[14px] font-semibold text-dns-deep">Dati Master</h3>
-              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">Identità e strutture condivise.</p>
+              <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">Dati Master</h3>
+              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">Identità e strutture condivise.</p>
             </div>
             <ul class="mt-4 space-y-2 font-alt text-xs text-dns-deep">
               <li>reportingAreas</li>
@@ -424,12 +425,12 @@
 
           <article class="dns-card p-5 md:p-6">
             <div class="lang-de">
-              <h3 class="text-[14px] font-semibold text-dns-deep">Operative Daten</h3>
-              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">Entstehen durch die Arbeit der DNS-Tools.</p>
+              <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">Operative Daten</h3>
+              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">Entstehen durch die Arbeit der DNS-Tools.</p>
             </div>
             <div class="lang-it">
-              <h3 class="text-[14px] font-semibold text-dns-deep">Dati operativi</h3>
-              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">Nascono dal lavoro quotidiano dei tool DNS.</p>
+              <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">Dati operativi</h3>
+              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">Nascono dal lavoro quotidiano dei tool DNS.</p>
             </div>
             <ul class="mt-4 space-y-2 font-alt text-xs text-dns-deep">
               <li>analytics metrics</li>
@@ -442,14 +443,14 @@
 
           <article class="dns-card p-5 md:p-6">
             <div class="lang-de">
-              <h3 class="text-[14px] font-semibold text-dns-deep">Personenbezogene Daten</h3>
-              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">Zweckgebunden und getrennt.</p>
+              <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">Personenbezogene Daten</h3>
+              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">Zweckgebunden und getrennt.</p>
             </div>
             <div class="lang-it">
-              <h3 class="text-[14px] font-semibold text-dns-deep">Dati personali</h3>
-              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">Separati e legati allo scopo.</p>
+              <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">Dati personali</h3>
+              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">Separati e legati allo scopo.</p>
             </div>
-            <ul class="mt-4 space-y-2 font-alt text-xs text-dns-muted">
+            <ul class="mt-4 space-y-2 font-alt text-xs text-dns-mid">
               <li>poll participants</li>
               <li>participant emails</li>
               <li>poll responses</li>
@@ -459,14 +460,14 @@
 
           <article class="dns-card p-5 md:p-6">
             <div class="lang-de">
-              <h3 class="text-[14px] font-semibold text-dns-deep">Buchhaltung</h3>
-              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">Außerhalb der DNS-Plattform.</p>
+              <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">Buchhaltung</h3>
+              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">Außerhalb der DNS-Plattform.</p>
             </div>
             <div class="lang-it">
-              <h3 class="text-[14px] font-semibold text-dns-deep">Contabilità</h3>
-              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">Fuori dalla piattaforma DNS.</p>
+              <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">Contabilità</h3>
+              <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">Fuori dalla piattaforma DNS.</p>
             </div>
-            <ul class="mt-4 space-y-2 font-alt text-xs text-dns-light">
+            <ul class="mt-4 space-y-2 font-alt text-xs text-dns-mid">
               <li>official invoices</li>
               <li>payments</li>
               <li>bookkeeping</li>
@@ -500,7 +501,7 @@
               <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">
                 <div class="dns-kicker">Organization</div>
                 <div class="mt-1 font-semibold">Tourismusverband Osttirol</div>
-                <div class="mt-1 font-alt text-xs text-dns-muted">tvb-osttirol</div>
+                <div class="mt-1 font-alt text-xs text-dns-mid">tvb-osttirol</div>
               </div>
             </div>
           </div>
@@ -543,14 +544,14 @@
         <div class="lang-de">
           <p class="dns-kicker">03 · Firebase & Apps</p>
           <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Firebase folgt Daten- und Sicherheitsgrenzen — nicht der Anzahl der Apps</h2>
-          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
             FAIR, Analytics und Portal können denselben operativen Datenraum nutzen. Polls und kommerzielle Workflows bleiben getrennt, wenn Schutzbedarf und Zweck unterschiedlich sind.
           </p>
         </div>
         <div class="lang-it">
           <p class="dns-kicker">03 · Firebase & App</p>
           <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Firebase segue i confini di dati e sicurezza — non il numero di app</h2>
-          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
             FAIR, Analytics e Portal possono condividere lo stesso dominio operativo. Polls e workflow commerciali restano separati quando scopo e protezione sono diversi.
           </p>
         </div>
@@ -559,18 +560,18 @@
       <div class="grid gap-5 lg:grid-cols-3">
         <article class="dns-card p-5 md:p-6">
           <div class="flex items-center justify-between gap-3">
-            <h3 class="text-[16px] font-semibold text-dns-deep">DNS Platform</h3>
+            <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">DNS Platform</h3>
             <span class="dns-pill">Firebase</span>
           </div>
-          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">Gemeinsamer operativer Datenraum.</div>
-          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">Dominio operativo condiviso.</div>
+          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">Gemeinsamer operativer Datenraum.</div>
+          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">Dominio operativo condiviso.</div>
           <div class="mt-5 grid grid-cols-2 gap-2 text-center text-xs font-bold">
             <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">Partner Portal</div>
             <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">FAIR</div>
             <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">Analytics</div>
             <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">Flyer Studio</div>
           </div>
-          <div class="mt-4 border-t border-dns-mid/15 pt-4 font-alt text-[11px] leading-6 text-dns-muted">
+          <div class="mt-4 border-t border-dns-mid/15 pt-4 font-alt text-[11px] leading-6 text-dns-mid">
             organizations<br>
             memberships<br>
             accessGrants<br>
@@ -582,16 +583,16 @@
 
         <article class="dns-card p-5 md:p-6">
           <div class="flex items-center justify-between gap-3">
-            <h3 class="text-[16px] font-semibold text-dns-deep">DNS Commercial</h3>
+            <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">DNS Commercial</h3>
             <span class="dns-pill">Firebase</span>
           </div>
-          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">Operativer Workflow vor XGLA4.</div>
-          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">Workflow operativo prima di XGLA4.</div>
+          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">Operativer Workflow vor XGLA4.</div>
+          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">Workflow operativo prima di XGLA4.</div>
           <div class="mt-5 grid grid-cols-2 gap-2 text-center text-xs font-bold">
             <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">Ticket Orders</div>
             <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">Billing Prep</div>
           </div>
-          <div class="mt-4 border-t border-dns-mid/15 pt-4 font-alt text-[11px] leading-6 text-dns-muted">
+          <div class="mt-4 border-t border-dns-mid/15 pt-4 font-alt text-[11px] leading-6 text-dns-mid">
             ticketOrders<br>
             billingProfiles<br>
             products<br>
@@ -603,16 +604,16 @@
 
         <article class="dns-card p-5 md:p-6">
           <div class="flex items-center justify-between gap-3">
-            <h3 class="text-[16px] font-semibold text-dns-deep">DNS Polls</h3>
+            <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">DNS Polls</h3>
             <span class="dns-pill">PII</span>
           </div>
-          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">Separater Bereich für öffentliche Formulare und personenbezogene Daten.</div>
-          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-muted">Dominio separato per form pubblici e dati personali.</div>
+          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">Separater Bereich für öffentliche Formulare und personenbezogene Daten.</div>
+          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">Dominio separato per form pubblici e dati personali.</div>
           <div class="mt-5 grid grid-cols-2 gap-2 text-center text-xs font-bold">
             <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">Polls</div>
             <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">Responses</div>
           </div>
-          <div class="mt-4 border-t border-dns-mid/15 pt-4 font-alt text-[11px] leading-6 text-dns-muted">
+          <div class="mt-4 border-t border-dns-mid/15 pt-4 font-alt text-[11px] leading-6 text-dns-mid">
             polls<br>
             participants<br>
             responses<br>
@@ -623,14 +624,14 @@
 
       <div class="dns-card mt-6 p-5 md:p-6">
         <div class="lang-de">
-          <h3 class="text-[16px] font-semibold text-dns-deep">Merksatz</h3>
-          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">Merksatz</h3>
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
             <strong>Neue App ≠ neues Firebase.</strong> Ein neues Firebase ist dann sinnvoll, wenn Datenzweck, Schutzbedarf oder Verantwortlichkeit wirklich anders sind.
           </p>
         </div>
         <div class="lang-it">
-          <h3 class="text-[16px] font-semibold text-dns-deep">Regola semplice</h3>
-          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">
+          <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">Regola semplice</h3>
+          <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
             <strong>Nuova app ≠ nuovo Firebase.</strong> Un nuovo Firebase serve quando scopo del dato, livello di protezione o responsabilità sono realmente diversi.
           </p>
         </div>
@@ -643,14 +644,14 @@
           <div class="lang-de">
             <p class="dns-kicker">04 · Datenflüsse</p>
             <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Jeder Datensatz hat einen Besitzer</h2>
-            <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">
+            <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
               Apps dürfen Daten anderer Bereiche lesen — aber sie sollen nicht dieselbe Wahrheit unabhängig neu speichern.
             </p>
           </div>
           <div class="lang-it">
             <p class="dns-kicker">04 · Flussi dati</p>
             <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Ogni dato ha un proprietario</h2>
-            <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-muted">
+            <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
               Le app possono leggere dati di altri domini — ma non devono ricreare autonomamente la stessa verità.
             </p>
           </div>
@@ -700,18 +701,18 @@
 
             <div class="mt-6 grid gap-2">
               <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">Ticket Order</div>
-              <div class="text-center text-xl text-dns-light">↓</div>
+              <div class="text-center text-xl text-dns-mid">↓</div>
               <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">
                 <span class="lang-de">DNS Prüfung</span>
                 <span class="lang-it">Controllo DNS</span>
               </div>
-              <div class="text-center text-xl text-dns-light">↓</div>
+              <div class="text-center text-xl text-dns-mid">↓</div>
               <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">Billing Preparation</div>
-              <div class="text-center text-xl text-dns-light">↓</div>
+              <div class="text-center text-xl text-dns-mid">↓</div>
               <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">
                 <div class="font-semibold">XGLA4</div>
-                <div class="lang-de mt-1 text-xs text-dns-muted">Rechnung · Buchhaltung · Zahlung</div>
-                <div class="lang-it mt-1 text-xs text-dns-muted">Fattura · Contabilità · Pagamento</div>
+                <div class="lang-de mt-1 text-xs text-dns-mid">Rechnung · Buchhaltung · Zahlung</div>
+                <div class="lang-it mt-1 text-xs text-dns-mid">Fattura · Contabilità · Pagamento</div>
               </div>
             </div>
           </article>
@@ -834,26 +835,17 @@
 
   <script>
     function setLang(lang) {
-      const de = document.querySelectorAll('.lang-de');
-      const it = document.querySelectorAll('.lang-it');
+      const activeLang = lang === 'it' ? 'it' : 'de';
       const btnDe = document.getElementById('btn-de');
       const btnIt = document.getElementById('btn-it');
 
-      if (lang === 'it') {
-        de.forEach(el => el.style.display = 'none');
-        it.forEach(el => el.style.display = '');
-        document.documentElement.lang = 'it';
-        btnIt.classList.add('is-active');
-        btnDe.classList.remove('is-active');
-      } else {
-        it.forEach(el => el.style.display = 'none');
-        de.forEach(el => el.style.display = '');
-        document.documentElement.lang = 'de';
-        btnDe.classList.add('is-active');
-        btnIt.classList.remove('is-active');
-      }
+      document.documentElement.lang = activeLang;
+      document.documentElement.dataset.lang = activeLang;
 
-      localStorage.setItem('dns-shared-data-lang', lang);
+      btnDe.classList.toggle('is-active', activeLang === 'de');
+      btnIt.classList.toggle('is-active', activeLang === 'it');
+
+      localStorage.setItem('dns-shared-data-lang', activeLang);
     }
 
     const savedLang = localStorage.getItem('dns-shared-data-lang');
