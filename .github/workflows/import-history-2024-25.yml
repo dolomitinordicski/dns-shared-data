@@ -1,0 +1,30 @@
+name: Import immutable 2024-25 history
+on:
+  push:
+    branches: [main]
+    paths: ['scripts/history/extract-2024-25.py', 'scripts/history/import-2024-25.mjs', '.github/workflows/import-history-2024-25.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: history-2024-25
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm install
+      - run: python -m pip install openpyxl==3.1.5 pypdf==6.10.0
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+      - name: Import private sources and verify Firebase
+        run: node scripts/history/import-2024-25.mjs --apply
