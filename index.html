@@ -94,7 +94,7 @@
       --dns-tab-text: rgba(255,255,255,.60);
       --dns-tab-active: #FFFFFF;
       --dns-tab-hover: rgba(255,255,255,.85);
-      --dns-tab-indicator: #FFFFFF;
+      --dns-tab-indicator: #AAD0D1;
       --dns-tab-indicator-width: 3px;
       --dns-tab-size: 11px;
       --dns-tab-weight: 600;
@@ -2061,7 +2061,7 @@
           <div>
             <p class="dns-kicker">Region / Partner Logos</p>
             <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">
-              <span id="shared-assets-count">12</span> canonical SVG assets
+              <span id="shared-assets-count">13</span> canonical SVG assets
             </h3>
             <p class="lang-de mt-2 max-w-3xl font-alt text-[11px] leading-relaxed text-dns-muted">
               Quelle: <code>brand/regions/manifest.json</code>. Ein Asset kann mehreren Reporting Areas, Destinations oder Organizations zugeordnet sein.
@@ -2640,6 +2640,7 @@
           const flags = [
             asset.priority ? `priority: ${asset.priority}` : '',
             asset.composite ? 'composite' : '',
+            Array.isArray(asset.seasonIds) && asset.seasonIds.length ? `season: ${asset.seasonIds.join(', ')}` : '',
           ].filter(Boolean).join(' · ');
 
           card.innerHTML = `
@@ -2666,6 +2667,16 @@
                 <span class="dns-asset-meta-key">Bindings</span>
                 <span class="dns-asset-meta-value">${bindingsHtml}</span>
               </div>
+              ${asset.sourceFile ? `
+              <div class="dns-asset-meta-row">
+                <span class="dns-asset-meta-key">Source</span>
+                <span class="dns-asset-meta-value">${asset.sourceFile}</span>
+              </div>` : ''}
+              ${asset.notes ? `
+              <div class="dns-asset-meta-row">
+                <span class="dns-asset-meta-key">Rule</span>
+                <span class="dns-asset-meta-value">${asset.notes}</span>
+              </div>` : ''}
             </div>
           `;
           grid.appendChild(card);
