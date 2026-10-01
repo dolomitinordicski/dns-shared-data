@@ -184,7 +184,7 @@ service cloud.firestore {
       allow read: if hasOrderPermission('ticketOrders.read', resource.data);
 
       allow create: if validOrderLine(request.resource.data)
-        && hasOrderPermission('ticketOrders.write', request.resource.data)
+        && (hasOrderPermission('ticketOrders.write', request.resource.data) || canVerifyOrder(request.resource.data))
         && lineMatchesOrder(request.resource.data)
         && parentOrderEditableForLine(request.resource.data);
 
@@ -193,13 +193,13 @@ service cloud.firestore {
         && resource.data.seasonId == request.resource.data.seasonId
         && resource.data.ticketOrderId == request.resource.data.ticketOrderId
         && resource.data.catalogItemId == request.resource.data.catalogItemId
-        && hasOrderPermission('ticketOrders.write', request.resource.data)
+        && (hasOrderPermission('ticketOrders.write', request.resource.data) || canVerifyOrder(request.resource.data))
         && lineMatchesOrder(request.resource.data)
         && parentOrderEditableForLine(request.resource.data);
 
       // Clearing a matrix cell deletes only that organization's own line.
       allow delete: if !historicalLocked(resource.data)
-        && hasOrderPermission('ticketOrders.write', resource.data)
+        && (hasOrderPermission('ticketOrders.write', resource.data) || canVerifyOrder(resource.data))
         && parentOrderEditableForLine(resource.data);
     }
 
