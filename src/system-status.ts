@@ -1,4 +1,4 @@
-export const DNS_SYSTEM_STATUS_VERSION = '0.2.0' as const;
+export const DNS_SYSTEM_STATUS_VERSION = '0.3.0' as const;
 export const DNS_SYSTEM_STATUS_VERIFIED_AT = '2026-10-01' as const;
 
 export type DNSAdoptionState = 'adopted' | 'partial' | 'notYet' | 'na' | 'pending';
@@ -22,7 +22,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/dns-shared-data',
     phase: 'foundation-source',
     firebaseProject: 'dns-core',
-    datasetVersion: 'Canonical v1.6 · Operational schema 4 · Design System v1.12.1',
+    datasetVersion: 'Canonical v1.6 · Operational schema 4 · Design System v1.13.2 · Asset manifest v2',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -42,7 +42,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/DNS-Data-Entry',
     phase: 'foundation-aligned',
     firebaseProject: 'dns-core',
-    datasetVersion: 'Shared package pinned to Foundation / Design System v1.12.1',
+    datasetVersion: 'Shared package pinned to Foundation / Design System v1.13.2',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -54,7 +54,7 @@ export const DNS_SYSTEM_STATUS = [
       dataContracts: 'adopted',
       accessibility: 'adopted',
     },
-    note: 'Reference operational consumer. Shared navigation runtime v1.12.1, stable first paint, regional assets, module-level Data Contracts and Accessibility v1 are adopted.',
+    note: 'Reference operational consumer. Shared navigation runtime v1.13.2, stable first paint, regional and organization assets, module-level Data Contracts and Accessibility v1 are adopted. Orders, public shares, print and pricing overrides resolve organization logos centrally.',
   },
   {
     id: 'polls',
@@ -74,7 +74,7 @@ export const DNS_SYSTEM_STATUS = [
       dataContracts: 'na',
       accessibility: 'adopted',
     },
-    note: 'Foundation shell v1.12.1 is adopted with shared navigation, motion, interaction and Accessibility v1. Privacy-sensitive poll data remains intentionally isolated in the separate Polls / PII domain; brand assets are still local copies.',
+    note: 'Foundation shell v1.13.2 is adopted with shared navigation, motion, interaction and Accessibility v1. Privacy-sensitive poll data remains intentionally isolated in the separate Polls / PII domain; organization logos are N/A because Polls does not render canonical organizations.',
   },
   {
     id: 'flyer-studio',
@@ -88,13 +88,13 @@ export const DNS_SYSTEM_STATUS = [
       sharedData: 'notYet',
       firebase: 'partial',
       auth: 'pending',
-      sharedAssets: 'notYet',
+      sharedAssets: 'partial',
       regionLogos: 'partial',
       motion: 'notYet',
       dataContracts: 'notYet',
       accessibility: 'notYet',
     },
-    note: 'Regional and DNS logos are currently stored locally; migration should replace local copies with shared manifest resolution.',
+    note: 'Active regional color-logo selections now point to DNS Shared Data, including the current Biathlon Antholz 2026/27 asset. Some legacy/local logo files and non-region brand assets remain, so full shared-asset adoption is still partial.',
   },
   {
     id: 'fair',
@@ -102,7 +102,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/fairmodel',
     phase: 'foundation-ui-aligned',
     firebaseProject: 'fair-modell · separate operational persistence',
-    datasetVersion: 'Foundation / Design System v1.13.0 · FAIR contract foundation-defined',
+    datasetVersion: 'Foundation / Design System v1.13.2 · FAIR contract foundation-defined',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -114,27 +114,27 @@ export const DNS_SYSTEM_STATUS = [
       dataContracts: 'partial',
       accessibility: 'adopted',
     },
-    note: 'Foundation shell, canonical navigation, shared print runtime/tokens, shared web logo, canonical regional-logo manifest, motion/interaction and Accessibility v1 are adopted. FAIR uses Tailwind v4/Vite with legacy popup printing, local logo copies, Tailwind v3/PostCSS config and the vanilla-JS backup removed. FAIR calculation logic and existing fair-modell persistence remain unchanged; the FAIR Data Contract is still foundation-defined pending data-domain integration.',
+    note: 'Foundation shell, canonical navigation, shared print runtime/tokens, shared web logo, canonical regional/organization-logo manifest, motion/interaction and Accessibility v1 are adopted. Organization breakdown and print resolve canonical organization logos. FAIR uses Tailwind v4/Vite with legacy popup printing, local logo copies, Tailwind v3/PostCSS config and the vanilla-JS backup removed. FAIR calculation logic and existing fair-modell persistence remain unchanged; the FAIR Data Contract is still foundation-defined pending data-domain integration.',
   },
   {
     id: 'analytics',
     label: 'DNS Analytics',
-    repo: null,
-    phase: 'pending-audit',
-    firebaseProject: 'DNS Platform target',
-    datasetVersion: 'Foundation ownership defined; measurement contract pending integration',
+    repo: 'dolomitinordicski/analytics',
+    phase: 'in-migration',
+    firebaseProject: 'dns-core master connection + legacy local analytics dataset',
+    datasetVersion: 'Foundation ownership defined; DNS_Core master-data bridge active; measurement contract pending integration',
     criteria: {
       designSystem: 'pending',
-      sharedData: 'pending',
-      firebase: 'pending',
+      sharedData: 'partial',
+      firebase: 'partial',
       auth: 'pending',
-      sharedAssets: 'pending',
-      regionLogos: 'pending',
+      sharedAssets: 'partial',
+      regionLogos: 'partial',
       motion: 'pending',
       dataContracts: 'partial',
       accessibility: 'pending',
     },
-    note: 'Analytics ownership and scope model are defined; production and extended implementations still require non-destructive integration audit.',
+    note: 'Analytics ownership and scope model are defined. The operational 16-partner KP table now resolves organization logos from the shared manifest/DNS_Core, including Biathlon Antholz and Sand in Taufers; broader Foundation refactor remains pending.',
   },
   {
     id: 'faktura',
