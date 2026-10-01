@@ -77,6 +77,10 @@
     "./ui/print": {
       "types": "./dist/ui/print.d.ts",
       "import": "./dist/ui/print.js"
+    },
+    "./ui/header-status": {
+      "types": "./dist/ui/header-status.d.ts",
+      "import": "./dist/ui/header-status.js"
     }
   }
 }
