@@ -9,14 +9,20 @@
       "label": "Südtirol",
       "filename": "suedtirol.svg",
       "entityBindings": [],
-      "notes": "Umbrella destination/brand asset; not a canonical DNS reporting area."
+      "notes": "Umbrella destination/brand asset; not a canonical DNS reporting area.",
+      "mimeType": "image/svg+xml",
+      "sha256": "5097c32f1c80b992bba71b84fcce62022af5ca5c0088252ac9f2fb1655c97faa",
+      "containsEmbeddedRaster": true
     },
     {
       "id": "dolomiti-bellunesi",
       "label": "Dolomiti Bellunesi",
       "filename": "dolomiti-bellunesi.svg",
       "entityBindings": [],
-      "notes": "External/umbrella brand asset; no direct canonical DNS entity binding in v1."
+      "notes": "External/umbrella brand asset; no direct canonical DNS entity binding in v1.",
+      "mimeType": "image/svg+xml",
+      "sha256": "a9a285610d503f8368b97f869f8ff629cdbe908c8d73f5cc6b10318b56b87f83",
+      "containsEmbeddedRaster": true
     },
     {
       "id": "osttirol",
@@ -35,7 +41,10 @@
           "entityType": "organization",
           "entityId": "tvb-osttirol"
         }
-      ]
+      ],
+      "mimeType": "image/svg+xml",
+      "sha256": "af467db758f652001f0158950420bb42c0cb99d8ad486cf5fb6286093d6ce9ea",
+      "containsEmbeddedRaster": true
     },
     {
       "id": "antholzertal-kronplatz",
@@ -56,7 +65,10 @@
           "entityId": "antholzertal"
         }
       ],
-      "notes": "Kronplatz and Antholzertal are intentionally one visual asset/entity in this source."
+      "notes": "Kronplatz and Antholzertal are intentionally one visual asset/entity in this source.",
+      "mimeType": "image/svg+xml",
+      "sha256": "2c424fc73e10a90d93176b5fef8faa0d206706a556b234c598ff1a3b690079fe",
+      "containsEmbeddedRaster": true
     },
     {
       "id": "gsiesertal-welsberg-taisten",
@@ -79,7 +91,10 @@
           "entityType": "organization",
           "entityId": "gsiesertal-welsberg-taisten"
         }
-      ]
+      ],
+      "mimeType": "image/svg+xml",
+      "sha256": "4c8f441f9d51913790e7ffdd3b2bb4aae4d6ba351b6b7fe520cec7fd779b3a00",
+      "containsEmbeddedRaster": true
     },
     {
       "id": "drei-zinnen-dolomites",
@@ -130,7 +145,10 @@
           "entityType": "organization",
           "entityId": "tv-prags"
         }
-      ]
+      ],
+      "mimeType": "image/svg+xml",
+      "sha256": "cf4472416d3125cbfc91fe9100d6a852b22d231afeafa7bf10ce6c3f4de00db9",
+      "containsEmbeddedRaster": true
     },
     {
       "id": "val-comelico",
@@ -150,7 +168,10 @@
           "entityType": "organization",
           "entityId": "val-comelico"
         }
-      ]
+      ],
+      "mimeType": "image/svg+xml",
+      "sha256": "eddf409305272bc632d11a154b3dfa07bdd82256c6472c5c2a42e4b048d8bb73",
+      "containsEmbeddedRaster": true
     },
     {
       "id": "consorzio-turistico-val-comelico",
@@ -163,7 +184,10 @@
           "entityId": "val-comelico"
         }
       ],
-      "notes": "Secondary organizational logo for Val Comelico."
+      "notes": "Secondary organizational logo for Val Comelico.",
+      "mimeType": "image/svg+xml",
+      "sha256": "894c636a3dcad8a83c61da1daa5f454e2c9200dd51c04e9b9103783c52457fab",
+      "containsEmbeddedRaster": true
     },
     {
       "id": "cortina-dolomiti",
@@ -182,7 +206,10 @@
           "entityType": "organization",
           "entityId": "servizi-ampezzo"
         }
-      ]
+      ],
+      "mimeType": "image/svg+xml",
+      "sha256": "0c28c5f83eff2fc83a63663505dad057104020b4b417dcf7d874594bb36d3804",
+      "containsEmbeddedRaster": true
     },
     {
       "id": "ahrntal-valle-aurina",
@@ -201,7 +228,10 @@
           "entityType": "organization",
           "entityId": "ahrntal"
         }
-      ]
+      ],
+      "mimeType": "image/svg+xml",
+      "sha256": "470b18672da8ea3969816ba6731e1186abfcb45abe5ed9a56622dd46ef7e4ef6",
+      "containsEmbeddedRaster": true
     },
     {
       "id": "seiser-alm",
@@ -220,7 +250,10 @@
           "entityType": "organization",
           "entityId": "seiser-alm-marketing"
         }
-      ]
+      ],
+      "mimeType": "image/svg+xml",
+      "sha256": "572bcbebbef9d98fa9ec862862a3801e41787686906b8826823793dab66d2bea",
+      "containsEmbeddedRaster": true
     },
     {
       "id": "val-gardena",
@@ -239,7 +272,12 @@
           "entityType": "organization",
           "entityId": "val-gardena"
         }
-      ]
+      ],
+      "mimeType": "image/svg+xml",
+      "sha256": "a824ed97c2562b2e326860e7a5f5709a6800a34bab3e481fe36879faab503e8d",
+      "containsEmbeddedRaster": true
     }
-  ]
+  ],
+  "assetVersion": "1",
+  "hosting": "repository"
 }
