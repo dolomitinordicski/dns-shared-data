@@ -297,6 +297,106 @@ service cloud.firestore {
       }
     }
 
+    function manageKpMilestones() {
+      return isAdmin() || hasGrant('network','dolomiti-nordicski','kp.write');
+    }
+
+    function hasKpPermission(permission, data) {
+      return isAdmin()
+        || hasGrant('network','dolomiti-nordicski',permission)
+        || hasGrant('reportingArea',data.reportingAreaId,permission)
+        || (data.entityType == 'organization' && hasGrant('organization',data.entityId,permission));
+    }
+
+    function validKpMilestone(data) {
+      return data.keys().hasOnly(['id','seasonId','date','label','order','updatedBy','updatedAt'])
+        && !historicalLocked(data)
+        && data.id is string
+        && data.seasonId is string
+        && exists(/databases/$(database)/documents/seasons/$(data.seasonId))
+        && data.date is string && data.date.size() == 10
+        && data.label is string
+        && data.order is int && data.order >= 1 && data.order <= 3
+        && data.updatedBy == request.auth.uid
+        && data.updatedAt == request.time;
+    }
+
+    function validKpMilestoneValue(value, seasonId) {
+      return value.keys().hasOnly(['milestoneId','naturalSnowKm','artificialSnowKm'])
+        && value.milestoneId is string
+        && exists(/databases/$(database)/documents/kpMilestones/$(value.milestoneId))
+        && get(/databases/$(database)/documents/kpMilestones/$(value.milestoneId)).data.seasonId == seasonId
+        && value.naturalSnowKm is number && value.naturalSnowKm >= 0
+        && value.artificialSnowKm is number && value.artificialSnowKm >= 0;
+    }
+
+    function validKpEntry(data) {
+      return data.keys().hasOnly(['id','seasonId','entityType','entityId','reportingAreaId','referenceKm','milestones','includeInKp','exclusionReason','provenance','notes','revision','updatedBy','updatedAt'])
+        && !historicalLocked(data)
+        && data.id == data.seasonId + '__' + data.entityId
+        && data.seasonId is string
+        && exists(/databases/$(database)/documents/seasons/$(data.seasonId))
+        && data.entityType == 'organization'
+        && data.entityId is string
+        && exists(/databases/$(database)/documents/organizations/$(data.entityId))
+        && data.reportingAreaId in get(/databases/$(database)/documents/organizations/$(data.entityId)).data.reportingAreaIds
+        && data.referenceKm.keys().hasOnly(['uniqueNetworkKm','potentialOperationalKm'])
+        && data.referenceKm.uniqueNetworkKm is number && data.referenceKm.uniqueNetworkKm >= 0
+        && data.referenceKm.potentialOperationalKm is number && data.referenceKm.potentialOperationalKm >= 0
+        && data.milestones is list && data.milestones.size() <= 3
+        && (data.milestones.size() < 1 || validKpMilestoneValue(data.milestones[0],data.seasonId))
+        && (data.milestones.size() < 2 || validKpMilestoneValue(data.milestones[1],data.seasonId))
+        && (data.milestones.size() < 3 || validKpMilestoneValue(data.milestones[2],data.seasonId))
+        && data.includeInKp is bool
+        && data.exclusionReason is string
+        && data.provenance.sourceSystem == 'manual-data-entry'
+        && data.provenance.methodVersion == 1
+        && data.provenance.dataStatus == 'draft'
+        && data.notes is string
+        && data.revision is int && data.revision >= 1
+        && data.updatedBy == request.auth.uid
+        && data.updatedAt == request.time;
+    }
+
+    match /kpMilestones/{document} {
+      allow read: if activeUser();
+      allow create: if validKpMilestone(request.resource.data)
+        && request.resource.data.id == document
+        && manageKpMilestones();
+      allow update: if validKpMilestone(request.resource.data)
+        && resource.data.id == request.resource.data.id
+        && resource.data.seasonId == request.resource.data.seasonId
+        && manageKpMilestones();
+      allow delete: if false;
+    }
+
+    match /kpEntries/{document} {
+      allow read: if hasKpPermission('kp.read',resource.data);
+      allow create: if validKpEntry(request.resource.data)
+        && hasKpPermission('kp.write',request.resource.data)
+        && request.resource.data.id == document
+        && request.resource.data.revision == 1;
+      allow update: if validKpEntry(request.resource.data)
+        && hasKpPermission('kp.write',resource.data)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.seasonId == resource.data.seasonId
+        && request.resource.data.entityType == resource.data.entityType
+        && request.resource.data.entityId == resource.data.entityId
+        && request.resource.data.reportingAreaId == resource.data.reportingAreaId
+        && resource.data.provenance.dataStatus == 'draft'
+        && request.resource.data.revision == resource.data.revision + 1
+        && archived('kpEntries',document);
+      allow delete: if false;
+
+      match /revisions/{revision} {
+        allow read: if hasKpPermission('kp.read',get(/databases/$(database)/documents/kpEntries/$(document)).data);
+        allow create: if hasKpPermission('kp.write',get(/databases/$(database)/documents/kpEntries/$(document)).data)
+          && request.resource.data == get(/databases/$(database)/documents/kpEntries/$(document)).data
+          && getAfter(/databases/$(database)/documents/kpEntries/$(document)).data.revision == request.resource.data.revision + 1;
+        allow update, delete: if false;
+      }
+    }
+
     // Trusted Admin import only. Historical sources and facts are immutable to all app clients.
     match /historicalSeasonRecords/{document} {
       allow read: if activeUser() && (isAdmin()
