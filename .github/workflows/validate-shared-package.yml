@@ -11,6 +11,7 @@ on:
       - 'scripts/check-web-data-contracts.mjs'
       - 'scripts/check-web-system-status.mjs'
       - 'scripts/check-web-accessibility.mjs'
+      - 'scripts/check-web-navigation.mjs'
       - 'package.json'
       - 'tsconfig.json'
       - 'tsconfig.package.json'
@@ -24,6 +25,7 @@ on:
       - 'scripts/check-web-data-contracts.mjs'
       - 'scripts/check-web-system-status.mjs'
       - 'scripts/check-web-accessibility.mjs'
+      - 'scripts/check-web-navigation.mjs'
       - 'package.json'
       - 'tsconfig.json'
       - 'tsconfig.package.json'
@@ -68,3 +70,6 @@ jobs:
 
       - name: Verify browser accessibility runtime
         run: node scripts/check-web-accessibility.mjs
+
+      - name: Verify browser navigation runtime
+        run: node scripts/check-web-navigation.mjs

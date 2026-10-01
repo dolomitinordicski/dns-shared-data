@@ -63,6 +63,10 @@
     "./ui/accessibility": {
       "types": "./dist/ui/accessibility.d.ts",
       "import": "./dist/ui/accessibility.js"
+    },
+    "./ui/navigation": {
+      "types": "./dist/ui/navigation.d.ts",
+      "import": "./dist/ui/navigation.js"
     }
   }
 }

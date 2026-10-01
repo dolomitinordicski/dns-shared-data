@@ -13,7 +13,7 @@ This repository contains:
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.3
-- **DNS Design System:** v1.11
+- **DNS Design System:** v1.12
 - **DNS Access Control:** v0.1
 
 ## Source of truth
@@ -61,7 +61,7 @@ firebase.json
 
 ## DNS Design System
 
-The current shared visual and interaction contract is **v1.11.1** and is documented in:
+The current shared visual and interaction contract is **v1.12.0** and is documented in:
 
 ```text
 docs/DNS-Design-System-v1.md
@@ -175,3 +175,16 @@ Package consumers import:
 The module provides text scale, high contrast, relaxed spacing, reduced motion, stronger keyboard focus and comfortable UI density. Preferences are persisted only in browser `localStorage` under `dns-accessibility-v1`; they are never written to Firebase and contain no user profile or personal data.
 
 Keyboard shortcut: `Alt+A`. `Escape` closes the panel.
+
+
+## Shared navigation runtime
+
+Sticky navigation behavior is centralized in `@dolomitinordicski/dns-shared-data/ui/navigation`.
+
+The runtime owns:
+- measured sticky header/navigation offsets;
+- document scroll progress;
+- deterministic active-section tracking for section-based pages;
+- shared tab/navigation interaction geometry.
+
+DNS tools may vary navigation content, but not navigation behavior. Fixed sticky offsets and app-specific scroll-spy implementations are not allowed.

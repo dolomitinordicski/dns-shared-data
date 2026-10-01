@@ -5,7 +5,7 @@
 **Data-tool reference:** DNS Analytics  
 **Target:** all DNS digital tools  
 **Runtime source:** DNS_Core / Firestore  
-**Current semantic version:** 1.11.1
+**Current semantic version:** 1.12.0
 
 ## Principle
 
@@ -161,7 +161,7 @@ designSystem/v1
 designSystem/current
 ```
 
-The document keeps a semantic `version` field, currently `1.11.1`.
+The document keeps a semantic `version` field, currently `1.12.0`.
 
 Applications should:
 
@@ -271,3 +271,19 @@ They are not:
 - closing returns focus to the previous control.
 
 The module supplements baseline accessibility. Semantic HTML, keyboard operability, visible focus, meaningful labels and reduced-motion support remain mandatory even when the panel is never opened.
+
+
+## Shared navigation runtime
+
+Navigation behavior is part of the Foundation contract and is implemented by `src/ui/navigation.ts`.
+
+All DNS tools with the shared header/navigation pattern must use this runtime for:
+
+- sticky offset calculation from the measured header height;
+- sticky-stack measurement when navigation wraps;
+- scroll progress;
+- active-section tracking on section-based pages.
+
+The active section is determined against the actual measured sticky stack rather than a fixed `rootMargin` or pixel offset. This keeps the active underline aligned when the navigation wraps, the viewport changes, or header controls alter the header height.
+
+Tool-specific labels, modules and navigation destinations are allowed. Tool-specific implementations of sticky positioning, progress calculation or scroll-spy behavior are not.
