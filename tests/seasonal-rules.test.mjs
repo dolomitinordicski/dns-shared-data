@@ -13,13 +13,24 @@ try {
     await setDoc(doc(db,'seasons','2024-25'),{status:'historical'});
     await setDoc(doc(db,'reportingAreas','area'),{canonicalName:'Area'});
     await setDoc(doc(db,'organizations','org'),{reportingAreaIds:['area']});
-    for(const [uid,permissions] of [['seller',['ticketSales.read','ticketSales.write']],['reader',['ticketSales.read']]])
+    for(const [uid,permissions] of [['seller',['ticketSales.read','ticketSales.write','kp.read','kp.write']],['reader',['ticketSales.read']]])
       await setDoc(doc(db,'accessGrants',`${uid}__organization__org`),{active:true,permissions});
     await setDoc(doc(db,'accessGrants','reader__reportingArea__area'),{active:true,permissions:['kp.read']});
   });
   const admin=env.authenticatedContext('admin').firestore();
   const seller=env.authenticatedContext('seller').firestore();
   const reader=env.authenticatedContext('reader').firestore();
+  const milestone={id:'2026-27__m1',seasonId:'2026-27',date:'2026-12-23',label:'Milestone 1',order:1,updatedBy:'admin',updatedAt:serverTimestamp()};
+  await assertSucceeds(setDoc(doc(admin,'kpMilestones',milestone.id),milestone));
+  await assertFails(setDoc(doc(seller,'kpMilestones','2026-27__m2'),{...milestone,id:'2026-27__m2',order:2,updatedBy:'seller'}));
+  const kpEntry={id:'2026-27__org',seasonId:'2026-27',entityType:'organization',entityId:'org',reportingAreaId:'area',referenceKm:{uniqueNetworkKm:20,potentialOperationalKm:25},milestones:[{milestoneId:milestone.id,naturalSnowKm:6,artificialSnowKm:4}],includeInKp:true,exclusionReason:'',provenance:{sourceSystem:'manual-data-entry',methodVersion:1,dataStatus:'draft'},notes:'',revision:1,updatedBy:'seller',updatedAt:serverTimestamp()};
+  await assertSucceeds(setDoc(doc(seller,'kpEntries',kpEntry.id),kpEntry));
+  await assertSucceeds(getDoc(doc(reader,'kpEntries',kpEntry.id)));
+  await assertFails(setDoc(doc(reader,'kpEntries','2026-27__reader'),{...kpEntry,id:'2026-27__reader',entityId:'reader',updatedBy:'reader'}));
+  await assertFails(setDoc(doc(seller,'kpEntries','2026-27__org-wrong'),{...kpEntry,id:'2026-27__org-wrong',reportingAreaId:'unrelated'}));
+  const kpPrevious=(await getDoc(doc(seller,'kpEntries',kpEntry.id))).data();
+  const kpBatch=writeBatch(seller);kpBatch.set(doc(seller,'kpEntries',kpEntry.id,'revisions','1'),kpPrevious);kpBatch.set(doc(seller,'kpEntries',kpEntry.id),{...kpEntry,revision:2,milestones:[{milestoneId:milestone.id,naturalSnowKm:7,artificialSnowKm:4}]});await assertSucceeds(kpBatch.commit());
+  await assertFails(setDoc(doc(admin,'kpEntries','2025-26__org'),{...kpEntry,id:'2025-26__org',seasonId:'2025-26',updatedBy:'admin'}));
   const price={id:'price',seasonId:'2026-27',scopeType:'reportingArea',scopeId:'area',productCode:'day',salesChannel:'official',salesPeriod:'regular',unitPrice:10,settlementUnitPrice:10,currency:'EUR',active:true,validFrom:'',validTo:'',notes:'',revision:1,provenance:{sourceSystem:'manual-data-entry',methodVersion:1,dataStatus:'draft'},updatedBy:'admin',updatedAt:serverTimestamp()};
   await assertSucceeds(setDoc(doc(admin,'ticketPricingConfigs','price'),price));
   await assertSucceeds(setDoc(doc(admin,'ticketPricingConfigs','price-weekly'),{...price,id:'price-weekly',productCode:'wk-area'}));
