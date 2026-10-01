@@ -24,7 +24,7 @@ export interface AreaAllocationKey {
 
 export const AREA_ALLOCATION_KEYS_2026_27 = [
   {
-    id: '2026-27__osttirol',
+    id: '2026-27-osttirol',
     seasonId: '2026-27',
     reportingAreaId: 'osttirol',
     allocations: [{ organizationId: 'tvb-osttirol', share: 1, fixedShare: 1 }],
@@ -32,7 +32,7 @@ export const AREA_ALLOCATION_KEYS_2026_27 = [
     revision: 1,
   },
   {
-    id: '2026-27__drei-zinnen',
+    id: '2026-27-drei-zinnen',
     seasonId: '2026-27',
     reportingAreaId: 'drei-zinnen',
     allocations: [
@@ -46,7 +46,7 @@ export const AREA_ALLOCATION_KEYS_2026_27 = [
     revision: 1,
   },
   {
-    id: '2026-27__cortina-d-ampezzo',
+    id: '2026-27-cortina-d-ampezzo',
     seasonId: '2026-27',
     reportingAreaId: 'cortina-d-ampezzo',
     allocations: [{ organizationId: 'servizi-ampezzo', share: 1, fixedShare: 1 }],
@@ -54,7 +54,7 @@ export const AREA_ALLOCATION_KEYS_2026_27 = [
     revision: 1,
   },
   {
-    id: '2026-27__val-comelico',
+    id: '2026-27-val-comelico',
     seasonId: '2026-27',
     reportingAreaId: 'val-comelico',
     allocations: [{ organizationId: 'val-comelico', share: 1, fixedShare: 1 }],
@@ -62,7 +62,7 @@ export const AREA_ALLOCATION_KEYS_2026_27 = [
     revision: 1,
   },
   {
-    id: '2026-27__gsiesertal-welsberg-taisten',
+    id: '2026-27-gsiesertal-welsberg-taisten',
     seasonId: '2026-27',
     reportingAreaId: 'gsiesertal-welsberg-taisten',
     allocations: [{ organizationId: 'gsiesertal-welsberg-taisten', share: 1, fixedShare: 1 }],
@@ -70,7 +70,7 @@ export const AREA_ALLOCATION_KEYS_2026_27 = [
     revision: 1,
   },
   {
-    id: '2026-27__antholzertal',
+    id: '2026-27-antholzertal',
     seasonId: '2026-27',
     reportingAreaId: 'antholzertal',
     allocations: [
@@ -81,7 +81,7 @@ export const AREA_ALLOCATION_KEYS_2026_27 = [
     revision: 1,
   },
   {
-    id: '2026-27__ahrntal',
+    id: '2026-27-ahrntal',
     seasonId: '2026-27',
     reportingAreaId: 'ahrntal',
     allocations: [
@@ -92,7 +92,7 @@ export const AREA_ALLOCATION_KEYS_2026_27 = [
     revision: 1,
   },
   {
-    id: '2026-27__seiser-alm-dolomites-val-gardena',
+    id: '2026-27-seiser-alm-dolomites-val-gardena',
     seasonId: '2026-27',
     reportingAreaId: 'seiser-alm-dolomites-val-gardena',
     allocations: [
