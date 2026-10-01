@@ -128,7 +128,11 @@
 
   <style>
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    html {
+      scroll-behavior: smooth;
+      --dns-header-height: 68px;
+      --dns-sticky-stack-height: 156px;
+    }
     body {
       margin: 0;
       background: var(--color-dns-bg);
@@ -207,7 +211,7 @@
 
     .dns-tab-nav {
       position: sticky;
-      top: 68px;
+      top: var(--dns-header-height);
       z-index: 25;
       background: var(--dns-tab-bg);
       overflow-x: auto;
@@ -297,7 +301,7 @@
       line-height: 1;
     }
 
-    .section-anchor { scroll-margin-top: 156px; }
+    .section-anchor { scroll-margin-top: calc(var(--dns-sticky-stack-height) + 16px); }
 
     .dns-site-header {
       background: var(--dns-header-bg) !important;
@@ -991,12 +995,10 @@
         padding: 0 1rem;
       }
       .dns-tab { padding-left: .95rem; padding-right: .95rem; }
-      .section-anchor { scroll-margin-top: 116px; }
     }
 
     @media (max-width: 767px) {
       .dns-tab-nav {
-        top: 62px;
         scroll-snap-type: x proximity;
       }
       .dns-tab-nav-inner { padding: 0 .9rem; }
@@ -1013,9 +1015,9 @@
 </head>
 
 <body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.9.0">
-  <header class="dns-site-header sticky top-0 z-30 text-white">
+  <header id="dns-site-header" class="dns-site-header sticky top-0 z-30 text-white">
     <div class="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-6 px-5 py-3.5 md:px-8">
-      <a href="#top" class="flex min-w-0 items-center gap-4 text-white no-underline">
+      <a id="dns-home-link" href="#top" class="flex min-w-0 items-center gap-4 text-white no-underline" aria-label="DNS Shared Data · page top">
         <img
           src="https://raw.githubusercontent.com/dolomitinordicski/dns-shared-data/main/brand/logo-web.png"
           alt="Dolomiti NordicSki"
@@ -1038,7 +1040,7 @@
     </div>
   </header>
 
-  <nav class="dns-tab-nav" aria-label="DNS Shared Data">
+  <nav id="dns-tab-nav" class="dns-tab-nav" aria-label="DNS Shared Data">
     <div class="dns-tab-nav-inner">
       <div class="dns-tab-season">DNS Foundation</div>
       <a href="#system-map" class="dns-tab dns-tab-active" data-section="system-map">
@@ -1103,7 +1105,7 @@
       </div>
     </section>
 
-    <section id="system-map" class="dns-page-shell mx-auto max-w-[1440px] px-5 pt-5 pb-2 md:px-8" data-dns-reveal>
+    <section id="system-map" class="dns-page-shell section-anchor mx-auto max-w-[1440px] px-5 pt-5 pb-2 md:px-8" data-dns-reveal>
       <div class="dns-card dns-card-primary dns-system-map p-5 md:p-6" data-mode="system">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div class="max-w-3xl">
@@ -2270,6 +2272,35 @@
 
     const savedLang = localStorage.getItem('dns-shared-data-lang');
     setLang(savedLang === 'it' ? 'it' : 'de');
+
+    const siteHeader = document.getElementById('dns-site-header');
+    const tabNav = document.getElementById('dns-tab-nav');
+    const homeLink = document.getElementById('dns-home-link');
+
+    function updateStickyMetrics() {
+      const headerHeight = siteHeader?.getBoundingClientRect().height ?? 0;
+      const navHeight = tabNav?.getBoundingClientRect().height ?? 0;
+      const root = document.documentElement;
+      root.style.setProperty('--dns-header-height', `${Math.ceil(headerHeight)}px`);
+      root.style.setProperty('--dns-sticky-stack-height', `${Math.ceil(headerHeight + navHeight)}px`);
+    }
+
+    const stickyResizeObserver = new ResizeObserver(updateStickyMetrics);
+    if (siteHeader) stickyResizeObserver.observe(siteHeader);
+    if (tabNav) stickyResizeObserver.observe(tabNav);
+    updateStickyMetrics();
+
+    homeLink?.addEventListener('click', (event) => {
+      event.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.location.hash) {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+      setActiveTab('system-map');
+    });
+
+    window.addEventListener('load', updateStickyMetrics);
+    window.addEventListener('resize', updateStickyMetrics);
 
     const tabs = Array.from(document.querySelectorAll('.dns-tab[data-section]'));
     const sections = tabs
