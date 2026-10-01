@@ -127,6 +127,21 @@ export interface PocketfolderEditionMetadata {
 
 export type DeliveryLocationStatus = 'verified' | 'needs-confirmation' | 'incomplete';
 
+export interface PocketfolderSourceRow {
+  id: string;
+  seasonId: SeasonId;
+  sourceRow: number;
+  label: string;
+  comparison2025: number | null;
+  requested2026: number | null;
+  dnsCopies: number | null;
+  areaTotal2026: number | null;
+  printerTotal2026: number | null;
+  backLanguageNote: string;
+  rowKind: 'area' | 'distribution' | 'total' | 'note' | 'blank';
+  provenance: DataProvenance;
+}
+
 export interface DeliveryLocation {
   id: string;
   organizationId?: OrganizationId;
@@ -445,6 +460,7 @@ export const FIRESTORE_OPERATIONAL_COLLECTIONS = {
   publicOrderShares: 'publicOrderShares',
   deliveryLocations: 'deliveryLocations',
   pocketfolderSetupImports: 'pocketfolderSetupImports',
+  pocketfolderSourceRows: 'pocketfolderSourceRows',
   orderFormConfigs: 'orderFormConfigs',
   ticketOrders: 'ticketOrders',
   ticketOrderLines: 'ticketOrderLines',
