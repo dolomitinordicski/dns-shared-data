@@ -5,7 +5,7 @@
 **Data-tool reference:** DNS Analytics  
 **Target:** all DNS digital tools  
 **Runtime source:** DNS_Core / Firestore  
-**Current semantic version:** 1.2.0
+**Current semantic version:** 1.6.0
 
 ## Principle
 
@@ -53,6 +53,65 @@ From the DNS web ecosystem we retain:
 
 Tool UIs should remain calmer and denser than public marketing pages.
 
+## Motion & interaction v1.6
+
+Motion is a shared DNS behavior, not a per-application decoration.
+
+The canonical runtime values live in `DNS_Core / designSystem/current`, while executable JavaScript remains versioned source code in `dns-shared-data` or in the consuming application bundle. Firestore must never contain executable animation or interaction code.
+
+### Motion tokens
+
+The shared contract defines:
+
+- `fastMs: 200` for immediate interaction feedback;
+- `standardMs: 300` for normal control transitions;
+- `revealMs: 600` for restrained entrance/reveal motion;
+- `ease` as the current common easing;
+- `hoverScale: 1.05` and `touchScale: 0.96` for interactive feedback;
+- reveal from `8 px` below with opacity `0 → 1`;
+- stagger intervals of `40 ms` (compact) and `70 ms` (standard).
+
+Reveal motion is intended for meaningful section/card entrance only. It is not a general instruction to animate every element.
+
+### Interaction tokens
+
+The shared contract also defines:
+
+- a visible 2 px DNS-mid focus ring with 2 px offset;
+- hover transforms only on elements that are actually interactive and only on hover-capable pointer devices;
+- press/touch feedback using the shared touch scale;
+- consistent control transition properties and timing;
+- link underline behavior on hover or `:focus-visible`;
+- tab motion limited to color and active-border transitions rather than decorative sliding indicators;
+- passive cards remain static.
+
+### Reduced motion
+
+`prefers-reduced-motion: reduce` is part of the shared contract.
+
+When active:
+
+- transition/reveal duration becomes zero;
+- transform-based reveal is disabled;
+- automatic reveal animation is disabled;
+- information and state changes must remain fully understandable without motion.
+
+### Runtime boundary
+
+The design system deliberately separates **configuration** from **code**:
+
+```text
+dns-shared-data/src/design-system.ts
+        ↓ seed
+DNS_Core / designSystem/current
+        ↓ read
+DNS applications
+        ↓
+local/shared versioned JS helpers
+```
+
+Remote Firestore documents provide tokens only. Applications must never download and execute JavaScript stored in Firestore.
+
 ## Data-tool patterns
 
 Analytics remains the reference for:
@@ -74,6 +133,7 @@ The shared system includes:
 - colors;
 - spacing;
 - motion;
+- interaction and focus behavior;
 - card and metric styling;
 - controls;
 - navigation behavior;
@@ -104,7 +164,7 @@ designSystem/v1
 designSystem/current
 ```
 
-The document keeps a semantic `version` field, currently `1.1.0`.
+The document keeps a semantic `version` field, currently `1.6.0`.
 
 Applications should:
 
