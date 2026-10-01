@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/design-system.ts
 // Keep this file synchronized with the canonical TypeScript contract.
-export const DNS_DESIGN_SYSTEM_VERSION = '1.10.1';
+export const DNS_DESIGN_SYSTEM_VERSION = '1.11.0';
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -498,6 +498,43 @@ export const DNS_DESIGN_SYSTEM = {
       'Primary actions remain Frosted Ice Blue.',
     ],
   },
+  accessibility: {
+    version: '1.0.0',
+    storageKey: 'dns-accessibility-v1',
+    persistence: 'local-browser-only',
+    shortcut: 'Alt+A',
+    closeKey: 'Escape',
+    textScale: {
+      presets: [100, 115, 130],
+      default: 100,
+    },
+    highContrast: {
+      enabledByDefault: false,
+    },
+    relaxedSpacing: {
+      enabledByDefault: false,
+    },
+    reduceMotion: {
+      enabledByDefault: false,
+      respectsSystemPreference: true,
+    },
+    strongFocus: {
+      enabledByDefault: false,
+      widthPx: 3,
+      offsetPx: 3,
+      color: '#AAD0D1',
+    },
+    comfortableDensity: {
+      enabledByDefault: false,
+      minimumControlHeightPx: 44,
+    },
+    rules: [
+      'Accessibility preferences are stored locally in the browser and are not written to Firebase.',
+      'The accessibility module supplements, but never replaces, semantic HTML, keyboard support, visible focus and reduced-motion support.',
+      'Applications should mount the shared runtime rather than reimplementing accessibility preferences locally.',
+    ],
+  },
+
   semanticAccent: {
     colorToken: 'colors.light',
     corporateColor: 'Deep Glacier Blue',

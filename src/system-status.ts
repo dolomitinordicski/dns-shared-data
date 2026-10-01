@@ -1,4 +1,4 @@
-export const DNS_SYSTEM_STATUS_VERSION = '0.1.0' as const;
+export const DNS_SYSTEM_STATUS_VERSION = '0.2.0' as const;
 export const DNS_SYSTEM_STATUS_VERIFIED_AT = '2026-10-01' as const;
 
 export type DNSAdoptionState = 'adopted' | 'partial' | 'notYet' | 'na' | 'pending';
@@ -12,6 +12,7 @@ export const DNS_SYSTEM_STATUS_CRITERIA = [
   { id: 'regionLogos', label: 'Region Logos' },
   { id: 'motion', label: 'Motion' },
   { id: 'dataContracts', label: 'Data Contracts' },
+  { id: 'accessibility', label: 'Accessibility' },
 ] as const;
 
 export const DNS_SYSTEM_STATUS = [
@@ -31,6 +32,7 @@ export const DNS_SYSTEM_STATUS = [
       regionLogos: 'adopted',
       motion: 'adopted',
       dataContracts: 'adopted',
+      accessibility: 'adopted',
     },
     note: 'Canonical source for shared contracts, assets, design tokens and Firebase rules/seeds.',
   },
@@ -50,6 +52,7 @@ export const DNS_SYSTEM_STATUS = [
       regionLogos: 'adopted',
       motion: 'adopted',
       dataContracts: 'adopted',
+      accessibility: 'notYet',
     },
     note: 'Reference operational consumer. Shared navigation, stable first paint, regional assets and module-level Data Contracts are adopted.',
   },
@@ -69,6 +72,7 @@ export const DNS_SYSTEM_STATUS = [
       regionLogos: 'na',
       motion: 'adopted',
       dataContracts: 'na',
+      accessibility: 'notYet',
     },
     note: 'Privacy-sensitive domain remains intentionally separate. Shared motion is adopted; brand assets are still local copies.',
   },
@@ -88,6 +92,7 @@ export const DNS_SYSTEM_STATUS = [
       regionLogos: 'partial',
       motion: 'notYet',
       dataContracts: 'notYet',
+      accessibility: 'notYet',
     },
     note: 'Regional and DNS logos are currently stored locally; migration should replace local copies with shared manifest resolution.',
   },
@@ -107,6 +112,7 @@ export const DNS_SYSTEM_STATUS = [
       regionLogos: 'pending',
       motion: 'pending',
       dataContracts: 'partial',
+      accessibility: 'pending',
     },
     note: 'FAIR ownership is defined in the Foundation; repository/runtime adoption must be audited during the planned refactor.',
   },
@@ -126,6 +132,7 @@ export const DNS_SYSTEM_STATUS = [
       regionLogos: 'pending',
       motion: 'pending',
       dataContracts: 'partial',
+      accessibility: 'pending',
     },
     note: 'Analytics ownership and scope model are defined; production and extended implementations still require non-destructive integration audit.',
   },
@@ -145,6 +152,7 @@ export const DNS_SYSTEM_STATUS = [
       regionLogos: 'na',
       motion: 'notYet',
       dataContracts: 'partial',
+      accessibility: 'notYet',
     },
     note: 'Commercial/billing-preparation domain is planned; XGLA4 remains the accounting authority.',
   },
@@ -164,6 +172,7 @@ export const DNS_SYSTEM_STATUS = [
       regionLogos: 'partial',
       motion: 'notYet',
       dataContracts: 'partial',
+      accessibility: 'pending',
     },
     note: 'Portal role, memberships and access-grant model are defined at Foundation level; application adoption remains pending.',
   },

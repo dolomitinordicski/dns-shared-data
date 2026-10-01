@@ -9,3 +9,5 @@ export * from './ui/motion.js';
 export * from './ui/interaction.js';
 
 export * from './system-status.js';
+
+export * from './ui/accessibility.js';
