@@ -1,4 +1,4 @@
-export const DNS_DATA_CONTRACTS_VERSION = '0.5.0' as const;
+export const DNS_DATA_CONTRACTS_VERSION = '0.6.0' as const;
 
 export const DNS_DATA_CONTRACTS = [
   {
@@ -79,11 +79,11 @@ export const DNS_DATA_CONTRACTS = [
     runtime: 'DNS Commercial / target',
     collections: ['billingRateConfigs', 'billingSeasonalExtras', 'billingRuns', 'billingLines', 'billingAdjustments'],
     source: 'src/billing-preparation.ts',
-    schema: 'Billing Preparation v0.5',
+    schema: 'Billing Preparation v0.6',
     write: 'Authorized DNS billing management',
     read: 'Authorized DNS management',
-    fields: ['seasonId', 'catalogItemId', 'billingUnitPrice', 'source.documentLabel', 'organizationId', 'reportingAreaId', 'description', 'quantity', 'unitAmount', 'amount', 'active', 'runId', 'runRevision', 'source.type', 'source.sourceId', 'included', 'rateId', 'rateRevision', 'sourceDocumentLabel', 'status', 'revision', 'sourceTypes', 'sourceOrderStatuses', 'lineCount', 'billedQuantity', 'unpricedQuantity', 'totalAmount'],
-    relations: ['Supplier offer/list → Billing rate', 'Order catalogue item → Billing rate', 'Supplier document → Seasonal Extra', 'Organization → Seasonal Extra', 'Order Billing calculation → Billing Run revision', 'Billing Run revision → immutable Billing Lines', 'FAIR result → Billing line', 'IDM Premium → Billing line', 'Order → Billing line', 'Seasonal extra → Billing line', 'Billing lines → Organization summary'],
+    fields: ['seasonId', 'catalogItemId', 'billingUnitPrice', 'source.documentLabel', 'organizationId', 'reportingAreaId', 'description', 'quantity', 'unitAmount', 'amount', 'active', 'runId', 'runRevision', 'snapshotType', 'sourceState', 'sourceBlockingReasons', 'source.type', 'source.sourceId', 'source.sourceRevision', 'included', 'rateId', 'rateRevision', 'sourceDocumentLabel', 'status', 'revision', 'sourceTypes', 'sourceOrderStatuses', 'lineCount', 'billedQuantity', 'unpricedQuantity', 'totalAmount'],
+    relations: ['Supplier offer/list → Billing rate', 'Order catalogue item → Billing rate', 'Supplier document → Seasonal Extra', 'Organization → Seasonal Extra', 'All four billing sources → Unified Billing Run revision', 'Unified Billing Run revision → immutable Billing Lines', 'Legacy Order Billing calculation → Orders-only Billing Run revision', 'FAIR result → Billing line', 'IDM Premium allocation key → Billing line', 'Order → Billing line', 'Seasonal extra → Billing line', 'Billing lines → Organization summary'],
   },
   {
     id: 'ticket-sales',
