@@ -11,6 +11,13 @@ const apply = process.argv.includes('--apply');
 const local = process.argv.find((arg) => arg.startsWith('--source-dir='))?.slice(13);
 const directory = await mkdtemp(join(tmpdir(), 'dns-history-2024-25-'));
 
+async function driveError(response) {
+  const body = await response.json().catch(() => ({}));
+  const error = body?.error ?? {};
+  const reason = error.errors?.[0]?.reason;
+  return [error.status, reason, error.message].filter(Boolean).join(': ').slice(0, 300) || `HTTP ${response.status}`;
+}
+
 try {
   let payloadPath;
   if (local) {
@@ -30,7 +37,7 @@ try {
       const metadataResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${id}?fields=mimeType&supportsAllDrives=true`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!metadataResponse.ok) throw new Error(`Cannot inspect source ${filename}: HTTP ${metadataResponse.status}. No source data has been written.`);
+      if (!metadataResponse.ok) throw new Error(`Cannot inspect source ${filename}: ${await driveError(metadataResponse)}. No source data has been written.`);
       const metadata = await metadataResponse.json();
       const nativeSpreadsheet = metadata.mimeType === 'application/vnd.google-apps.spreadsheet';
       const sourceUrl = nativeSpreadsheet
@@ -40,7 +47,7 @@ try {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
-        throw new Error(`Cannot read source ${filename}: HTTP ${response.status}. Share the original file with the source access account printed above; no source data has been written.`);
+        throw new Error(`Cannot read source ${filename}: ${await driveError(response)}. No source data has been written.`);
       }
       if (nativeSpreadsheet) console.log('Exported the native Google Sheet to XLSX; the extractor will verify the immutable data fingerprint.');
       await writeFile(join(directory, filename), Buffer.from(await response.arrayBuffer()));
