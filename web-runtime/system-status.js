@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/system-status.ts
 // Keep this file synchronized with the canonical TypeScript registry.
-export const DNS_SYSTEM_STATUS_VERSION = '0.3.0';
+export const DNS_SYSTEM_STATUS_VERSION = '0.4.0';
 export const DNS_SYSTEM_STATUS_VERIFIED_AT = '2026-10-01';
 
 export const DNS_SYSTEM_STATUS_CRITERIA = [
@@ -85,7 +85,7 @@ export const DNS_SYSTEM_STATUS = [
     datasetVersion: 'No shared package pin detected',
     criteria: {
       designSystem: 'notYet',
-      sharedData: 'notYet',
+      sharedData: 'partial',
       firebase: 'partial',
       auth: 'pending',
       sharedAssets: 'partial',
@@ -111,7 +111,7 @@ export const DNS_SYSTEM_STATUS = [
       sharedAssets: 'adopted',
       regionLogos: 'adopted',
       motion: 'adopted',
-      dataContracts: 'partial',
+      dataContracts: 'adopted',
       accessibility: 'adopted',
     },
     note: 'Foundation shell, canonical navigation, shared print runtime/tokens, shared web logo, canonical regional/organization-logo manifest, motion/interaction and Accessibility v1 are adopted. Organization breakdown and print resolve canonical organization logos. FAIR uses Tailwind v4/Vite with legacy popup printing, local logo copies, Tailwind v3/PostCSS config and the vanilla-JS backup removed. FAIR calculation logic and existing fair-modell persistence remain unchanged; the FAIR Data Contract is still foundation-defined pending data-domain integration.',
@@ -140,9 +140,9 @@ export const DNS_SYSTEM_STATUS = [
     id: 'faktura',
     label: 'DNS Faktura / Commercial',
     repo: null,
-    phase: 'planned',
+    phase: 'foundation-defined',
     firebaseProject: 'DNS Commercial target',
-    datasetVersion: 'Foundation boundary defined',
+    datasetVersion: 'Billing Preparation v0.1 · accounting integration intentionally out of scope',
     criteria: {
       designSystem: 'notYet',
       sharedData: 'notYet',
@@ -154,7 +154,7 @@ export const DNS_SYSTEM_STATUS = [
       dataContracts: 'partial',
       accessibility: 'notYet',
     },
-    note: 'Commercial/billing-preparation domain is planned; XGLA4 remains the accounting authority.',
+    note: 'Faktura is defined as an internal billing-preparation tool only: it calculates billable amounts by organization/area and does not create official invoices, track payments or integrate accounting software.',
   },
   {
     id: 'partner-portal',
