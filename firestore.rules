@@ -42,7 +42,7 @@ service cloud.firestore {
     }
 
     function historicalLocked(data) {
-      return data.seasonId == '2025-26';
+      return data.seasonId in ['2024-25', '2025-26'];
     }
 
     function validOrder(data) {
@@ -303,7 +303,8 @@ service cloud.firestore {
         || (resource.data.domain == 'pricing')
         || (resource.data.domain == 'sales' && hasOrderPermission('ticketSales.read',resource.data))
         || (resource.data.domain == 'orders' && hasOrderPermission('ticketOrders.read',resource.data))
-        || (resource.data.domain == 'kp' && hasOrderPermission('kp.read',resource.data)));
+        || (resource.data.domain == 'kp' && hasOrderPermission('kp.read',resource.data))
+        || (resource.data.domain in ['snow','costs'] && hasOrderPermission('kp.read',resource.data)));
       allow write: if false;
     }
     match /historicalSeasonImports/{document} {
