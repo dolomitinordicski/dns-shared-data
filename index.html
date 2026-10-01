@@ -1122,7 +1122,7 @@
             </h1>
             <p class="mt-3 max-w-3xl font-alt text-[12px] leading-relaxed text-dns-mid">
               Diese Seite zeigt in einfacher Form, wie gemeinsame Stammdaten, Firebase, Partner Portal,
-              FAIR, Analytics, Polls, Ticket Orders und XGLA4 zusammenarbeiten — ohne dieselben Daten
+              FAIR, Analytics, Polls, Ticket Orders und Faktura zusammenarbeiten — ohne dieselben Daten
               mehrfach und widersprüchlich zu speichern.
             </p>
           </div>
@@ -1134,7 +1134,7 @@
             </h1>
             <p class="mt-3 max-w-3xl font-alt text-[12px] leading-relaxed text-dns-mid">
               Questa pagina mostra in modo semplice come dati master condivisi, Firebase, Partner Portal,
-              FAIR, Analytics, Polls, Ticket Orders e XGLA4 lavorano insieme — evitando copie incoerenti
+              FAIR, Analytics, Polls, Ticket Orders e Faktura lavorano insieme — evitando copie incoerenti
               dello stesso dato.
             </p>
           </div>
@@ -1177,14 +1177,13 @@
         </div>
 
         <div class="dns-system-map-viewport" aria-label="Interactive DNS system architecture">
-          <svg class="dns-system-map-svg" viewBox="0 0 1180 610" role="img" aria-labelledby="dns-map-title dns-map-desc">
+          <svg class="dns-system-map-svg" viewBox="0 0 1180 520" role="img" aria-labelledby="dns-map-title dns-map-desc">
             <title id="dns-map-title">Dolomiti NordicSki system architecture</title>
-            <desc id="dns-map-desc">Interactive map of shared data, Firebase domains, DNS applications and XGLA4.</desc>
+            <desc id="dns-map-desc">Interactive map of shared data, Firebase domains and DNS applications.</desc>
 
             <text x="18" y="68" class="dns-map-layer-label">01 · SOURCE OF TRUTH</text>
             <text x="18" y="208" class="dns-map-layer-label">02 · OPERATIONAL DOMAINS</text>
             <text x="18" y="368" class="dns-map-layer-label">03 · APPLICATIONS</text>
-            <text x="18" y="535" class="dns-map-layer-label">04 · EXTERNAL AUTHORITY</text>
 
             <g aria-hidden="true">
               <path class="dns-map-edge" data-edge="shared-core" data-from="shared" data-to="core" data-mode="system ownership flow" d="M590 130 V188" />
@@ -1198,9 +1197,8 @@
               <path class="dns-map-edge" data-edge="platform-flyer" data-from="platform" data-to="flyer" data-mode="system ownership flow" d="M276 374 V402 H580 V432" />
 
               <path class="dns-map-edge" data-edge="commercial-orders" data-from="commercial" data-to="orders" data-mode="system ownership flow" d="M590 374 V402 H732 V432" />
+              <path class="dns-map-edge" data-edge="commercial-faktura" data-from="commercial" data-to="faktura" data-mode="system ownership flow" d="M590 374 V402 H1036 V432" />
               <path class="dns-map-edge" data-edge="polls-pollsapp" data-from="polls-domain" data-to="polls-app" data-mode="system ownership flow" d="M904 374 V402 H884 V432" />
-
-              <path class="dns-map-edge" data-edge="orders-xgla4" data-from="orders" data-to="xgla4" data-kind="external" data-mode="system flow" d="M732 494 V520 H590 V552" />
               <path class="dns-map-edge" data-edge="fair-analytics" data-from="fair" data-to="analytics" data-mode="flow" d="M336 463 H368" />
             </g>
 
@@ -1264,11 +1262,10 @@
               <text x="884" y="455" text-anchor="middle" class="dns-map-node-kicker">APP</text>
               <text x="884" y="477" text-anchor="middle" class="dns-map-node-title">Polls</text>
             </g>
-
-            <g class="dns-map-node" data-node="xgla4" data-tier="external" data-ownership="external" tabindex="0" role="button" aria-label="XGLA4">
-              <rect x="500" y="552" width="180" height="50" />
-              <text x="590" y="572" text-anchor="middle" class="dns-map-node-kicker">ACCOUNTING AUTHORITY</text>
-              <text x="590" y="591" text-anchor="middle" class="dns-map-node-title">XGLA4</text>
+            <g class="dns-map-node" data-node="faktura" data-tier="app" data-ownership="owner" tabindex="0" role="button" aria-label="DNS Faktura">
+              <rect x="966" y="432" width="140" height="62" />
+              <text x="1036" y="455" text-anchor="middle" class="dns-map-node-kicker">APP</text>
+              <text x="1036" y="477" text-anchor="middle" class="dns-map-node-title">Faktura</text>
             </g>
           </svg>
         </div>
@@ -1280,8 +1277,8 @@
               <span class="lang-de">Knoten auswählen</span><span class="lang-it">Seleziona un nodo</span>
             </div>
             <div class="dns-map-detail-text" id="dns-map-detail-text">
-              <span class="lang-de">Die Karte zeigt Definition, operative Domänen, Anwendungen und externe Buchhaltung als ein zusammenhängendes System.</span>
-              <span class="lang-it">La mappa mostra definizione, domini operativi, applicazioni e contabilità esterna come un unico sistema connesso.</span>
+              <span class="lang-de">Die Karte zeigt Definition, operative Domänen und DNS-Anwendungen als ein zusammenhängendes System.</span>
+              <span class="lang-it">La mappa mostra definizione, domini operativi e applicazioni DNS come un unico sistema connesso.</span>
             </div>
           </div>
           <div class="dns-map-detail-meta" id="dns-map-detail-meta">
@@ -1305,21 +1302,21 @@
       <div class="dns-editorial-heading mb-8 max-w-3xl">
         <div class="lang-de">
           <p class="dns-kicker">01 · Gesamtsystem</p>
-          <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Vier klar getrennte Ebenen</h2>
+          <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Drei klar getrennte Ebenen</h2>
           <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
-            Das System trennt Definition, operative Speicherung, Anwendungen und Buchhaltung.
+            Das System trennt Definition, operative Speicherung und Anwendungen. Die offizielle Buchhaltung bleibt außerhalb der DNS-Plattform.
           </p>
         </div>
         <div class="lang-it">
           <p class="dns-kicker">01 · Sistema generale</p>
-          <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Quattro livelli chiaramente separati</h2>
+          <h2 class="mt-1 text-[27px] font-semibold tracking-[-.02em] text-dns-deep">Tre livelli chiaramente separati</h2>
           <p class="mt-2 font-alt text-[12px] leading-relaxed text-dns-mid">
-            Il sistema separa definizione, persistenza operativa, applicazioni e contabilità.
+            Il sistema separa definizione, persistenza operativa e applicazioni. La contabilità ufficiale resta fuori dalla piattaforma DNS.
           </p>
         </div>
       </div>
 
-      <div class="grid gap-4 lg:grid-cols-4">
+      <div class="grid gap-4 lg:grid-cols-3">
         <article class="dns-card dns-card-primary p-5 md:p-6">
           <div class="dns-kicker">Source of truth</div>
           <h3 class="mt-2 text-[16px] font-semibold text-dns-deep">dns-shared-data</h3>
@@ -1352,21 +1349,10 @@
             Portal, FAIR, Analytics, Flyer Studio e gli altri tool leggono e scrivono solo i dati di cui sono realmente responsabili.
           </div>
         </article>
-
-        <article class="dns-card dns-card-primary p-5 md:p-6">
-          <div class="dns-kicker">External authority</div>
-          <h3 class="mt-2 text-[16px] font-semibold text-dns-deep">XGLA4</h3>
-          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
-            Bleibt das offizielle System für Rechnungen, Buchhaltung und Zahlungen.
-          </div>
-          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">
-            Rimane il sistema ufficiale per fatture, contabilità e pagamenti.
-          </div>
-        </article>
       </div>
 
       <div class="dns-card mt-6 p-5 md:p-6">
-        <div class="grid gap-6 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] lg:items-center">
+        <div class="grid gap-6 lg:grid-cols-[1fr_auto_1fr_auto_1fr] lg:items-center">
           <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">
             <div class="dns-kicker">Define</div>
             <div class="mt-1 font-semibold">Shared Data</div>
@@ -1380,11 +1366,6 @@
           <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">
             <div class="dns-kicker">Use</div>
             <div class="mt-1 font-semibold">DNS Apps</div>
-          </div>
-          <div class="hidden text-xl text-dns-mid lg:block">→</div>
-          <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">
-            <div class="dns-kicker">Accounting</div>
-            <div class="mt-1 font-semibold">XGLA4</div>
           </div>
         </div>
       </div>
@@ -1476,7 +1457,7 @@
               <li>official invoices</li>
               <li>payments</li>
               <li>bookkeeping</li>
-              <li>XGLA4</li>
+              <li>official invoices</li><li>bookkeeping</li><li>payments</li>
             </ul>
           </article>
         </div>
@@ -1591,19 +1572,18 @@
             <h3 class="mt-1 text-[16px] font-semibold text-dns-deep">DNS Commercial</h3>
             <span class="dns-pill">Firebase</span>
           </div>
-          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">Operativer Workflow vor XGLA4.</div>
-          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">Workflow operativo prima di XGLA4.</div>
+          <div class="lang-de mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">Bestellungen und interne Fakturavorbereitung.</div>
+          <div class="lang-it mt-3 font-alt text-[12px] leading-relaxed text-dns-mid">Ordini e preparazione interna della fatturazione.</div>
           <div class="mt-5 grid grid-cols-2 gap-2 text-center text-xs font-bold">
             <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">Ticket Orders</div>
             <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">Billing Prep</div>
           </div>
           <div class="mt-4 border-t border-dns-mid/15 pt-4 font-alt text-[11px] leading-6 text-dns-mid">
             ticketOrders<br>
-            billingProfiles<br>
-            products<br>
-            priceLists<br>
-            billingExports<br>
-            xgla4References
+            ticketOrderLines<br>
+            billingRuns<br>
+            billingLines<br>
+            billingAdjustments
           </div>
         </article>
 
@@ -1696,28 +1676,33 @@
 
           <article class="dns-card p-5 md:p-6">
             <div class="lang-de">
-              <p class="dns-kicker">Ticket Orders → XGLA4</p>
-              <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">DNS vorbereitet. XGLA4 fakturiert.</h3>
+              <p class="dns-kicker">FAIR · IDM · Orders → Faktura</p>
+              <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">DNS berechnet, prüft und bündelt fakturierbare Beträge.</h3>
             </div>
             <div class="lang-it">
-              <p class="dns-kicker">Ticket Orders → XGLA4</p>
-              <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">DNS prepara. XGLA4 fattura.</h3>
+              <p class="dns-kicker">FAIR · IDM · Orders → Faktura</p>
+              <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">DNS calcola, verifica e aggrega gli importi da fatturare.</h3>
             </div>
 
             <div class="mt-6 grid gap-2">
-              <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">Ticket Order</div>
-              <div class="text-center text-xl text-dns-mid">↓</div>
-              <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">
-                <span class="lang-de">DNS Prüfung</span>
-                <span class="lang-it">Controllo DNS</span>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">FAIR / Mitgliedsbeitrag</div>
+                <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">IDM Premiumpartner</div>
+                <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">Orders</div>
+                <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">Seasonal extras</div>
               </div>
               <div class="text-center text-xl text-dns-mid">↓</div>
-              <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">Billing Preparation</div>
+              <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">
+                <strong>DNS Faktura</strong>
+                <div class="lang-de mt-1 text-xs text-dns-mid">Prüfung · Zuordnung · Berechnung je Organisation / Gebiet</div>
+                <div class="lang-it mt-1 text-xs text-dns-mid">Controllo · attribuzione · calcolo per organizzazione / area</div>
+              </div>
               <div class="text-center text-xl text-dns-mid">↓</div>
               <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4 text-center">
-                <div class="font-semibold">XGLA4</div>
-                <div class="lang-de mt-1 text-xs text-dns-mid">Rechnung · Buchhaltung · Zahlung</div>
-                <div class="lang-it mt-1 text-xs text-dns-mid">Fattura · Contabilità · Pagamento</div>
+                <div class="lang-de font-semibold">Interne Fakturavorbereitung</div>
+                <div class="lang-it font-semibold">Riepilogo interno da fatturare</div>
+                <div class="lang-de mt-1 text-xs text-dns-mid">Keine offizielle Rechnung · keine Zahlung · keine Buchhaltungsintegration</div>
+                <div class="lang-it mt-1 text-xs text-dns-mid">Nessuna fattura ufficiale · nessun pagamento · nessuna integrazione contabile</div>
               </div>
             </div>
           </article>
@@ -2350,7 +2335,7 @@
             <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">✓ Organizations: verified / provisional</div>
             <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">✓ Seasons 2022-23 → 2026-27</div>
             <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">✓ Foundation v1.2</div>
-            <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">✓ XGLA4 boundary</div>
+            <div class="rounded-lg border border-dns-mid/15 bg-dns-bg px-4 py-4">✓ Billing preparation boundary</div>
           </div>
         </aside>
       </div>
@@ -2474,8 +2459,8 @@
       orders: {
         kicker: 'Application · data owner',
         title: 'Ticket Orders',
-        de: 'Erfasst operative Bestellungen und erstellt die geprüfte Grundlage für die Übergabe an XGLA4.',
-        it: 'Registra gli ordini operativi e prepara la base verificata da trasferire a XGLA4.',
+        de: 'Erfasst operative Bestellungen und stellt geprüfte Bestelldaten für Faktura bereit.',
+        it: 'Registra gli ordini operativi e rende disponibili a Faktura i dati ordine verificati.',
         owner: 'DNS Commercial',
         data: 'Orders · billing preparation'
       },
@@ -2487,13 +2472,13 @@
         owner: 'DNS Polls',
         data: 'Polls · participants · responses'
       },
-      xgla4: {
-        kicker: 'External authority',
-        title: 'XGLA4',
-        de: 'Bleibt das offizielle System für Rechnungen, Buchhaltung und Zahlungen. DNS bereitet Daten nur vor.',
-        it: 'Rimane il sistema ufficiale per fatture, contabilità e pagamenti. DNS prepara soltanto i dati.',
-        owner: 'External authority',
-        data: 'Invoices · bookkeeping · payments'
+      faktura: {
+        kicker: 'Application · data owner',
+        title: 'DNS Faktura',
+        de: 'Berechnet und bündelt intern fakturierbare Beträge je Organisation und Gebiet. Erstellt keine offizielle Rechnung und verwaltet keine Zahlungen.',
+        it: 'Calcola e aggrega internamente gli importi da fatturare per organizzazione e area. Non crea fatture ufficiali e non gestisce pagamenti.',
+        owner: 'DNS Commercial',
+        data: 'FAIR contribution · IDM Premium · orders · seasonal extras'
       }
     };
 
@@ -2597,8 +2582,8 @@
                 : 'Die Ansicht unterscheidet Referenzquelle, operative Eigentümer und Anwendungen, die gemeinsame Daten konsumieren.')
             : mode === 'flow'
               ? (lang === 'it'
-                  ? 'La vista mette in evidenza i principali flussi: dalla definizione ai domini, alle app e fino a XGLA4.'
-                  : 'Die Ansicht hebt die wichtigsten Flüsse hervor: von der Definition über Domänen und Apps bis zu XGLA4.')
+                  ? 'La vista mette in evidenza i principali flussi: dalla definizione ai domini e alle applicazioni DNS.'
+                  : 'Die Ansicht hebt die wichtigsten Flüsse hervor: von der Definition über Domänen bis zu den DNS-Anwendungen.')
               : (lang === 'it'
                   ? 'La struttura mostra i quattro livelli principali e le loro relazioni.'
                   : 'Die Struktur zeigt die vier Hauptebenen und ihre Beziehungen.');
