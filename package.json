@@ -7,6 +7,8 @@
     "node": ">=20"
   },
   "scripts": {
+    "build:package": "tsc -p tsconfig.package.json",
+    "prepare": "npm run build:package",
     "seed:firebase": "tsx scripts/seed-firestore.ts",
     "seed:firebase:apply": "tsx scripts/seed-firestore.ts --apply",
     "typecheck": "tsc --noEmit",
@@ -23,5 +25,28 @@
   "devDependencies": {
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./design-system": {
+      "types": "./dist/design-system.d.ts",
+      "import": "./dist/design-system.js"
+    },
+    "./ui/motion": {
+      "types": "./dist/ui/motion.d.ts",
+      "import": "./dist/ui/motion.js"
+    },
+    "./ui/interaction": {
+      "types": "./dist/ui/interaction.d.ts",
+      "import": "./dist/ui/interaction.js"
+    }
   }
 }
