@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/data-contracts.ts
 // Keep this file synchronized with the canonical TypeScript catalog.
-export const DNS_DATA_CONTRACTS_VERSION = '0.3.0';
+export const DNS_DATA_CONTRACTS_VERSION = '0.4.0';
 
 export const DNS_DATA_CONTRACTS = [
   {
@@ -81,11 +81,11 @@ export const DNS_DATA_CONTRACTS = [
     runtime: 'DNS Commercial / target',
     collections: ['billingRateConfigs', 'billingRuns', 'billingLines', 'billingAdjustments'],
     source: 'src/billing-preparation.ts',
-    schema: 'Billing Preparation v0.2',
+    schema: 'Billing Preparation v0.4',
     write: 'Authorized DNS billing management',
     read: 'Authorized DNS management',
-    fields: ['seasonId', 'catalogItemId', 'billingUnitPrice', 'source.documentLabel', 'organizationId', 'reportingAreaId', 'source.type', 'source.sourceId', 'description', 'quantity', 'unitAmount', 'amount', 'included', 'status'],
-    relations: ['Supplier offer/list → Billing rate', 'Order catalogue item → Billing rate', 'FAIR result → Billing line', 'IDM Premium → Billing line', 'Order → Billing line', 'Seasonal extra → Billing line', 'Billing lines → Organization summary'],
+    fields: ['seasonId', 'catalogItemId', 'billingUnitPrice', 'source.documentLabel', 'runId', 'runRevision', 'organizationId', 'reportingAreaId', 'source.type', 'source.sourceId', 'description', 'quantity', 'unitAmount', 'amount', 'included', 'rateId', 'rateRevision', 'sourceDocumentLabel', 'status', 'revision', 'sourceTypes', 'sourceOrderStatuses', 'lineCount', 'billedQuantity', 'unpricedQuantity', 'totalAmount'],
+    relations: ['Supplier offer/list → Billing rate', 'Order catalogue item → Billing rate', 'Order Billing calculation → Billing Run revision', 'Billing Run revision → immutable Billing Lines', 'FAIR result → Billing line', 'IDM Premium → Billing line', 'Order → Billing line', 'Seasonal extra → Billing line', 'Billing lines → Organization summary'],
   },
   {
     id: 'ticket-sales',
