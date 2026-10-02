@@ -7,6 +7,8 @@ import {
 } from './localization.js';
 import { initDNSInteractionRuntime } from './ui/interaction.js';
 import { initDNSRevealRuntime } from './ui/motion.js';
+import { initDNSSemanticMotionRuntime, type DNSSemanticMotionOptions } from './ui/semantic-motion.js';
+import type { DNSMotionSemanticId } from './motion-semantics.js';
 import { initDNSToolChromeRuntime, type DNSToolChromeRuntimeOptions } from './ui/tool-chrome.js';
 import { initDNSPrintRuntime } from './ui/print.js';
 import { initDNSUIPrimitives } from './ui/primitives.js';
@@ -43,6 +45,7 @@ export interface DNSFoundationRuntimeOptions {
   contentPatterns?: boolean;
   interaction?: boolean;
   motion?: boolean;
+  semanticMotion?: boolean;
   chrome?: boolean | DNSToolChromeRuntimeOptions;
   print?: boolean;
   printProfile?: DNSPrintProfileId;
@@ -59,6 +62,7 @@ export interface DNSFoundationRuntimeHandle {
   setLanguage(language: DNSUILanguage): void;
   subscribeLanguage(listener: (language: DNSUILanguage) => void): () => void;
   refresh(): void;
+  playMotion(element: HTMLElement, semantic: DNSMotionSemanticId, options?: DNSSemanticMotionOptions): Animation | null;
   printNow(profile?: DNSPrintProfileId): void;
   disconnect(): void;
 }
@@ -310,6 +314,7 @@ export function initDNSFoundation(
         return () => listeners.delete(listener);
       },
       refresh() {},
+      playMotion() { return null; },
       printNow() {},
       disconnect() {
         listeners.clear();
@@ -363,6 +368,14 @@ export function initDNSFoundation(
     options.motion === false
       ? null
       : initDNSRevealRuntime({
+          root: documentRoot,
+          motion: designSystem.motion,
+        });
+
+  const semanticMotion =
+    options.semanticMotion === false
+      ? null
+      : initDNSSemanticMotionRuntime({
           root: documentRoot,
           motion: designSystem.motion,
         });
@@ -448,12 +461,16 @@ export function initDNSFoundation(
         initDNSFooterRuntime(documentRoot);
       }
     },
+    playMotion(element, semantic, motionOptions) {
+      return semanticMotion?.play(element, semantic, motionOptions) ?? null;
+    },
     printNow(profile) {
       print?.printNow(profile);
     },
     disconnect() {
       chrome?.disconnect();
       reveal?.disconnect();
+      semanticMotion?.disconnect();
       interaction?.disconnect();
       print?.disconnect();
       accessibility.disconnect();
