@@ -1,3 +1,5 @@
+import { initDNSContentPatterns } from './content-patterns.js';
+
 export const DNS_ACCESSIBILITY_RUNTIME_VERSION = '1.2.0' as const;
 
 export type DNSAccessibilityLanguage = 'de' | 'it';
@@ -316,6 +318,7 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
   }
 
   ensureStyles();
+  initDNSContentPatterns();
 
   const storageKey = options.storageKey ?? 'dns-accessibility-v1';
   let language: DNSAccessibilityLanguage = options.language === 'it' ? 'it' : 'de';
