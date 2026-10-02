@@ -5,7 +5,7 @@
 **Data-tool reference:** DNS Analytics  
 **Target:** all DNS digital tools  
 **Runtime source:** DNS_Core / Firestore  
-**Current semantic version:** 1.17.0
+**Current semantic version:** 1.18.0
 
 ## Principle
 
@@ -390,3 +390,49 @@ listeners or independent header/nav animation CSS.
 Framework-specific markup remains local only where the application needs distinct
 controls, account context or domain navigation. The scroll/sticky/progress behavior
 is Foundation-owned.
+
+
+## UI primitives complete — v1.18
+
+Foundation v1.18 closes the common DNS application language around recurring operational UI.
+
+### Status system
+Canonical states: `draft`, `live`, `locked`, `ready`, `warning`, `error`, `archived`, `synced`.
+Use `dns-status` with `data-status`. Applications must not invent additional visual badge systems for equivalent states.
+
+### Application states
+Loading, empty, error and offline states use the shared `dns-state` structure with `data-state`.
+These states replace local improvised placeholders and connection-error panels where the same meaning applies.
+
+### Action hierarchy
+Canonical action variants are `primary`, `secondary`, `tertiary`, `danger` and `icon`.
+Use `dns-button` with `data-variant`. Destructive actions must use `danger`.
+
+### Forms
+Shared classes: `dns-field`, `dns-field-label`, `dns-field-help`, `dns-field-error`, `dns-input`, `dns-select`, `dns-textarea`, `dns-check`.
+Validation state is declared on the field wrapper, not reinvented per control.
+
+### Table v2
+The canonical table pattern adds sticky headers, zebra rows, numeric alignment, totals/subtotals, selected rows, edited/dirty rows, sortable headings and sticky first columns.
+Applications remain responsible for table semantics and data logic; Foundation owns visual and interaction conventions.
+
+### Content hierarchy
+Use:
+- `dns-note` for contextual notes;
+- `dns-methodology` for methodological explanation;
+- `dns-source` for provenance/source lines;
+- `dns-definition` for term definitions;
+- `dns-help` for operational help.
+Insight and Alert retain their separate semantic roles defined in v1.17.
+
+### Toolbars and context filters
+Use `dns-toolbar` and `dns-toolbar-group`. Context-changing selectors may use `dns-context-select` and retain the Deep Glacier Blue selected-state convention.
+
+### Modal and confirmation
+The shared modal geometry is Foundation-owned. `confirmDNSAction()` provides the canonical confirm/destructive-confirm flow. Local browser `confirm()` dialogs should be retired where the shared runtime is available.
+
+### Toasts
+`showDNSToast()` provides transient `info`, `success`, `warning` and `error` feedback. Toasts do not replace persistent Alerts when a condition remains relevant after the message disappears.
+
+### Naming contract
+Shared Foundation classes use the `dns-` prefix. A consuming application may add a local class for layout only, but must not redefine the semantic meaning or core visual behavior of a Foundation primitive.
