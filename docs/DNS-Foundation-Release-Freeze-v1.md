@@ -1,7 +1,7 @@
 # DNS Foundation Release & Freeze Policy v1.0
 
 **Stable Foundation release:** 1.0.0  
-**Release ref:** `release/release/v1.0.0`  
+**Release ref:** `release/v1.0.0`  
 **Status:** frozen / stable  
 **Release date:** 2026-10-02
 
