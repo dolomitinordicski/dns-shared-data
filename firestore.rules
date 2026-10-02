@@ -187,6 +187,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Published aggregate Analytics read model. Exact-document reads only:
+    // no collection listing, no client writes, no raw operational rows.
+    match /analyticsPublicSnapshots/{seasonId} {
+      allow get: if resource.data.id == seasonId
+                 && resource.data.seasonId == seasonId
+                 && resource.data.publicationStatus == 'published';
+      allow list, write: if false;
+    }
+
     // Private authorization metadata.
     match /users/{userId} {
       allow read: if signedIn() && request.auth.uid == userId;
