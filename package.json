@@ -26,7 +26,9 @@
     "seed:area-allocation-keys": "tsx scripts/seed-area-allocation-keys.ts",
     "seed:area-allocation-keys:apply": "tsx scripts/seed-area-allocation-keys.ts --apply",
     "seed:billing-rates:2026-27": "tsx scripts/seed-billing-rates-2026-27.ts",
-    "seed:billing-rates:2026-27:apply": "tsx scripts/seed-billing-rates-2026-27.ts --apply"
+    "seed:billing-rates:2026-27:apply": "tsx scripts/seed-billing-rates-2026-27.ts --apply",
+    "publish:analytics-public": "tsx scripts/publish-analytics-public-snapshot.ts",
+    "publish:analytics-public:apply": "tsx scripts/publish-analytics-public-snapshot.ts --apply"
   },
   "devDependencies": {
     "firebase-admin": "^14.5.0",
@@ -93,6 +95,10 @@
     "./ui/primitives": {
       "types": "./dist/ui/primitives.d.ts",
       "import": "./dist/ui/primitives.js"
+    },
+    "./analytics-public": {
+      "types": "./dist/analytics-public.d.ts",
+      "import": "./dist/analytics-public.js"
     }
   }
 }
