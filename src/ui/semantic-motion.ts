@@ -30,6 +30,13 @@ export interface DNSSemanticMotionRuntimeHandle {
 
 const activeAnimations = new WeakMap<HTMLElement, Animation>();
 
+function shouldReduceMotion(element: HTMLElement, motion: DNSMotionTokens) {
+  return (
+    prefersReducedMotion(motion) ||
+    element.ownerDocument?.documentElement.classList.contains('dns-a11y-reduce-motion')
+  );
+}
+
 function reducedKeyframe(element: HTMLElement, semantic: DNSMotionSemanticId) {
   const preset = getDNSMotionSemantic(semantic);
   element.style.opacity = String(preset.toOpacity);
@@ -49,7 +56,7 @@ export function playDNSSemanticMotion(
 
   activeAnimations.get(element)?.cancel();
 
-  if (prefersReducedMotion(motion) || typeof element.animate !== 'function') {
+  if (shouldReduceMotion(element, motion) || typeof element.animate !== 'function') {
     reducedKeyframe(element, semantic);
     return null;
   }
@@ -144,7 +151,8 @@ export function initDNSSemanticMotionRuntime(
       : null;
 
   const finishAll = () => {
-    if (!media?.matches) return;
+    const accessibilityReduced = documentRoot.documentElement.classList.contains('dns-a11y-reduce-motion');
+    if (!media?.matches && !accessibilityReduced) return;
     documentRoot.querySelectorAll<HTMLElement>('[data-dns-motion-state="running"]').forEach((element) => {
       activeAnimations.get(element)?.finish();
       const id = element.dataset.dnsMotion as DNSMotionSemanticId | undefined;
@@ -155,6 +163,16 @@ export function initDNSSemanticMotionRuntime(
 
   media?.addEventListener?.('change', finishAll);
 
+  const accessibilityObserver =
+    typeof MutationObserver !== 'undefined'
+      ? new MutationObserver(() => finishAll())
+      : null;
+
+  accessibilityObserver?.observe(documentRoot.documentElement, {
+    attributes: true,
+    attributeFilter: ['class'],
+  });
+
   return {
     play(element, semantic, motionOptions) {
       return playDNSSemanticMotion(element, semantic, motionOptions, motion);
@@ -164,6 +182,7 @@ export function initDNSSemanticMotionRuntime(
     },
     disconnect() {
       media?.removeEventListener?.('change', finishAll);
+      accessibilityObserver?.disconnect();
       documentRoot.getElementById(styleId)?.remove();
     },
   };
