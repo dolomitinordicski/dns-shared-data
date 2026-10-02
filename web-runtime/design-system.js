@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/design-system.ts
 // Keep this file synchronized with the canonical TypeScript contract.
-export const DNS_DESIGN_SYSTEM_VERSION = '1.18.0';
+export const DNS_DESIGN_SYSTEM_VERSION = '1.19.0';
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -180,6 +180,18 @@ export const DNS_DESIGN_SYSTEM = {
       animateOnlyInteractive: true,
       passiveCardsStatic: true,
     },
+  },
+  shellProfiles: {
+    version: '1.0.0',
+    default: 'operational',
+    values: ['operational', 'portal', 'workspace'],
+    source: 'shell-profiles',
+    rules: [
+      'All Foundation-aligned applications declare one canonical shell profile.',
+      'Operational, Portal and Workspace share one Design System and differ only by structural profile.',
+      'Tool-specific business engines do not define shell geometry.',
+      'Portal and Workspace must not inherit Operational navigation behavior by accident.',
+    ],
   },
   header: {
     background: '#0D4D5E',
@@ -630,6 +642,17 @@ export const DNS_DESIGN_SYSTEM = {
         'The versioned dns-shared-data package is the canonical default Design System source.',
         'Tool-specific business, calculation and persistence engines remain application-owned.',
         'Static and framework consumers use the same built Foundation runtime.',
+      ],
+    },
+    shellRuntime: {
+      codeSource: 'dns-shared-data/ui/shell',
+      version: '1.0.0',
+      requiredForFoundationAlignedTools: true,
+      rules: [
+        'Shell profile is initialized through initDNSFoundation().',
+        'Operational is the default profile for existing DNS tools.',
+        'Portal uses account-aware application navigation rather than Operational tabs.',
+        'Workspace uses Foundation-framed toolbar/canvas/inspector regions without constraining authored creative output.',
       ],
     },
     navigationRuntime: {

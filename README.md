@@ -13,7 +13,7 @@ This repository contains:
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.3
-- **DNS Design System:** v1.18
+- **DNS Design System:** v1.19
 - **DNS Access Control:** v0.1
 
 ## Source of truth
@@ -61,7 +61,7 @@ firebase.json
 
 ## DNS Design System
 
-The current shared visual and interaction contract is **v1.18.0** and is documented in:
+The current shared visual and interaction contract is **v1.19.0** and is documented in:
 
 ```text
 docs/DNS-Design-System-v1.md
@@ -73,6 +73,26 @@ The v1.11 contract includes shared motion, focus, hover/press, tab and reduced-m
 
 The GitHub Pages architecture overview is also the visual reference implementation of this contract. It consumes the canonical tokens at runtime, prefers `DNS_Core / designSystem/current`, falls back to the versioned package mirror, and uses the shared motion/interaction behavior. The committed `web-runtime/design-system.js` browser mirror is CI-checked against `src/design-system.ts` to prevent silent drift.
 
+
+
+## Foundation shell profiles
+
+F2 defines three canonical structural profiles while keeping one Design System and one runtime:
+
+```text
+operational — FAIR / Analytics / Data Entry / Polls / Faktura / Hub
+portal      — Partner Portal / authenticated account-aware access layers
+workspace   — Flyer Studio / creation and editing environments
+```
+
+Contract:
+
+```text
+docs/DNS-Shell-Profiles-v1.md
+@dolomitinordicski/dns-shared-data/shell-profiles
+```
+
+Applications declare the profile through `initDNSFoundation({ shellProfile: ... })`. Operational remains the default for backward compatibility. Portal does not inherit Operational tab navigation, and Workspace does not force administrative page geometry onto the creative canvas.
 
 ## Unified Foundation runtime
 

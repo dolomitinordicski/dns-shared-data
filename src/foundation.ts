@@ -17,6 +17,8 @@ import {
   type DNSAccessibilitySettings,
 } from './ui/accessibility.js';
 import { initDNSFooterRuntime } from './ui/footer.js';
+import { initDNSShellRuntime } from './ui/shell.js';
+import type { DNSShellProfileId } from './shell-profiles.js';
 
 export const DNS_FOUNDATION_RUNTIME_VERSION = '1.0.0' as const;
 export const DNS_FOUNDATION_LANGUAGE_EVENT = 'dns:languagechange' as const;
@@ -44,6 +46,7 @@ export interface DNSFoundationRuntimeOptions {
   print?: boolean;
   footer?: boolean;
   accessibility?: boolean | DNSFoundationAccessibilityOptions;
+  shellProfile?: DNSShellProfileId;
 }
 
 export interface DNSFoundationRuntimeHandle {
@@ -317,6 +320,7 @@ export function initDNSFoundation(
 
   const designSystem = options.designSystem ?? DNS_DESIGN_SYSTEM;
   const source = options.designSystem ? 'provided' as const : 'package' as const;
+  const shellProfile = options.shellProfile ?? 'operational';
   const storageKey = options.languageStorageKey ?? DNS_UI_LANGUAGE_STORAGE_KEY;
   const persistLanguage = options.persistLanguage ?? true;
 
@@ -328,6 +332,7 @@ export function initDNSFoundation(
   const listeners = new Set<(language: DNSUILanguage) => void>();
 
   applyDNSDesignVariables(designSystem, documentRoot);
+  const shell = initDNSShellRuntime(shellProfile, documentRoot);
   documentRoot.documentElement.lang = language;
   documentRoot.documentElement.dataset.dnsLanguage = language;
   documentRoot.documentElement.dataset.dnsFoundationRuntime = DNS_FOUNDATION_RUNTIME_VERSION;
@@ -360,8 +365,9 @@ export function initDNSFoundation(
           motion: designSystem.motion,
         });
 
+  const defaultChromeEnabled = shellProfile === 'operational';
   const chrome =
-    options.chrome === false
+    options.chrome === false || (options.chrome === undefined && !defaultChromeEnabled)
       ? null
       : initDNSToolChromeRuntime({
           ...(typeof options.chrome === 'object' ? options.chrome : {}),
@@ -380,7 +386,10 @@ export function initDNSFoundation(
           print: designSystem.print,
         });
 
-  if (options.footer !== false) initDNSFooterRuntime(documentRoot);
+  const defaultFooterEnabled = shell.profile.footer.required;
+  if (options.footer !== false && (options.footer === true || defaultFooterEnabled)) {
+    initDNSFooterRuntime(documentRoot);
+  }
 
   const accessibilityConfig: DNSFoundationAccessibilityOptions =
     typeof options.accessibility === 'object'
@@ -430,9 +439,12 @@ export function initDNSFoundation(
       return () => listeners.delete(listener);
     },
     refresh() {
+      shell.refresh();
       chrome?.refresh();
       reveal?.refresh();
-      if (options.footer !== false) initDNSFooterRuntime(documentRoot);
+      if (options.footer !== false && (options.footer === true || defaultFooterEnabled)) {
+        initDNSFooterRuntime(documentRoot);
+      }
     },
     printNow() {
       print?.printNow();
@@ -443,6 +455,7 @@ export function initDNSFoundation(
       interaction?.disconnect();
       print?.disconnect();
       accessibility.disconnect();
+      shell.disconnect();
       listeners.clear();
       runtimeByDocument.delete(documentRoot);
       delete documentRoot.documentElement.dataset.dnsFoundationRuntime;

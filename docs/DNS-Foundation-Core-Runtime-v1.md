@@ -198,3 +198,17 @@ F1 does not:
 - add new Firebase writes.
 
 It standardizes the shared runtime only.
+
+## 13. Shell profiles
+
+F2 extends the Core Runtime with `shellProfile`:
+
+```ts
+initDNSFoundation({ shellProfile: 'operational' });
+initDNSFoundation({ shellProfile: 'portal' });
+initDNSFoundation({ shellProfile: 'workspace' });
+```
+
+Operational remains the default. The profile controls structural defaults such as Operational Tool Chrome and required footer behavior; it does not change tool-specific business engines.
+
+See `docs/DNS-Shell-Profiles-v1.md`.
