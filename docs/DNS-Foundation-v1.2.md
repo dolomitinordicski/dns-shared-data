@@ -1084,7 +1084,7 @@ src/localization.ts
 @dolomitinordicski/dns-shared-data/localization
 ```
 
-F1 will integrate this contract into the unified `initDNSFoundation()` runtime.
+F1 integrates this contract into the unified `initDNSFoundation()` runtime.
 
 
 ---
@@ -1109,6 +1109,31 @@ The runtime centralizes Design System CSS variables and shared primitives/conten
 The default runtime source is the versioned Shared Data package. Consumer-owned Design System fallbacks, local variable bridges and independent initialization of shared behavior are migration debt and must be removed during the consolidation pass.
 
 F1 does not change any application business or calculation engine.
+
+
+---
+
+## 44. F2 shell profiles
+
+DNS applications share one Design System and one Foundation runtime but may use one of three canonical structural profiles:
+
+```text
+operational
+portal
+workspace
+```
+
+The normative contract is:
+
+```text
+src/shell-profiles.ts
+src/ui/shell.ts
+docs/DNS-Shell-Profiles-v1.md
+```
+
+Operational is the default profile for current internal tools. Portal adds account/organization-aware application structure without inheriting Operational tabs. Workspace supports toolbar/canvas/inspector composition while preserving the rule that Foundation governs the authoring environment, not the creative artifact.
+
+Tool repositories may not create independent shell systems or a fourth local shell profile.
 
 
 ---
