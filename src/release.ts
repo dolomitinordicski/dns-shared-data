@@ -5,11 +5,12 @@ import { DNS_FOUNDATION_RUNTIME_VERSION } from './foundation.js';
 export const DNS_FOUNDATION_RELEASE_VERSION = '1.0.0' as const;
 export const DNS_FOUNDATION_RELEASE_CHANNEL = 'stable' as const;
 export const DNS_FOUNDATION_RELEASE_STATUS = 'frozen' as const;
-export const DNS_FOUNDATION_RELEASE_TAG = 'v1.0.0' as const;
+export const DNS_FOUNDATION_RELEASE_REF = 'release/v1.0.0' as const;
 
 export const DNS_FOUNDATION_RELEASE = {
   version: DNS_FOUNDATION_RELEASE_VERSION,
-  tag: DNS_FOUNDATION_RELEASE_TAG,
+  ref: DNS_FOUNDATION_RELEASE_REF,
+  refType: 'immutable-release-branch',
   channel: DNS_FOUNDATION_RELEASE_CHANNEL,
   status: DNS_FOUNDATION_RELEASE_STATUS,
   releasedAt: '2026-10-02',
@@ -22,7 +23,7 @@ export const DNS_FOUNDATION_RELEASE = {
   supportedUILanguages: ['de', 'it'],
   pinning: {
     required: true,
-    preferredRef: DNS_FOUNDATION_RELEASE_TAG,
+    preferredRef: DNS_FOUNDATION_RELEASE_REF,
     prohibitedRefs: ['main', 'master', 'raw-commit-sha'],
   },
   freezeRules: [
