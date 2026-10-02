@@ -12,6 +12,8 @@ on:
       - 'scripts/check-web-system-status.mjs'
       - 'scripts/check-web-accessibility.mjs'
       - 'scripts/check-web-navigation.mjs'
+      - 'scripts/check-localization-contract.mjs'
+      - 'scripts/check-localization-contract.mjs'
       - 'package.json'
       - 'tsconfig.json'
       - 'tsconfig.package.json'
@@ -73,3 +75,6 @@ jobs:
 
       - name: Verify browser navigation runtime
         run: node scripts/check-web-navigation.mjs
+
+      - name: Verify localization contract
+        run: node scripts/check-localization-contract.mjs
