@@ -91,6 +91,10 @@
     "./ui/primitives": {
       "types": "./dist/ui/primitives.d.ts",
       "import": "./dist/ui/primitives.js"
+    },
+    "./analytics-public": {
+      "types": "./dist/analytics-public.d.ts",
+      "import": "./dist/analytics-public.js"
     }
   }
 }
