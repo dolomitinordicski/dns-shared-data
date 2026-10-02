@@ -20,6 +20,8 @@ on:
       - 'scripts/check-data-ui.mjs'
       - 'scripts/check-identity-ui.mjs'
       - 'scripts/check-assets-workspace.mjs'
+      - 'scripts/check-release-freeze.mjs'
+      - 'releases/**'
       - 'package.json'
       - 'tsconfig.json'
       - 'tsconfig.package.json'
@@ -42,6 +44,8 @@ on:
       - 'scripts/check-data-ui.mjs'
       - 'scripts/check-identity-ui.mjs'
       - 'scripts/check-assets-workspace.mjs'
+      - 'scripts/check-release-freeze.mjs'
+      - 'releases/**'
       - 'package.json'
       - 'tsconfig.json'
       - 'tsconfig.package.json'
@@ -113,3 +117,6 @@ jobs:
 
       - name: Verify F7 assets/workspace contract
         run: node scripts/check-assets-workspace.mjs
+
+      - name: Verify F8 release/freeze contract
+        run: node scripts/check-release-freeze.mjs
