@@ -83,6 +83,10 @@
     "./ui/header-status": {
       "types": "./dist/ui/header-status.d.ts",
       "import": "./dist/ui/header-status.js"
+    },
+    "./ui/content-patterns": {
+      "types": "./dist/ui/content-patterns.d.ts",
+      "import": "./dist/ui/content-patterns.js"
     }
   }
 }
