@@ -10,6 +10,7 @@ export * from './billing-preparation.js';
 export * from './fair-governance.js';
 export * from './localization.js';
 export * from './foundation.js';
+export * from './release.js';
 export * from './shell-profiles.js';
 export * from './print-profiles.js';
 export * from './motion-semantics.js';
