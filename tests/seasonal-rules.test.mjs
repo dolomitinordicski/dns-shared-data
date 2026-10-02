@@ -373,7 +373,23 @@ try {
   };
   await assertSucceeds(setDoc(doc(admin,'fakturaConfirmationTokens','token-test'),token));
   await assertFails(getDoc(doc(seller,'fakturaConfirmationTokens','token-test')));
+  await assertFails(
+    getDocs(
+      query(
+        collection(seller,'fakturaConfirmationTokens'),
+        where('tokenHash','==','0123456789abcdef')
+      )
+    )
+  );
   await assertFails(getDocs(collection(env.unauthenticatedContext().firestore(),'fakturaConfirmationTokens')));
+  await assertFails(
+    getDocs(
+      query(
+        collection(env.unauthenticatedContext().firestore(),'fakturaConfirmationTokens'),
+        where('tokenHash','==','0123456789abcdef')
+      )
+    )
+  );
 
   const ledger={
     orderId:'order-test',
@@ -415,6 +431,33 @@ try {
   await assertSucceeds(setDoc(doc(admin,'fakturaBillingSheets','billing-test'),fakturaBilling));
   await assertFails(getDoc(doc(reader,'fakturaBillingSheets','billing-test')));
   await assertFails(setDoc(doc(seller,'fakturaBillingSheets','billing-seller'),fakturaBilling));
+
+  const fakturaPayment={
+    billingSheetId:'billing-test',
+    required:true,
+    status:'OPEN',
+    updatedAt:'2026-10-02T20:05:00Z',
+    updatedBy:'admin',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaPayments','billing-test'),fakturaPayment));
+  await assertFails(getDoc(doc(reader,'fakturaPayments','billing-test')));
+  await assertFails(setDoc(doc(seller,'fakturaPayments','billing-seller'),fakturaPayment));
+
+  const fakturaDelivery={
+    id:'delivery-test',
+    seasonId:'2026-27',
+    organizationId:'org',
+    orderId:'order-test',
+    billingSheetId:'billing-test',
+    confirmationIds:['confirmation-test'],
+    status:'PENDING',
+    lines:[],
+    createdAt:'2026-10-02T20:06:00Z',
+    createdBy:'admin',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaDeliveries','delivery-test'),fakturaDelivery));
+  await assertFails(getDoc(doc(reader,'fakturaDeliveries','delivery-test')));
+  await assertFails(setDoc(doc(seller,'fakturaDeliveries','delivery-seller'),fakturaDelivery));
 
   console.log('Faktura v2 rules passed: internal collections are admin-only, public token collection is not directly readable, and audit events are append-only.');
 
