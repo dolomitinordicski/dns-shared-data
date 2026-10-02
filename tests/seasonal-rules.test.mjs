@@ -387,5 +387,120 @@ try {
   await assertFails(setDoc(doc(admin,'ticketSales','2024-25__org__area__day__official__regular'),{...sale,id:'2024-25__org__area__day__official__regular',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketPricingConfigs','historic-price-2024'),{...price,id:'historic-price-2024',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketOrders','historic-order-2024'),{seasonId:'2024-25',organizationId:'org',category:'ticket',status:'draft'}));
+  // Faktura v2 internal collections are DNS-admin only.
+  const fakturaConfirmation={
+    id:'confirmation-test',
+    seasonId:'2026-27',
+    organizationId:'org',
+    orderId:'order-test',
+    revision:1,
+    status:'DRAFT',
+    acceptanceTextVersion:'v1',
+    lines:[],
+    createdAt:'2026-10-02T20:00:00Z',
+    createdBy:'admin',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaConfirmations','confirmation-test'),fakturaConfirmation));
+  await assertSucceeds(getDoc(doc(admin,'fakturaConfirmations','confirmation-test')));
+  await assertFails(getDoc(doc(seller,'fakturaConfirmations','confirmation-test')));
+  await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'fakturaConfirmations','confirmation-test')));
+
+  const token={
+    id:'token-test',
+    confirmationId:'confirmation-test',
+    tokenHash:'0123456789abcdef',
+    active:true,
+    createdAt:'2026-10-02T20:00:00Z',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaConfirmationTokens','token-test'),token));
+  await assertFails(getDoc(doc(seller,'fakturaConfirmationTokens','token-test')));
+  await assertFails(
+    getDocs(
+      query(
+        collection(seller,'fakturaConfirmationTokens'),
+        where('tokenHash','==','0123456789abcdef')
+      )
+    )
+  );
+  await assertFails(getDocs(collection(env.unauthenticatedContext().firestore(),'fakturaConfirmationTokens')));
+  await assertFails(
+    getDocs(
+      query(
+        collection(env.unauthenticatedContext().firestore(),'fakturaConfirmationTokens'),
+        where('tokenHash','==','0123456789abcdef')
+      )
+    )
+  );
+
+  const ledger={
+    orderId:'order-test',
+    confirmedByLine:{},
+    updatedAt:'2026-10-02T20:00:00Z',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaConfirmationLedgers','order-test'),ledger));
+  await assertFails(getDoc(doc(reader,'fakturaConfirmationLedgers','order-test')));
+
+  const fakturaEvent={
+    id:'event-test',
+    type:'CONFIRMATION_CREATED',
+    occurredAt:'2026-10-02T20:00:00Z',
+    actorId:'admin',
+    seasonId:'2026-27',
+    organizationId:'org',
+    entityType:'CONFIRMATION',
+    entityId:'confirmation-test',
+    entityRevision:1,
+    payload:{toStatus:'DRAFT'},
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaEvents','event-test'),fakturaEvent));
+  await assertSucceeds(getDoc(doc(admin,'fakturaEvents','event-test')));
+  await assertFails(setDoc(doc(admin,'fakturaEvents','event-test'),{...fakturaEvent,type:'CONFIRMATION_SENT'}));
+  await assertFails(deleteDoc(doc(admin,'fakturaEvents','event-test')));
+  await assertFails(getDoc(doc(seller,'fakturaEvents','event-test')));
+
+  const fakturaBilling={
+    id:'billing-test',
+    seasonId:'2026-27',
+    organizationId:'org',
+    revision:1,
+    status:'DRAFT',
+    lines:[],
+    totalAmount:0,
+    createdAt:'2026-10-02T20:00:00Z',
+    createdBy:'admin',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaBillingSheets','billing-test'),fakturaBilling));
+  await assertFails(getDoc(doc(reader,'fakturaBillingSheets','billing-test')));
+  await assertFails(setDoc(doc(seller,'fakturaBillingSheets','billing-seller'),fakturaBilling));
+
+  const fakturaPayment={
+    billingSheetId:'billing-test',
+    required:true,
+    status:'OPEN',
+    updatedAt:'2026-10-02T20:05:00Z',
+    updatedBy:'admin',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaPayments','billing-test'),fakturaPayment));
+  await assertFails(getDoc(doc(reader,'fakturaPayments','billing-test')));
+  await assertFails(setDoc(doc(seller,'fakturaPayments','billing-seller'),fakturaPayment));
+
+  const fakturaDelivery={
+    id:'delivery-test',
+    seasonId:'2026-27',
+    organizationId:'org',
+    orderId:'order-test',
+    billingSheetId:'billing-test',
+    confirmationIds:['confirmation-test'],
+    status:'PENDING',
+    lines:[],
+    createdAt:'2026-10-02T20:06:00Z',
+    createdBy:'admin',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaDeliveries','delivery-test'),fakturaDelivery));
+  await assertFails(getDoc(doc(reader,'fakturaDeliveries','delivery-test')));
+  await assertFails(setDoc(doc(seller,'fakturaDeliveries','delivery-seller'),fakturaDelivery));
+
+  console.log('Faktura v2 rules passed: internal collections are admin-only, public token collection is not directly readable, and audit events are append-only.');
+
   console.log('Seasonal rules passed: scoped reads/writes, sourced billing rates/extras, Flyer owner scope grants, legacy and unified revisioned billing snapshots, READY completeness guards, read-only users, immutable audit history, stale pricing and anonymous access.');
 } finally { await env.cleanup(); }
