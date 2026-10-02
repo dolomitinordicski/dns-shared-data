@@ -1,0 +1,96 @@
+name: Propagate DNS Foundation release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Published Foundation tag to re-dispatch, for example foundation-v1.1.3"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: foundation-release-propagation
+  cancel-in-progress: false
+
+jobs:
+  dispatch-consumers:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'foundation-v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve and validate Foundation tag
+        id: release
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+          const tag = process.env.GITHUB_EVENT_NAME === 'release'
+            ? event.release?.tag_name
+            : process.env.INPUT_TAG;
+          if (!/^foundation-v\d+\.\d+\.\d+$/.test(tag ?? '')) {
+            throw new Error(`Expected an immutable Foundation tag, got: ${tag ?? '(empty)'}`);
+          }
+          const response = await fetch(`https://api.github.com/repos/dolomitinordicski/dns-shared-data/releases/tags/${tag}`);
+          if (!response.ok) throw new Error(`Foundation release ${tag} was not found.`);
+          const release = await response.json();
+          if (release.draft || release.prerelease || release.tag_name !== tag) {
+            throw new Error(`Foundation tag ${tag} is not a published stable release.`);
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `tag=${tag}\n`);
+          NODE
+
+      - name: Create cross-repository dispatch token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.DNS_FOUNDATION_PROPAGATION_APP_ID }}
+          private-key: ${{ secrets.DNS_FOUNDATION_PROPAGATION_APP_PRIVATE_KEY }}
+          owner: dolomitinordicski
+          repositories: DNS-Data-Entry,DNS-Polls-tool,fairmodel,analytics,DNS-Faktura,DNS-Flyer-Studio
+          permission-contents: write
+
+      - name: Dispatch exact release to every Foundation consumer
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          FOUNDATION_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          node --input-type=module <<'NODE'
+          const owner = 'dolomitinordicski';
+          const repositories = [
+            'DNS-Data-Entry',
+            'DNS-Polls-tool',
+            'fairmodel',
+            'analytics',
+            'DNS-Faktura',
+            'DNS-Flyer-Studio',
+          ];
+          for (const repo of repositories) {
+            const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/dispatches`, {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${process.env.GH_TOKEN}`,
+                Accept: 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                event_type: 'dns-foundation-release',
+                client_payload: {
+                  tag: process.env.FOUNDATION_TAG,
+                  release_url: `https://github.com/${owner}/dns-shared-data/releases/tag/${process.env.FOUNDATION_TAG}`,
+                },
+              }),
+            });
+            if (!response.ok) {
+              const body = await response.text();
+              throw new Error(`Dispatch to ${repo} failed (${response.status}): ${body}`);
+            }
+            console.log(`Dispatched ${process.env.FOUNDATION_TAG} to ${repo}`);
+          }
+          NODE

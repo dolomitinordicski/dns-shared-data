@@ -28,6 +28,7 @@ on:
       - 'tsconfig.json'
       - 'tsconfig.package.json'
       - '.github/workflows/validate-shared-package.yml'
+      - '.github/workflows/propagate-foundation-release.yml'
       - '.github/workflows/release-foundation.yml'
       - 'docs/DNS-Foundation-Propagation-v1.md'
   pull_request:
@@ -54,6 +55,7 @@ on:
       - 'tsconfig.json'
       - 'tsconfig.package.json'
       - '.github/workflows/validate-shared-package.yml'
+      - '.github/workflows/propagate-foundation-release.yml'
       - '.github/workflows/release-foundation.yml'
       - 'docs/DNS-Foundation-Propagation-v1.md'
   workflow_dispatch:
