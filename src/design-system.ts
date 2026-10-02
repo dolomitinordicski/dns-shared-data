@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.15.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.16.0' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -288,6 +288,10 @@ export const DNS_DESIGN_SYSTEM = {
     bodySizePx: 11,
     rowBorder: 'rgba(65,116,131,.08)',
     headerBorder: 'rgba(65,116,131,.20)',
+    alternateRowBackground: 'rgba(170,208,209,.18)',
+    alternateRowSource: 'colors.light',
+    gridStrongBorder: 'rgba(65,116,131,.42)',
+    zebraRows: true,
   },
   controls: {
     radiusPx: 6,
