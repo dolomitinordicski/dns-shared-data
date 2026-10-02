@@ -1,0 +1,23 @@
+name: Audit Faktura rate bindings
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx tsx scripts/audit-faktura-rate-bindings.ts
+        env:
+          GOOGLE_CLOUD_PROJECT: dns-core
