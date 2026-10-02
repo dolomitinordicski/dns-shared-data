@@ -169,8 +169,16 @@ function nativeAdapter(printNow?: DNSCapabilityRuntimeOptions['printNow']): DNSC
     async execute(input: any, context) {
       switch (context.capability) {
         case 'export.csv': {
-          const text = '\uFEFF' + rowsToCSV(input);
-          return downloadText(input?.filename ?? 'export.csv', text, 'text/csv;charset=utf-8');
+          const rawText = typeof input?.text === 'string' ? input.text : rowsToCSV(input);
+          const includeBom = input?.bom !== false;
+          const text = includeBom && !rawText.startsWith('\uFEFF')
+            ? '\uFEFF' + rawText
+            : rawText;
+          return downloadText(
+            input?.filename ?? 'export.csv',
+            text,
+            input?.mimeType ?? 'text/csv;charset=utf-8',
+          );
         }
         case 'export.json': {
           const text = JSON.stringify(input?.data ?? input ?? null, null, input?.pretty === false ? 0 : 2);
