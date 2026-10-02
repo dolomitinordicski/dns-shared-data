@@ -24,8 +24,9 @@ export interface DNSPrintRuntimeOptions {
 }
 
 export interface DNSPrintRuntimeHandle {
-  readonly profileId: DNSPrintProfileId | 'legacy';
-  printNow(): void;
+  getProfile(): DNSPrintProfileId | 'legacy';
+  setProfile(profile: DNSPrintProfileId): void;
+  printNow(profile?: DNSPrintProfileId): void;
   disconnect(): void;
 }
 
@@ -296,23 +297,37 @@ export function initDNSPrintRuntime(
     options.root ?? (typeof document !== 'undefined' ? document : undefined);
 
   if (!documentRoot || typeof window === 'undefined') {
-    return { profileId: options.profile ?? 'operational-table', printNow() {}, disconnect() {} };
+    let profileId: DNSPrintProfileId | 'legacy' = options.profile ?? (options.print ? 'legacy' : 'operational-table');
+    return {
+      getProfile: () => profileId,
+      setProfile(profile) { profileId = profile; },
+      printNow(profile) { if (profile) profileId = profile; },
+      disconnect() {},
+    };
   }
 
-  const profileId: DNSPrintProfileId | 'legacy' =
+  let profileId: DNSPrintProfileId | 'legacy' =
     options.profile ?? (options.print ? 'legacy' : 'operational-table');
 
-  const print =
-    profileId === 'legacy'
-      ? fromLegacy(options.print ?? DNS_DESIGN_SYSTEM.print)
-      : fromProfile(getDNSPrintProfile(profileId));
+  const applyProfile = (next: DNSPrintProfileId | 'legacy') => {
+    profileId = next;
+    const print =
+      profileId === 'legacy'
+        ? fromLegacy(options.print ?? DNS_DESIGN_SYSTEM.print)
+        : fromProfile(getDNSPrintProfile(profileId));
+    ensurePrintStyles(documentRoot, print, profileId);
+    documentRoot.documentElement.dataset.dnsPrintProfile = profileId;
+  };
 
-  ensurePrintStyles(documentRoot, print, profileId);
-  documentRoot.documentElement.dataset.dnsPrintProfile = profileId;
+  applyProfile(profileId);
 
   return {
-    profileId,
-    printNow() {
+    getProfile: () => profileId,
+    setProfile(profile) {
+      applyProfile(profile);
+    },
+    printNow(profile) {
+      if (profile) applyProfile(profile);
       window.print();
     },
     disconnect() {
