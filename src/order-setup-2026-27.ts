@@ -12,6 +12,7 @@ export interface OrderSourceOrganization {
   organizationId: OrganizationId;
   reportingAreaId?: ReportingAreaId;
   sourceLabel: string;
+  defaultDeliveryLocationId?: string;
   wristbandSourceRow?: number;
   ticketSourceRow?: number;
 }
@@ -208,22 +209,22 @@ export const ORDER_CATALOG_2026_27: readonly OrderCatalogItem[] = [
 ] as const satisfies readonly OrderCatalogItem[];
 
 export const ORDER_SOURCE_ORGANIZATIONS_2026_27: readonly OrderSourceOrganization[] = [
-  { organizationId: 'antholzertal', reportingAreaId: 'antholzertal', sourceLabel: 'Antholzertal (für TV)', wristbandSourceRow: 3, ticketSourceRow: 5 },
-  { organizationId: 'biathlon-antholz', reportingAreaId: 'antholzertal', sourceLabel: 'Antholzertal (für Biathlon)', wristbandSourceRow: 4, ticketSourceRow: 6 },
-  { organizationId: 'gsiesertal-welsberg-taisten', reportingAreaId: 'gsiesertal-welsberg-taisten', sourceLabel: 'Gsies-Welsberg-Taisten', wristbandSourceRow: 5, ticketSourceRow: 7 },
-  { organizationId: 'tv-toblach', reportingAreaId: 'drei-zinnen', sourceLabel: '3ZD - Toblach', wristbandSourceRow: 6, ticketSourceRow: 8 },
-  { organizationId: 'tv-niederdorf', reportingAreaId: 'drei-zinnen', sourceLabel: '3ZD - Niederdorf', wristbandSourceRow: 7, ticketSourceRow: 9 },
-  { organizationId: 'tv-innichen', reportingAreaId: 'drei-zinnen', sourceLabel: '3ZD - Innichen', wristbandSourceRow: 8, ticketSourceRow: 10 },
-  { organizationId: 'tv-sexten', reportingAreaId: 'drei-zinnen', sourceLabel: '3ZD - Sexten', wristbandSourceRow: 9, ticketSourceRow: 11 },
-  { organizationId: 'tv-prags', reportingAreaId: 'drei-zinnen', sourceLabel: '3ZD - Prags', wristbandSourceRow: 10, ticketSourceRow: 12 },
-  { organizationId: 'tvb-osttirol', reportingAreaId: 'osttirol', sourceLabel: 'Osttirol', wristbandSourceRow: 11, ticketSourceRow: 13 },
-  { organizationId: 'val-comelico', reportingAreaId: 'val-comelico', sourceLabel: 'Comelico', wristbandSourceRow: 12, ticketSourceRow: 14 },
-  { organizationId: 'servizi-ampezzo', reportingAreaId: 'cortina-d-ampezzo', sourceLabel: 'Cortina', wristbandSourceRow: 13, ticketSourceRow: 15 },
-  { organizationId: 'sand-in-taufers', reportingAreaId: 'ahrntal', sourceLabel: 'TV Sand in Taufers', wristbandSourceRow: 14, ticketSourceRow: 16 },
-  { organizationId: 'ahrntal', reportingAreaId: 'ahrntal', sourceLabel: 'TV Ahrntal', wristbandSourceRow: 15, ticketSourceRow: 17 },
-  { organizationId: 'val-gardena', reportingAreaId: 'seiser-alm-dolomites-val-gardena', sourceLabel: 'Gröden', wristbandSourceRow: 16, ticketSourceRow: 18 },
-  { organizationId: 'seiser-alm-marketing', reportingAreaId: 'seiser-alm-dolomites-val-gardena', sourceLabel: 'Seiser Alm', wristbandSourceRow: 17, ticketSourceRow: 19 },
-  { organizationId: 'dolomiti-nordicski', sourceLabel: 'Dolomiti Nordicski', ticketSourceRow: 20 },
+  { organizationId: 'antholzertal', defaultDeliveryLocationId: 'delivery-antholzertal-tv', reportingAreaId: 'antholzertal', sourceLabel: 'Antholzertal (für TV)', wristbandSourceRow: 3, ticketSourceRow: 5 },
+  { organizationId: 'biathlon-antholz', defaultDeliveryLocationId: 'delivery-biathlon-antholz', reportingAreaId: 'antholzertal', sourceLabel: 'Antholzertal (für Biathlon)', wristbandSourceRow: 4, ticketSourceRow: 6 },
+  { organizationId: 'gsiesertal-welsberg-taisten', defaultDeliveryLocationId: 'delivery-gsies-welsberg', reportingAreaId: 'gsiesertal-welsberg-taisten', sourceLabel: 'Gsies-Welsberg-Taisten', wristbandSourceRow: 5, ticketSourceRow: 7 },
+  { organizationId: 'tv-toblach', defaultDeliveryLocationId: 'delivery-tv-toblach', reportingAreaId: 'drei-zinnen', sourceLabel: '3ZD - Toblach', wristbandSourceRow: 6, ticketSourceRow: 8 },
+  { organizationId: 'tv-niederdorf', defaultDeliveryLocationId: 'delivery-tv-niederdorf', reportingAreaId: 'drei-zinnen', sourceLabel: '3ZD - Niederdorf', wristbandSourceRow: 7, ticketSourceRow: 9 },
+  { organizationId: 'tv-innichen', defaultDeliveryLocationId: 'delivery-tv-innichen', reportingAreaId: 'drei-zinnen', sourceLabel: '3ZD - Innichen', wristbandSourceRow: 8, ticketSourceRow: 10 },
+  { organizationId: 'tv-sexten', defaultDeliveryLocationId: 'delivery-tv-sexten', reportingAreaId: 'drei-zinnen', sourceLabel: '3ZD - Sexten', wristbandSourceRow: 9, ticketSourceRow: 11 },
+  { organizationId: 'tv-prags', defaultDeliveryLocationId: 'delivery-tv-prags', reportingAreaId: 'drei-zinnen', sourceLabel: '3ZD - Prags', wristbandSourceRow: 10, ticketSourceRow: 12 },
+  { organizationId: 'tvb-osttirol', defaultDeliveryLocationId: 'delivery-osttirol', reportingAreaId: 'osttirol', sourceLabel: 'Osttirol', wristbandSourceRow: 11, ticketSourceRow: 13 },
+  { organizationId: 'val-comelico', defaultDeliveryLocationId: 'delivery-comelico', reportingAreaId: 'val-comelico', sourceLabel: 'Comelico', wristbandSourceRow: 12, ticketSourceRow: 14 },
+  { organizationId: 'servizi-ampezzo', defaultDeliveryLocationId: 'delivery-cortina', reportingAreaId: 'cortina-d-ampezzo', sourceLabel: 'Cortina', wristbandSourceRow: 13, ticketSourceRow: 15 },
+  { organizationId: 'sand-in-taufers', defaultDeliveryLocationId: 'delivery-sand-in-taufers', reportingAreaId: 'ahrntal', sourceLabel: 'TV Sand in Taufers', wristbandSourceRow: 14, ticketSourceRow: 16 },
+  { organizationId: 'ahrntal', defaultDeliveryLocationId: 'delivery-ahrntal', reportingAreaId: 'ahrntal', sourceLabel: 'TV Ahrntal', wristbandSourceRow: 15, ticketSourceRow: 17 },
+  { organizationId: 'val-gardena', defaultDeliveryLocationId: 'delivery-val-gardena', reportingAreaId: 'seiser-alm-dolomites-val-gardena', sourceLabel: 'Gröden', wristbandSourceRow: 16, ticketSourceRow: 18 },
+  { organizationId: 'seiser-alm-marketing', defaultDeliveryLocationId: 'delivery-seiser-alm', reportingAreaId: 'seiser-alm-dolomites-val-gardena', sourceLabel: 'Seiser Alm', wristbandSourceRow: 17, ticketSourceRow: 19 },
+  { organizationId: 'dolomiti-nordicski', defaultDeliveryLocationId: 'delivery-dns-office', sourceLabel: 'Dolomiti Nordicski', ticketSourceRow: 20 },
 ] as const;
 
 const wristbandIds = ORDER_CATALOG_2026_27
