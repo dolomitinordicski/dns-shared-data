@@ -45,7 +45,8 @@ async function main() {
   if (!persisted.exists) throw new Error('Analytics audit snapshot read-back failed.');
 
   const data = persisted.data();
-  const comparable = { ...data };
+  if (!data) throw new Error('Analytics audit snapshot read-back payload missing.');
+  const comparable: Record<string, unknown> = { ...data };
   delete comparable.updatedAt;
   const expected = {
     ...snapshot,
@@ -54,12 +55,16 @@ async function main() {
       purpose: 'Zero-loss audit copy. Not an operational source until exact parity gates pass.',
     },
   };
-  const normalize = (value) =>
-    Array.isArray(value)
-      ? value.map(normalize)
-      : value && typeof value === 'object'
-        ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, normalize(value[key])]))
-        : value;
+  const normalize = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(normalize);
+    if (value && typeof value === 'object') {
+      const record = value as Record<string, unknown>;
+      return Object.fromEntries(
+        Object.keys(record).sort().map((key) => [key, normalize(record[key])]),
+      );
+    }
+    return value;
+  };
 
   if (JSON.stringify(normalize(comparable)) !== JSON.stringify(normalize(expected))) {
     throw new Error('Analytics audit snapshot read-back differs from golden master.');
