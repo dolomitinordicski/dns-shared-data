@@ -212,3 +212,10 @@ Migration changes shell/runtime ownership only. Tool-specific engines remain unt
 Portal and authenticated Workspace shells use the shared F6 account, organization, membership and access presentation contract. Operational tools may opt into the same context only when authenticated identity is part of their workflow.
 
 The shell renders resolved context; it does not calculate authorization.
+
+
+## 13. F7 workspace integration
+
+The Workspace shell uses the F7 toolbar/canvas/inspector/mobile-panel contract and the shared asset browser. Partner Portal consumes the same asset metadata without adopting Workspace canvas behavior.
+
+The creative renderer/export engine remains application-owned.
