@@ -14,6 +14,26 @@ try {
     await setDoc(doc(db,'seasons','2024-25'),{status:'historical'});
     await setDoc(doc(db,'reportingAreas','area'),{canonicalName:'Area'});
     await setDoc(doc(db,'organizations','org'),{reportingAreaIds:['area']});
+    await setDoc(doc(db,'analyticsPublicSnapshots','2025-26'),{
+      id:'2025-26',
+      seasonId:'2025-26',
+      schemaVersion:1,
+      revision:1,
+      publicationStatus:'published',
+      generatedAt:'2026-10-02T00:00:00Z',
+      sourceSummary:'test aggregate',
+      sales:{totalTickets:10,totalRevenue:100,averageTicketPrice:10,byProduct:{},byReportingArea:{},byReportingAreaProduct:{},byChannel:{}},
+    });
+    await setDoc(doc(db,'analyticsPublicSnapshots','2026-27'),{
+      id:'2026-27',
+      seasonId:'2026-27',
+      schemaVersion:1,
+      revision:1,
+      publicationStatus:'draft',
+      generatedAt:'2026-10-02T00:00:00Z',
+      sourceSummary:'draft aggregate',
+      sales:{totalTickets:0,totalRevenue:0,averageTicketPrice:0,byProduct:{},byReportingArea:{},byReportingAreaProduct:{},byChannel:{}},
+    });
     await setDoc(doc(db,'deliveryLocations','delivery-org'),{id:'delivery-org',organizationId:'org',reportingAreaId:'area',recipientName:'Org',label:'Org delivery',status:'verified'});
     await setDoc(doc(db,'pocketfolderSourceRows','2026-27__source-row-06'),{id:'2026-27__source-row-06',seasonId:'2026-27',sourceRow:6,label:'Antholzertal',comparison2025:3500,requested2026:3000,dnsCopies:100,areaTotal2026:4200,printerTotal2026:4550,backLanguageNote:'Rückseite dt-it-en',rowKind:'area'});
     for(const [uid,permissions] of [['seller',['ticketOrders.read','ticketOrders.write','ticketSales.read','ticketSales.write','kp.read','kp.write']],['reader',['ticketOrders.read','ticketSales.read']]])
@@ -25,6 +45,12 @@ try {
   const seller=env.authenticatedContext('seller').firestore();
   const reader=env.authenticatedContext('reader').firestore();
   const verifier=env.authenticatedContext('verifier').firestore();
+  const publicDb=env.unauthenticatedContext().firestore();
+
+  await assertSucceeds(getDoc(doc(publicDb,'analyticsPublicSnapshots','2025-26')));
+  await assertFails(getDoc(doc(publicDb,'analyticsPublicSnapshots','2026-27')));
+  await assertFails(getDocs(collection(publicDb,'analyticsPublicSnapshots')));
+  await assertFails(setDoc(doc(publicDb,'analyticsPublicSnapshots','2025-26'),{publicationStatus:'published',seasonId:'2025-26'}));
   await assertSucceeds(getDoc(doc(seller,'deliveryLocations','delivery-org')));
   await assertSucceeds(getDoc(doc(reader,'deliveryLocations','delivery-org')));
   await assertSucceeds(getDoc(doc(reader,'pocketfolderSourceRows','2026-27__source-row-06')));
