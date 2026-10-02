@@ -1,8 +1,9 @@
 import { DNS_DESIGN_SYSTEM_VERSION } from './design-system.js';
 import { DNS_DATA_CONTRACTS_VERSION } from './data-contracts.js';
 import { DNS_FOUNDATION_RUNTIME_VERSION } from './foundation.js';
+import { DNS_FOUNDATION_RELEASE_VERSION } from './version.js';
 
-export const DNS_FOUNDATION_RELEASE_VERSION = '1.2.0' as const;
+export { DNS_FOUNDATION_RELEASE_VERSION } from './version.js';
 export const DNS_FOUNDATION_RELEASE_CHANNEL = 'stable' as const;
 export const DNS_FOUNDATION_RELEASE_STATUS = 'frozen' as const;
 export const DNS_FOUNDATION_RELEASE_REF = 'foundation-v1.2.0' as const;
