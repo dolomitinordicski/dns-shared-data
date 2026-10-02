@@ -195,6 +195,10 @@
     "./kp-setup-2026-27": {
       "types": "./dist/kp-setup-2026-27.d.ts",
       "import": "./dist/kp-setup-2026-27.js"
+    },
+    "./pocketfolder-setup-2026-27": {
+      "types": "./dist/pocketfolder-setup-2026-27.d.ts",
+      "import": "./dist/pocketfolder-setup-2026-27.js"
     }
   }
 }
