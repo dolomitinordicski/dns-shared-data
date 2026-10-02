@@ -20,6 +20,10 @@ export interface AnalyticsPublicMeasure {
   revenue: number;
 }
 
+export interface AnalyticsPublicChannelMeasure {
+  quantity: number;
+}
+
 export interface AnalyticsPublicSalesAggregate {
   totalTickets: number;
   totalRevenue: number;
@@ -29,7 +33,7 @@ export interface AnalyticsPublicSalesAggregate {
   byReportingAreaProduct: Partial<
     Record<ReportingAreaId, Partial<Record<TicketProductCode, AnalyticsPublicMeasure>>>
   >;
-  byChannel: Partial<Record<TicketSalesChannel, AnalyticsPublicMeasure>>;
+  byChannel: Partial<Record<TicketSalesChannel, AnalyticsPublicChannelMeasure>>;
 }
 
 export interface AnalyticsPublicAnnualPoint {
