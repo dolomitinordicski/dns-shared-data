@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/analytics-audit-snapshot.ts'
+      - 'scripts/analytics-audit-snapshot.json'
       - 'scripts/seed-analytics-audit-snapshot.ts'
       - '.github/workflows/deploy-analytics-audit-snapshot.yml'
   workflow_dispatch:
@@ -35,6 +35,6 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npm run typecheck
-      - run: npm run seed:analytics-audit:apply
+      - run: npx tsx scripts/seed-analytics-audit-snapshot.ts --apply
         env:
           GOOGLE_CLOUD_PROJECT: dns-core
