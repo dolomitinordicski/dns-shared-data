@@ -29,6 +29,7 @@ export interface DNSCapabilityRuntimeOptions {
   adapters?: readonly DNSCapabilityAdapter[];
   printNow?: (profile?: DNSPrintProfileId) => void;
   language?: 'de' | 'it';
+  getLanguage?: () => 'de' | 'it';
 }
 
 export interface DNSCapabilityRuntime {
@@ -259,7 +260,7 @@ export function createDNSCapabilityRuntime(
       }
       const output = await adapter.execute(input, {
         capability,
-        language: options.language,
+        language: options.getLanguage?.() ?? options.language,
       });
       return { capability, adapterId: adapter.id, output: output as T };
     },
