@@ -856,19 +856,17 @@ service cloud.firestore {
 
     // DNS Flyer Studio working documents.
     match /flyerDocuments/{document} {
-      allow read: if activeUser() && (
-        resource.data.ownerUserId == request.auth.uid
-        || hasFlyerPermission('flyer.read', resource.data)
-      );
+      allow read: if activeUser()
+        && (
+          hasFlyerPermission('flyer.read', resource.data)
+          || hasFlyerPermission('flyer.write', resource.data)
+        );
 
       allow create: if activeUser()
         && validFlyerDocument(request.resource.data)
         && request.resource.data.id == document
         && request.resource.data.ownerUserId == request.auth.uid
-        && (
-          hasFlyerPermission('flyer.write', request.resource.data)
-          || request.resource.data.ownerUserId == request.auth.uid
-        );
+        && hasFlyerPermission('flyer.write', request.resource.data);
 
       allow update: if activeUser()
         && validFlyerDocument(request.resource.data)
@@ -877,13 +875,14 @@ service cloud.firestore {
         && request.resource.data.scopeId == resource.data.scopeId
         && request.resource.data.seasonId == resource.data.seasonId
         && request.resource.data.ownerUserId == resource.data.ownerUserId
-        && (
-          resource.data.ownerUserId == request.auth.uid
-          || hasFlyerPermission('flyer.write', resource.data)
-        );
+        && hasFlyerPermission('flyer.write', resource.data);
 
       allow delete: if isAdmin()
-        || (activeUser() && resource.data.ownerUserId == request.auth.uid);
+        || (
+          activeUser()
+          && resource.data.ownerUserId == request.auth.uid
+          && hasFlyerPermission('flyer.write', resource.data)
+        );
     }
 
     // Immutable publication snapshots. Published records are append-only.
@@ -902,10 +901,17 @@ service cloud.firestore {
     match /flyerTemplates/{document} {
       allow read: if hasFlyerPermission('flyer.read', resource.data);
 
-      allow create, update: if activeUser()
+      allow create: if activeUser()
         && validFlyerTemplate(request.resource.data)
         && request.resource.data.id == document
         && hasFlyerPermission('flyer.templates.manage', request.resource.data);
+
+      allow update: if activeUser()
+        && validFlyerTemplate(request.resource.data)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.scopeType == resource.data.scopeType
+        && request.resource.data.scopeId == resource.data.scopeId
+        && hasFlyerPermission('flyer.templates.manage', resource.data);
 
       allow delete: if isAdmin();
     }
@@ -914,10 +920,17 @@ service cloud.firestore {
     match /flyerAssets/{document} {
       allow read: if hasFlyerPermission('flyer.read', resource.data);
 
-      allow create, update: if activeUser()
+      allow create: if activeUser()
         && validFlyerAsset(request.resource.data)
         && request.resource.data.id == document
         && hasFlyerPermission('flyer.assets.manage', request.resource.data);
+
+      allow update: if activeUser()
+        && validFlyerAsset(request.resource.data)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.scopeType == resource.data.scopeType
+        && request.resource.data.scopeId == resource.data.scopeId
+        && hasFlyerPermission('flyer.assets.manage', resource.data);
 
       allow delete: if isAdmin();
     }
