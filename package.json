@@ -87,6 +87,10 @@
     "./ui/content-patterns": {
       "types": "./dist/ui/content-patterns.d.ts",
       "import": "./dist/ui/content-patterns.js"
+    },
+    "./ui/primitives": {
+      "types": "./dist/ui/primitives.d.ts",
+      "import": "./dist/ui/primitives.js"
     }
   }
 }
