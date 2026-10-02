@@ -1,6 +1,6 @@
 {
   "name": "@dolomitinordicski/dns-shared-data",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -171,6 +171,10 @@
     "./ui/workspace": {
       "types": "./dist/ui/workspace.d.ts",
       "import": "./dist/ui/workspace.js"
+    },
+    "./release": {
+      "types": "./dist/release.d.ts",
+      "import": "./dist/release.js"
     }
   }
 }

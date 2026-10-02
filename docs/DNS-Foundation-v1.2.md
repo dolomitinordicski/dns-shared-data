@@ -1278,4 +1278,34 @@ Workspace defines toolbar/canvas/inspector/mobile-panel geometry. Foundation gov
 
 ---
 
+## 50. F8 release & freeze
+
+Foundation is frozen as stable release:
+
+```text
+Foundation package/runtime  1.0.0
+Release ref                 release/v1.0.0
+Design System               1.24.0
+Data Contracts              0.8.0
+Channel                     stable
+Status                      frozen
+```
+
+Normative release contract:
+
+```text
+src/release.ts
+docs/DNS-Foundation-Release-Freeze-v1.md
+releases/v1.0.0/manifest.json
+```
+
+Consumer migrations must pin the stable release ref rather than development `main`, `master` or arbitrary raw commit SHAs.
+
+Freeze preserves the F0–F7 compatibility surface. Future changes follow semantic versioning: PATCH for compatible fixes, MINOR for backward-compatible shared capability, MAJOR for breaking contract changes.
+
+The package remains private/internal to DNS; F8 does not publish to the public npm registry.
+
+
+---
+
 **End of DNS Foundation v1.2**

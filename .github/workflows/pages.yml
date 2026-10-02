@@ -9,6 +9,8 @@ on:
       - 'brand/**'
       - 'graphics/**'
       - 'package.json'
+      - 'releases/**'
+      - 'docs/**'
       - 'src/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
