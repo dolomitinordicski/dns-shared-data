@@ -247,3 +247,9 @@ See `docs/DNS-Motion-Interaction-Semantics-v1.md`.
 F5 is initialized by the Core Runtime by default. Consumers may use the canonical overlay/data UI contracts directly while retaining tool-owned business logic.
 
 See `docs/DNS-Data-UI-Overlays-v1.md`.
+
+## 17. Identity & access UI
+
+F6 is initialized by the Core Runtime by default. It provides shared presentation for account, organization, membership and access context without implementing authentication or authorization.
+
+See `docs/DNS-Identity-Access-UI-v1.md`.
