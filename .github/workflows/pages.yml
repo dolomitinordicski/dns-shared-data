@@ -8,7 +8,7 @@ on:
       - 'web-runtime/**'
       - 'brand/**'
       - 'package.json'
-      - 'src/ui/**'
+      - 'src/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
