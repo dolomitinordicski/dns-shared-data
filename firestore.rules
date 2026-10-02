@@ -61,6 +61,8 @@ service cloud.firestore {
         && data.seasonId is string
         && exists(/databases/$(database)/documents/seasons/$(data.seasonId))
         && data.status in ['draft', 'ready', 'archived']
+        && data.ownerUserId is string
+        && data.ownerUserId.size() > 0
         && data.document is map
         && data.updatedBy == request.auth.uid
         && data.updatedAt == request.time;
@@ -854,12 +856,19 @@ service cloud.firestore {
 
     // DNS Flyer Studio working documents.
     match /flyerDocuments/{document} {
-      allow read: if hasFlyerPermission('flyer.read', resource.data);
+      allow read: if activeUser() && (
+        resource.data.ownerUserId == request.auth.uid
+        || hasFlyerPermission('flyer.read', resource.data)
+      );
 
       allow create: if activeUser()
         && validFlyerDocument(request.resource.data)
         && request.resource.data.id == document
-        && hasFlyerPermission('flyer.write', request.resource.data);
+        && request.resource.data.ownerUserId == request.auth.uid
+        && (
+          hasFlyerPermission('flyer.write', request.resource.data)
+          || request.resource.data.ownerUserId == request.auth.uid
+        );
 
       allow update: if activeUser()
         && validFlyerDocument(request.resource.data)
@@ -867,9 +876,14 @@ service cloud.firestore {
         && request.resource.data.scopeType == resource.data.scopeType
         && request.resource.data.scopeId == resource.data.scopeId
         && request.resource.data.seasonId == resource.data.seasonId
-        && hasFlyerPermission('flyer.write', resource.data);
+        && request.resource.data.ownerUserId == resource.data.ownerUserId
+        && (
+          resource.data.ownerUserId == request.auth.uid
+          || hasFlyerPermission('flyer.write', resource.data)
+        );
 
-      allow delete: if isAdmin();
+      allow delete: if isAdmin()
+        || (activeUser() && resource.data.ownerUserId == request.auth.uid);
     }
 
     // Immutable publication snapshots. Published records are append-only.
