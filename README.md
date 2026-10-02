@@ -13,7 +13,7 @@ This repository contains:
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.3
-- **DNS Design System:** v1.19
+- **DNS Design System:** v1.20
 - **DNS Access Control:** v0.1
 
 ## Source of truth
@@ -61,7 +61,7 @@ firebase.json
 
 ## DNS Design System
 
-The current shared visual and interaction contract is **v1.19.0** and is documented in:
+The current shared visual and interaction contract is **v1.20.0** and is documented in:
 
 ```text
 docs/DNS-Design-System-v1.md
@@ -74,6 +74,28 @@ The v1.11 contract includes shared motion, focus, hover/press, tab and reduced-m
 The GitHub Pages architecture overview is also the visual reference implementation of this contract. It consumes the canonical tokens at runtime, prefers `DNS_Core / designSystem/current`, falls back to the versioned package mirror, and uses the shared motion/interaction behavior. The committed `web-runtime/design-system.js` browser mirror is CI-checked against `src/design-system.ts` to prevent silent drift.
 
 
+
+
+## Foundation print profiles
+
+F3 defines three canonical printable artifact profiles:
+
+```text
+operational-table — dense operational tables
+report            — analytical/management document flow
+document          — formal confirmations/forms/documents
+```
+
+Contract:
+
+```text
+docs/DNS-Print-Profiles-v1.md
+@dolomitinordicski/dns-shared-data/print-profiles
+```
+
+Consumers select the profile through `initDNSFoundation({ printProfile })` or per artifact with `foundation.printNow(profile)`.
+
+`creative-export` is deliberately outside the Foundation print runtime: Flyer Studio uses the same Foundation for its editor UI, but its creative output is rendered by the authoring engine.
 
 ## Foundation shell profiles
 

@@ -123,6 +123,10 @@
     "./ui/shell": {
       "types": "./dist/ui/shell.d.ts",
       "import": "./dist/ui/shell.js"
+    },
+    "./print-profiles": {
+      "types": "./dist/print-profiles.d.ts",
+      "import": "./dist/print-profiles.js"
     }
   }
 }

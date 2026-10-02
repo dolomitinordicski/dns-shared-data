@@ -212,3 +212,18 @@ initDNSFoundation({ shellProfile: 'workspace' });
 Operational remains the default. The profile controls structural defaults such as Operational Tool Chrome and required footer behavior; it does not change tool-specific business engines.
 
 See `docs/DNS-Shell-Profiles-v1.md`.
+
+## 14. Print profiles
+
+F3 extends the Core Runtime with `printProfile` and per-artifact profile selection:
+
+```ts
+const foundation = initDNSFoundation({
+  printProfile: 'operational-table',
+});
+
+foundation.printNow('report');
+foundation.printNow('document');
+```
+
+See `docs/DNS-Print-Profiles-v1.md`.

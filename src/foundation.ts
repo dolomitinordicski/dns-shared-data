@@ -19,6 +19,7 @@ import {
 import { initDNSFooterRuntime } from './ui/footer.js';
 import { initDNSShellRuntime } from './ui/shell.js';
 import type { DNSShellProfileId } from './shell-profiles.js';
+import type { DNSPrintProfileId } from './print-profiles.js';
 
 export const DNS_FOUNDATION_RUNTIME_VERSION = '1.0.0' as const;
 export const DNS_FOUNDATION_LANGUAGE_EVENT = 'dns:languagechange' as const;
@@ -44,6 +45,7 @@ export interface DNSFoundationRuntimeOptions {
   motion?: boolean;
   chrome?: boolean | DNSToolChromeRuntimeOptions;
   print?: boolean;
+  printProfile?: DNSPrintProfileId;
   footer?: boolean;
   accessibility?: boolean | DNSFoundationAccessibilityOptions;
   shellProfile?: DNSShellProfileId;
@@ -57,7 +59,7 @@ export interface DNSFoundationRuntimeHandle {
   setLanguage(language: DNSUILanguage): void;
   subscribeLanguage(listener: (language: DNSUILanguage) => void): () => void;
   refresh(): void;
-  printNow(): void;
+  printNow(profile?: DNSPrintProfileId): void;
   disconnect(): void;
 }
 
@@ -383,7 +385,7 @@ export function initDNSFoundation(
       ? null
       : initDNSPrintRuntime({
           root: documentRoot,
-          print: designSystem.print,
+          profile: options.printProfile ?? 'operational-table',
         });
 
   const defaultFooterEnabled = shell.profile.footer.required;
@@ -446,8 +448,8 @@ export function initDNSFoundation(
         initDNSFooterRuntime(documentRoot);
       }
     },
-    printNow() {
-      print?.printNow();
+    printNow(profile) {
+      print?.printNow(profile);
     },
     disconnect() {
       chrome?.disconnect();
