@@ -24,7 +24,9 @@
     "seed:pocketfolder:2026-27": "tsx scripts/seed-pocketfolder-2026-27.ts",
     "seed:pocketfolder:2026-27:apply": "tsx scripts/seed-pocketfolder-2026-27.ts --apply",
     "seed:area-allocation-keys": "tsx scripts/seed-area-allocation-keys.ts",
-    "seed:area-allocation-keys:apply": "tsx scripts/seed-area-allocation-keys.ts --apply"
+    "seed:area-allocation-keys:apply": "tsx scripts/seed-area-allocation-keys.ts --apply",
+    "seed:analytics-audit": "tsx scripts/seed-analytics-audit-snapshot.ts",
+    "seed:analytics-audit:apply": "tsx scripts/seed-analytics-audit-snapshot.ts --apply"
   },
   "devDependencies": {
     "firebase-admin": "^14.5.0",
