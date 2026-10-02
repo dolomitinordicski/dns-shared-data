@@ -2753,7 +2753,6 @@
 
     document.getElementById('dns-home-link')?.addEventListener('click', (event) => {
       event.preventDefault();
-      navigationRuntime.setActiveSection('system-map');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       if (window.location.hash) {
         history.replaceState(null, '', window.location.pathname + window.location.search);
