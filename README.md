@@ -13,7 +13,7 @@ This repository contains:
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.3
-- **DNS Design System:** v1.13
+- **DNS Design System:** v1.18
 - **DNS Access Control:** v0.1
 
 ## Source of truth
@@ -61,7 +61,7 @@ firebase.json
 
 ## DNS Design System
 
-The current shared visual and interaction contract is **v1.13.0** and is documented in:
+The current shared visual and interaction contract is **v1.18.0** and is documented in:
 
 ```text
 docs/DNS-Design-System-v1.md
@@ -88,6 +88,35 @@ Applications may consume the repository as a Git dependency and pin a specific c
 
 Canonical organizations may reference one primary public logo through `logoFile`. Logo assets live in `assets/organization-logos/`; keep `logoFile: null` until the correct asset has been uploaded and verified.
 
+
+
+## Governance & reproducibility
+
+F0 governance is defined by the following normative documents:
+
+```text
+docs/DNS-Canonical-Change-Control-v1.md
+docs/DNS-Canonical-Dataset-Changelog.md
+docs/DNS-FAIR-Reproducibility-v1.md
+docs/DNS-Data-Governance-Compliance-v1.md
+docs/DNS-Implementation-State-Policy-v1.md
+docs/DNS-Operational-Runbook-v1.md
+```
+
+Key rules:
+- canonical changes are classified as MAJOR / MINOR / PATCH;
+- money-moving canonical changes require institutional approval and a future effective season;
+- approved FAIR seasons use immutable, versioned input and result snapshots;
+- technical implementation state must be distinguished from target/planned architecture;
+- public documentation may record governance references, but never secrets, PII or confidential approval material.
+
+The typed FAIR snapshot contract is exported from:
+
+```text
+@dolomitinordicski/dns-shared-data/fair-governance
+```
+
+The persistence collections `fairInputSnapshots` and `fairResultSnapshots` are Foundation-defined targets; no Firebase write implementation is implied merely by the contract.
 
 ## Firebase Master Dataset
 
