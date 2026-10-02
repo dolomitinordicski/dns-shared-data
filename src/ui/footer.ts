@@ -22,6 +22,8 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
   overflow: hidden;
   isolation: isolate;
   min-height: 64px;
+  background: var(--dns-footer-bg, #0D4D5E);
+  color: var(--dns-footer-text, #FFFFFF);
 }
 [data-dns-tool-footer] > :not(.dns-footer-graphic) {
   position: relative;
