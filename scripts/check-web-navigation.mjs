@@ -15,7 +15,7 @@ const styleInitializerBody = styleInitializerSource.slice(styleInitializerSource
 if (
   !styleInitializerBody.includes('setNavigationVariables(documentRoot.documentElement') ||
   !styleInitializerBody.includes('ensureNavigationStyles(documentRoot') ||
-  /\\binitDNSNavigationStyles\\s*\\(/.test(styleInitializerBody)
+  /\binitDNSNavigationStyles\s*\(/.test(styleInitializerBody)
 ) {
   console.error('Standalone navigation style initializer must apply its styles without recursion');
   process.exit(1);
