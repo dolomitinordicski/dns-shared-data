@@ -1,0 +1,71 @@
+name: Canonical data change
+description: Propose a governed change to canonical DNS master data
+title: "[Canonical] "
+labels:
+  - canonical-data
+body:
+  - type: dropdown
+    id: change_class
+    attributes:
+      label: Change class
+      description: Classify according to docs/DNS-Canonical-Change-Control-v1.md.
+      options:
+        - MAJOR — money-moving / structural
+        - MINOR — additive non-money
+        - PATCH — corrective / cosmetic
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe exactly what canonical entity or relationship should change.
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: Reason and source
+      description: Who requested this and what evidence/source supports it?
+    validations:
+      required: true
+  - type: input
+    id: effective_season
+    attributes:
+      label: Effective season
+      description: Required for MAJOR changes. Use YYYY-YY. Never use a closed/approved season retroactively.
+      placeholder: 2027-28
+  - type: dropdown
+    id: fair_impact
+    attributes:
+      label: FAIR impact
+      options:
+        - Yes / expected
+        - No
+        - Unknown — simulation required
+    validations:
+      required: true
+  - type: textarea
+    id: impact_simulation
+    attributes:
+      label: FAIR impact simulation
+      description: For MAJOR or unknown-impact changes, link or summarize the simulation. Do not include confidential attachments in the public repo.
+  - type: input
+    id: approval_ref
+    attributes:
+      label: Approval reference
+      description: Required before implementation of a MAJOR change. Use a non-confidential reference/date only.
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Historical / compatibility notes
+      description: Identify aliases, legacy mappings, historical data or consumers that must remain readable.
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I have not proposed destructive rewriting of approved historical data.
+          required: true
+        - label: I understand that repository write access does not replace institutional approval for MAJOR changes.
+          required: true
