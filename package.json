@@ -28,7 +28,9 @@
     "seed:billing-rates:2026-27": "tsx scripts/seed-billing-rates-2026-27.ts",
     "seed:billing-rates:2026-27:apply": "tsx scripts/seed-billing-rates-2026-27.ts --apply",
     "publish:analytics-public": "tsx scripts/publish-analytics-public-snapshot.ts",
-    "publish:analytics-public:apply": "tsx scripts/publish-analytics-public-snapshot.ts --apply"
+    "publish:analytics-public:apply": "tsx scripts/publish-analytics-public-snapshot.ts --apply",
+    "seed:idm-premium-programs": "tsx scripts/seed-idm-premium-programs.ts",
+    "seed:idm-premium-programs:apply": "tsx scripts/seed-idm-premium-programs.ts --apply"
   },
   "devDependencies": {
     "firebase-admin": "^14.5.0",
