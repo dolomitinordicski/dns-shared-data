@@ -19,3 +19,5 @@ export * from './ui/print.js';
 
 export * from './ui/content-patterns.js';
 export * from './ui/primitives.js';
+
+export * from './analytics-audit-snapshot.js';
