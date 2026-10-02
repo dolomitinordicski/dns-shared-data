@@ -43,10 +43,10 @@ dynamicLanguage = 'it';
 await languageRuntime.run('export.xlsx', {});
 if (observedAdapterLanguage !== 'it') errors.push('Capability adapter must receive current Foundation language at invocation time.');
 
-if (pkg.version !== '1.1.3') errors.push('Package must be 1.1.3.');
-if (DNS_FOUNDATION_RELEASE_VERSION !== '1.1.3') errors.push('Release must be 1.1.3.');
-if (DNS_FOUNDATION_RELEASE_REF !== 'release/v1.1.3') errors.push('Release ref must be release/v1.1.3.');
-if (DNS_FOUNDATION_RUNTIME_VERSION !== '1.1.3') errors.push('Runtime must be 1.1.3.');
+if (pkg.version !== '1.2.0') errors.push('Package must be 1.1.3.');
+if (DNS_FOUNDATION_RELEASE_VERSION !== '1.2.0') errors.push('Release must be 1.1.3.');
+if (DNS_FOUNDATION_RELEASE_REF !== 'foundation-v1.2.0') errors.push('Release ref must be release/v1.1.3.');
+if (DNS_FOUNDATION_RUNTIME_VERSION !== '1.2.0') errors.push('Runtime must be 1.1.3.');
 if (DNS_DESIGN_SYSTEM_VERSION !== '1.25.0') errors.push('Design System must be 1.25.0.');
 if (DNS_DATA_CONTRACTS_VERSION !== '0.8.0') errors.push('Data Contracts must remain 0.8.0.');
 if (current.components.capabilities !== '1.0.0') errors.push('Capability component version mismatch.');
@@ -58,4 +58,4 @@ if (errors.length) {
   errors.forEach(e=>console.error('- '+e));
   process.exit(1);
 }
-console.log('✓ C1 shared capabilities / Foundation 1.1.3 contract valid');
+console.log('✓ C1 shared capabilities / Foundation 1.2.0 contract valid');
