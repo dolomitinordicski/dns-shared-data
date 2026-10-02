@@ -1,0 +1,27 @@
+{
+  "foundationRelease": "1.1.1",
+  "ref": "release/v1.1.1",
+  "refType": "immutable-release-branch",
+  "channel": "stable",
+  "status": "frozen",
+  "releasedAt": "2026-10-02",
+  "components": {
+    "foundationRuntime": "1.1.1",
+    "designSystem": "1.25.0",
+    "dataContracts": "0.8.0",
+    "capabilities": "1.0.0"
+  },
+  "scope": "F0-F8 + C1 + F9.A compatibility fixes",
+  "supportedUILanguages": ["de", "it"],
+  "shellProfiles": ["operational", "portal", "workspace"],
+  "consumerPinning": {
+    "required": true,
+    "target": "release/v1.1.1",
+    "prohibited": ["main", "master", "raw-commit-sha"]
+  },
+  "fixes": [
+    "Footer runtime observes late-mounted consumer footers.",
+    "Native CSV export accepts pre-serialized text while retaining Foundation-owned download mechanics.",
+    "brand-assets is exported as a stable package entry point."
+  ]
+}
