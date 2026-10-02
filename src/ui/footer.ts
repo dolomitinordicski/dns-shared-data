@@ -1,4 +1,4 @@
-export const DNS_FOOTER_RUNTIME_VERSION = '1.0.0' as const;
+export const DNS_FOOTER_RUNTIME_VERSION = '1.1.0' as const;
 export const DNS_FOOTER_GRAPHIC_URL =
   'https://dolomitinordicski.github.io/dns-shared-data/graphics/swoosh.svg' as const;
 
@@ -16,6 +16,7 @@ export function initDNSFooterRuntime(root?: Document) {
   position: relative;
   overflow: hidden;
   isolation: isolate;
+  min-height: 64px;
 }
 [data-dns-tool-footer] > :not(.dns-footer-graphic) {
   position: relative;
@@ -23,19 +24,20 @@ export function initDNSFooterRuntime(root?: Document) {
 }
 .dns-footer-graphic {
   position: absolute;
-  right: -24px;
-  bottom: -72px;
-  width: min(220px, 42vw);
+  right: -18px;
+  top: 50%;
+  width: min(190px, 38vw);
   height: auto;
   z-index: 0;
+  transform: translateY(-50%);
   pointer-events: none;
   user-select: none;
 }
 @media (max-width: 767px) {
   .dns-footer-graphic {
-    right: -54px;
-    bottom: -62px;
-    width: 180px;
+    right: -42px;
+    top: 50%;
+    width: 165px;
   }
 }
 @media print {
