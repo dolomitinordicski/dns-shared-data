@@ -227,3 +227,17 @@ foundation.printNow('document');
 ```
 
 See `docs/DNS-Print-Profiles-v1.md`.
+
+## 15. Semantic motion
+
+F4 adds shared semantic motion to the Core Runtime:
+
+```ts
+foundation.playMotion(element, 'enter');
+foundation.playMotion(element, 'modal');
+foundation.playMotion(element, 'drawer', { direction: 'reverse' });
+```
+
+The runtime applies Foundation-owned timing/easing/transform values and honors both system and DNS Accessibility reduced-motion preferences.
+
+See `docs/DNS-Motion-Interaction-Semantics-v1.md`.
