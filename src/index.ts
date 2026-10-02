@@ -8,6 +8,7 @@ export * from './graphics.js';
 export * from './data-contracts.js';
 export * from './billing-preparation.js';
 export * from './fair-governance.js';
+export * from './localization.js';
 export * from './area-allocation-keys.js';
 export * from './ui/motion.js';
 export * from './ui/interaction.js';
