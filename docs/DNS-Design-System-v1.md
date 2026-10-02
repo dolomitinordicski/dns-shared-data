@@ -5,7 +5,7 @@
 **Data-tool reference:** DNS Analytics  
 **Target:** all DNS digital tools  
 **Runtime source:** DNS_Core / Firestore  
-**Current semantic version:** 1.16.0
+**Current semantic version:** 1.17.0
 
 ## Principle
 
@@ -108,6 +108,38 @@ local/shared versioned JS helpers
 ```
 
 Remote Firestore documents provide tokens only. Applications must never download and execute JavaScript stored in Firestore.
+
+## Reading text accessibility
+
+Explanatory prose is distinct from dense application chrome. The shared accessibility panel therefore includes **large reading text**, which increases only explanatory copy to 16 px with a 1.7 line-height. It does not enlarge navigation, KPI values, form controls or table data.
+
+Eligible content uses the shared semantic hooks:
+
+- `dns-readable-copy`;
+- `dns-insight-body`;
+- `dns-alert-body`;
+- methodology/explanatory copy explicitly mapped by the consuming tool.
+
+## Shared Insight pattern
+
+`dns-insight` is the canonical explanatory insight bar. It uses Frosted Ice Blue as the main surface, Deep Glacier Blue as the accent, a restrained left accent and a wireframe document icon. Applications must not invent separate visual treatments for explanatory insight bars.
+
+Canonical classes:
+
+- `dns-insight`;
+- `dns-insight-title`;
+- `dns-insight-body`.
+
+## Shared Alert pattern
+
+`dns-alert` is the canonical operational alert/message treatment. Supported variants are:
+
+- `info`;
+- `success`;
+- `warning`;
+- `error`.
+
+Use `data-variant` for the semantic variant and the classes `dns-alert-title` and `dns-alert-body` for content. Alerts are for states requiring attention; Insight is for explanatory interpretation.
 
 ## Data-tool patterns
 
@@ -250,6 +282,7 @@ The common runtime is framework-agnostic and is published from `src/ui/accessibi
 - reduce motion override;
 - stronger keyboard focus;
 - comfortable UI density;
+- large reading text for explanatory content only;
 - Grid mode for stronger table cell boundaries;
 - reset to DNS defaults.
 
