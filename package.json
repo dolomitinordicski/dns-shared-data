@@ -115,6 +115,14 @@
     "./foundation": {
       "types": "./dist/foundation.d.ts",
       "import": "./dist/foundation.js"
+    },
+    "./shell-profiles": {
+      "types": "./dist/shell-profiles.d.ts",
+      "import": "./dist/shell-profiles.js"
+    },
+    "./ui/shell": {
+      "types": "./dist/ui/shell.d.ts",
+      "import": "./dist/ui/shell.js"
     }
   }
 }
