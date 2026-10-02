@@ -1,5 +1,5 @@
 export const DNS_GRAPHICS_BASE_URL =
-  'https://dolomitinordicski.github.io/dns-shared-data/graphics' as const;
+  'https://raw.githubusercontent.com/dolomitinordicski/dns-shared-data/release/v1.1.1/graphics' as const;
 
 export const DNS_FOOTER_GRAPHIC = {
   id: 'footer-swoosh',

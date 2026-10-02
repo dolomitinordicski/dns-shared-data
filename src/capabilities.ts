@@ -49,7 +49,7 @@ export const DNS_CAPABILITIES: Readonly<Record<DNSCapabilityId, DNSCapabilityDef
     implementation: 'foundation-native',
     labelKey: 'capability.export.csv',
     description: 'Export tabular data as UTF-8 CSV.',
-    accepts: ['rows', 'columns', 'filename'],
+    accepts: ['rows', 'columns', 'text', 'delimiter', 'bom', 'mimeType', 'filename'],
     produces: ['text/csv'],
     rules: ['Tool owns row/column selection; Foundation owns encoding and download mechanics.'],
   },

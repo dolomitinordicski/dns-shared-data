@@ -30,7 +30,7 @@ import { createDNSCapabilityRuntime, type DNSCapabilityAdapter, type DNSCapabili
 import type { DNSCapabilityId } from './capabilities.js';
 import { initDNSCapabilityUIRuntime } from './ui/capabilities.js';
 
-export const DNS_FOUNDATION_RUNTIME_VERSION = '1.1.0' as const;
+export const DNS_FOUNDATION_RUNTIME_VERSION = '1.1.1' as const;
 export const DNS_FOUNDATION_LANGUAGE_EVENT = 'dns:languagechange' as const;
 
 export interface DNSFoundationAccessibilityOptions {
@@ -440,9 +440,10 @@ export function initDNSFoundation(
   });
 
   const defaultFooterEnabled = shell.profile.footer.required;
-  if (options.footer !== false && (options.footer === true || defaultFooterEnabled)) {
-    initDNSFooterRuntime(documentRoot);
-  }
+  const footerRuntime =
+    options.footer !== false && (options.footer === true || defaultFooterEnabled)
+      ? initDNSFooterRuntime(documentRoot)
+      : null;
 
   const accessibilityConfig: DNSFoundationAccessibilityOptions =
     typeof options.accessibility === 'object'
@@ -497,9 +498,7 @@ export function initDNSFoundation(
       shell.refresh();
       chrome?.refresh();
       reveal?.refresh();
-      if (options.footer !== false && (options.footer === true || defaultFooterEnabled)) {
-        initDNSFooterRuntime(documentRoot);
-      }
+      footerRuntime?.refresh();
     },
     playMotion(element, semantic, motionOptions) {
       return semanticMotion?.play(element, semantic, motionOptions) ?? null;
@@ -514,6 +513,7 @@ export function initDNSFoundation(
       interaction?.disconnect();
       print?.disconnect();
       accessibility.disconnect();
+      footerRuntime?.disconnect();
       workspaceRuntime?.disconnect();
       shell.disconnect();
       listeners.clear();
