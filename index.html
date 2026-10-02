@@ -1039,7 +1039,7 @@
   </style>
 </head>
 
-<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.14.0">
+<body class="antialiased" data-dns-design-source="fallback" data-dns-design-version="1.18.0">
   <header data-dns-tool-header id="dns-site-header" class="dns-site-header text-white">
     <div class="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-6 px-5 py-3.5 md:px-8">
       <a id="dns-home-link" href="#top" class="flex min-w-0 items-center gap-4 text-white no-underline" aria-label="DNS Shared Data · page top">
@@ -2233,7 +2233,7 @@
         <article class="dns-card dns-card-primary p-5 md:p-6">
           <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <p class="dns-kicker">Accessibility runtime v1</p>
+              <p class="dns-kicker">Accessibility runtime v1.2</p>
               <h3 class="mt-1 text-[18px] font-semibold text-dns-deep">Aa · Alt + A</h3>
             </div>
             <span class="dns-pill">local-browser-only</span>
@@ -2245,6 +2245,8 @@
             <div class="dns-context-soft rounded-lg border p-4"><strong class="text-dns-deep">Reduce motion</strong><div class="mt-1 font-alt text-[10px] text-dns-muted">Motion override</div></div>
             <div class="dns-context-soft rounded-lg border p-4"><strong class="text-dns-deep">Strong focus</strong><div class="mt-1 font-alt text-[10px] text-dns-muted">Enhanced keyboard focus</div></div>
             <div class="dns-context-soft rounded-lg border p-4"><strong class="text-dns-deep">Comfort density</strong><div class="mt-1 font-alt text-[10px] text-dns-muted">Larger controls & table rows</div></div>
+            <div class="dns-context-soft rounded-lg border p-4"><strong class="text-dns-deep">Grid</strong><div class="mt-1 font-alt text-[10px] text-dns-muted">Stronger table boundaries</div></div>
+            <div class="dns-context-soft rounded-lg border p-4"><strong class="text-dns-deep">Large reading text</strong><div class="mt-1 font-alt text-[10px] text-dns-muted">Explanatory copy only</div></div>
           </div>
         </article>
 
@@ -2680,16 +2682,17 @@
     };
   </script>
   <script type="module">
-    import { DNS_DESIGN_SYSTEM } from './web-runtime/design-system.js';
-    import { DNS_DATA_CONTRACTS, DNS_DATA_CONTRACTS_VERSION } from './web-runtime/data-contracts.js';
+    import { DNS_DESIGN_SYSTEM } from './dist/design-system.js';
+    import { DNS_DATA_CONTRACTS, DNS_DATA_CONTRACTS_VERSION } from './dist/data-contracts.js';
     import {
       DNS_SYSTEM_STATUS,
       DNS_SYSTEM_STATUS_CRITERIA,
       DNS_SYSTEM_STATUS_VERIFIED_AT,
-    } from './web-runtime/system-status.js';
-    import { initDNSRevealRuntime, initDNSInteractionRuntime } from './web-runtime/runtime.js';
-    import { initDNSToolChromeRuntime } from './web-runtime/tool-chrome.js';
-    import { initDNSAccessibilityRuntime } from './web-runtime/accessibility.js';
+    } from './dist/system-status.js';
+    import { initDNSRevealRuntime } from './dist/ui/motion.js';
+    import { initDNSInteractionRuntime } from './dist/ui/interaction.js';
+    import { initDNSToolChromeRuntime } from './dist/ui/tool-chrome.js';
+    import { initDNSAccessibilityRuntime } from './dist/ui/accessibility.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
     import { collection, doc, getDoc, getDocs, getFirestore } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
 
@@ -3118,11 +3121,31 @@
         if (!snapshot.exists()) return;
 
         const remoteDesignSystem = mergeTokens(DNS_DESIGN_SYSTEM, snapshot.data());
+
+        const semverParts = (value) => String(value ?? '0.0.0').split('.').map((part) => Number(part) || 0);
+        const compareSemver = (a, b) => {
+          const av = semverParts(a);
+          const bv = semverParts(b);
+          for (let index = 0; index < Math.max(av.length, bv.length, 3); index += 1) {
+            const delta = (av[index] ?? 0) - (bv[index] ?? 0);
+            if (delta !== 0) return delta;
+          }
+          return 0;
+        };
+
+        // DNS Shared Data is the reference consumer: an older DNS_Core token
+        // document must never downgrade the canonical package shipped by this repo.
+        if (compareSemver(remoteDesignSystem.version, activeDesignSystem.version) < 0) {
+          console.info(
+            'DNS_Core Design System is older than the canonical package; keeping local Foundation.',
+            { remote: remoteDesignSystem.version, local: activeDesignSystem.version },
+          );
+          return;
+        }
+
         const sameVersion = remoteDesignSystem.version === activeDesignSystem.version;
         const sameRuntime = runtimeSignature(remoteDesignSystem) === runtimeSignature(activeDesignSystem);
 
-        // Avoid a second visual pass when DNS_Core contains the exact same
-        // semantic version already shipped as the local fallback.
         if (!sameVersion) {
           applyVariables(remoteDesignSystem);
         }
