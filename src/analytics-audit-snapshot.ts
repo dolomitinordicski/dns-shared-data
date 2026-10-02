@@ -1,3 +1,4 @@
+// A.3.11 zero-loss audit snapshot — verification copy only; not operational source.
 export const ANALYTICS_AUDIT_SNAPSHOT_VERSION = '1.0.0' as const;
 
 export const ANALYTICS_LEGACY_AUDIT_SNAPSHOT = {
