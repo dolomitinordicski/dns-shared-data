@@ -2,15 +2,20 @@
 
 ## What happens
 
-When a published GitHub Release uses a `foundation-vX.Y.Z` tag, the
-`Propagate DNS Foundation release` workflow sends that exact tag to each
-registered consumer. Each consumer installs and validates the pinned version,
-then opens or refreshes its reviewable update PR. Weekly and manual consumer
-checks remain available as recovery paths.
+When `Release DNS Foundation` publishes a `foundation-vX.Y.Z` release, it
+calls the reusable `Propagate DNS Foundation release` workflow explicitly.
+This avoids relying on a second workflow being triggered by a Release event
+created with the repository `GITHUB_TOKEN`, which GitHub intentionally
+suppresses to prevent recursive workflow chains.
 
-The release propagation can be replayed from Actions with a previously
-published tag if a dispatch needs recovery. The release itself remains an
-explicit, version-controlled action.
+The propagation workflow sends that exact immutable tag to each registered
+consumer. Each consumer installs and validates the pinned version, then opens
+or refreshes its reviewable update PR. The standalone `release.published`
+trigger remains available for releases created outside the release workflow,
+and `workflow_dispatch` remains the recovery/replay path for an already
+published tag.
+
+Weekly consumer checks remain available as a final recovery path.
 
 ## One-time GitHub App setup
 
