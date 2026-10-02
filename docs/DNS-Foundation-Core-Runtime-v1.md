@@ -266,3 +266,17 @@ foundation.workspaceRuntime?.setMobilePanelOpen(true);
 ```
 
 See `docs/DNS-Assets-Workspace-v1.md`.
+
+## 19. Stable release
+
+F8 freezes the Core Runtime as part of Foundation 1.0.0.
+
+Consumers target:
+
+```text
+release/v1.0.0
+```
+
+The release manifest records the exact Runtime, Design System and Data Contracts versions. Development `main` is not a production consumer pin.
+
+See `docs/DNS-Foundation-Release-Freeze-v1.md`.
