@@ -122,6 +122,8 @@ If Italian display text is unavailable, use the German display value according t
 
 Do not store translated display strings as relational keys.
 
+Canonical localized records may contain additional metadata languages such as existing English names; UI consumers still resolve only DE/IT and fall back to DE.
+
 ## 8. Formatting
 
 Formatting must use Foundation helpers or equivalent shared runtime behavior, not per-tool string formatting.
@@ -133,11 +135,21 @@ de → de-IT
 it → it-IT
 ```
 
+Canonical operational timezone:
+
+```text
+Europe/Rome
+```
+
+This timezone is used to avoid client-device timezone drift in shared formatting. Domain workflows may explicitly override it when a real event/document requires another IANA timezone.
+
 Foundation owns formatting behavior for:
 - numbers;
 - currency;
 - percentages;
 - dates/times where no domain-specific format is mandated.
+
+Scheduled/event output such as ICS should carry an explicit event timezone when available rather than relying on the viewer device.
 
 Raw values remain language-neutral.
 
