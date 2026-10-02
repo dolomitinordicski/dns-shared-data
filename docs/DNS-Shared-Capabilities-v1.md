@@ -1,6 +1,6 @@
 # DNS Shared Capabilities Contract v1.0
 
-**Foundation release:** 1.1.0  
+**Foundation release:** 1.1.1  
 **Status:** stable shared capability contract
 
 ## 1. Purpose
@@ -72,6 +72,7 @@ Foundation owns:
 
 Tool owns:
 - which data is exported;
+- optional pre-serialization when workflow-specific CSV layout cannot be expressed as generic rows/columns;
 - columns/sheets/content;
 - business validation;
 - permissions;
@@ -104,6 +105,14 @@ Then:
 await foundation.capabilityRuntime.run('export.csv', {
   filename: 'daten.csv',
   rows,
+});
+
+// Workflow-specific CSV may also be pre-serialized by the tool while
+// Foundation remains responsible for the governed download capability.
+await foundation.capabilityRuntime.run('export.csv', {
+  filename: 'nummerierung.csv',
+  text: csvText,
+  mimeType: 'text/csv;charset=utf-8',
 });
 
 await foundation.capabilityRuntime.run('export.xlsx', workbookPayload);
