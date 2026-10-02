@@ -1,0 +1,27 @@
+{
+  "foundationRelease": "1.1.3",
+  "ref": "release/v1.1.3",
+  "refType": "immutable-release-branch",
+  "channel": "stable",
+  "status": "frozen",
+  "releasedAt": "2026-10-02",
+  "components": {
+    "foundationRuntime": "1.1.3",
+    "designSystem": "1.25.0",
+    "dataContracts": "0.8.0",
+    "capabilities": "1.0.0"
+  },
+  "scope": "F0-F8 + C1 + F9.A header-only chrome compatibility",
+  "supportedUILanguages": ["de", "it"],
+  "shellProfiles": ["operational", "portal", "workspace"],
+  "consumerPinning": {
+    "required": true,
+    "target": "release/v1.1.3",
+    "prohibited": ["main", "master", "raw-commit-sha"]
+  },
+  "fixes": [
+    "Canonical Tool Chrome styles initialize independently of navigation presence.",
+    "Header-only routes receive canonical sticky/header styling and deferred route handling.",
+    "Browser runtime mirrors are aligned with the package runtime for header-only routes."
+  ]
+}
