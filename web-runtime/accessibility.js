@@ -1,6 +1,6 @@
 // Browser runtime mirror of src/ui/accessibility.ts.
 // Source of truth remains the TypeScript module in src/ui/accessibility.ts.
-export const DNS_ACCESSIBILITY_RUNTIME_VERSION = '1.0.0';
+export const DNS_ACCESSIBILITY_RUNTIME_VERSION = '1.2.0';
 
 export const DNS_ACCESSIBILITY_DEFAULTS = {
   textScale: 100,
@@ -9,6 +9,8 @@ export const DNS_ACCESSIBILITY_DEFAULTS = {
   reduceMotion: false,
   strongFocus: false,
   comfortableDensity: false,
+  grid: false,
+  largeReadingText: false,
 };
 
 const STYLE_ID = 'dns-accessibility-runtime-style';
@@ -27,6 +29,8 @@ const COPY = {
     reduceMotion: 'Bewegung reduzieren',
     strongFocus: 'Fokus verstärken',
     comfortableDensity: 'Komfortable Dichte',
+    grid: 'Grid',
+    largeReadingText: 'Sehr großer Lesetext',
     reset: 'Zurücksetzen',
     close: 'Schließen',
     local: 'Einstellungen werden nur in diesem Browser gespeichert.',
@@ -44,6 +48,8 @@ const COPY = {
     reduceMotion: 'Riduci movimento',
     strongFocus: 'Focus rinforzato',
     comfortableDensity: 'Densità confortevole',
+    grid: 'Grid',
+    largeReadingText: 'Testo di lettura molto grande',
     reset: 'Ripristina',
     close: 'Chiudi',
     local: 'Le preferenze vengono salvate solo in questo browser.',
@@ -104,6 +110,10 @@ html.dns-a11y-relaxed-spacing :is(p, li, td, th, label) {
   line-height: 1.65 !important;
   letter-spacing: .015em;
 }
+/* DNS Foundation v1.16: tables use a subtle alternating Deep Glacier Blue tint by default. */
+table tbody tr:nth-child(even) > :is(td, th) {
+  background: var(--dns-table-row-alt, rgba(170,208,209,.18));
+}
 html.dns-a11y-reduce-motion *,
 html.dns-a11y-reduce-motion *::before,
 html.dns-a11y-reduce-motion *::after {
@@ -119,6 +129,14 @@ html.dns-a11y-strong-focus :is(button, a[href], input, select, textarea, [tabind
 }
 html.dns-a11y-comfort-density :is(button, input, select, textarea) { min-height: 44px; }
 html.dns-a11y-comfort-density :is(th, td) { padding-top: .75rem !important; padding-bottom: .75rem !important; }
+html.dns-a11y-grid table { border-collapse: collapse !important; }
+html.dns-a11y-grid :is(table, th, td) { border-color: var(--dns-table-grid-strong, rgba(65,116,131,.42)) !important; }
+html.dns-a11y-grid :is(th, td) { border-width: 1px !important; border-style: solid !important; }
+html.dns-a11y-large-reading-text :is(.dns-readable-copy, .dns-insight-body, .dns-alert-body, .analytics-editorial-summary p, .analytics-methodology p, .analytics-assumption-note) {
+  font-size: var(--dns-reading-text-large-size, 16px) !important;
+  line-height: var(--dns-reading-text-large-line-height, 1.7) !important;
+  letter-spacing: .005em;
+}
 
 .dns-a11y-trigger {
   display: inline-flex;
@@ -263,6 +281,8 @@ function applySettings(settings) {
   root.classList.toggle('dns-a11y-reduce-motion', settings.reduceMotion);
   root.classList.toggle('dns-a11y-strong-focus', settings.strongFocus);
   root.classList.toggle('dns-a11y-comfort-density', settings.comfortableDensity);
+  root.classList.toggle('dns-a11y-grid', settings.grid);
+  root.classList.toggle('dns-a11y-large-reading-text', settings.largeReadingText);
   root.dataset.dnsA11yTextScale = String(settings.textScale);
 }
 
@@ -334,6 +354,8 @@ export function initDNSAccessibilityRuntime(options = {}) {
             ['reduceMotion', c.reduceMotion],
             ['strongFocus', c.strongFocus],
             ['comfortableDensity', c.comfortableDensity],
+            ['grid', c.grid],
+            ['largeReadingText', c.largeReadingText],
           ].map(([key, label]) => `
             <label class="dns-a11y-toggle">
               <span>${label}</span>
