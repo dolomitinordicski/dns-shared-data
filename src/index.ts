@@ -17,6 +17,7 @@ export * from './ui/accessibility.js';
 export * from './ui/navigation.js';
 export * from './ui/tool-chrome.js';
 export * from './ui/print.js';
+export * from './ui/footer.js';
 
 export * from './ui/content-patterns.js';
 export * from './ui/primitives.js';
