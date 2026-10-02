@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.17.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.18.0' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -316,6 +316,60 @@ export const DNS_DESIGN_SYSTEM = {
     alternateRowSource: 'colors.light',
     gridStrongBorder: 'rgba(65,116,131,.42)',
     zebraRows: true,
+  },
+  statusSystem: {
+    values: ['draft','live','locked','ready','warning','error','archived','synced'],
+    className: 'dns-status',
+  },
+  applicationStates: {
+    values: ['loading','empty','error','offline'],
+    className: 'dns-state',
+  },
+  actions: {
+    className: 'dns-button',
+    variants: ['primary','secondary','tertiary','danger','icon'],
+    minHeightPx: 36,
+  },
+  forms: {
+    fieldClassName: 'dns-field',
+    labelClassName: 'dns-field-label',
+    helpClassName: 'dns-field-help',
+    errorClassName: 'dns-field-error',
+    inputClassName: 'dns-input',
+    selectClassName: 'dns-select',
+    textareaClassName: 'dns-textarea',
+    checkClassName: 'dns-check',
+  },
+  tableV2: {
+    wrapperClassName: 'dns-table-wrap',
+    tableClassName: 'dns-table',
+    numericClassName: 'dns-num',
+    totalClassName: 'dns-total',
+    subtotalClassName: 'dns-subtotal',
+    stickyColumnClassName: 'dns-sticky-col',
+    stickyHeader: true,
+    zebraRows: true,
+    supportsSelection: true,
+    supportsDirtyState: true,
+    supportsSorting: true,
+  },
+  contentHierarchy: {
+    note: 'dns-note',
+    methodology: 'dns-methodology',
+    source: 'dns-source',
+    definition: 'dns-definition',
+    help: 'dns-help',
+  },
+  toolbar: {
+    className: 'dns-toolbar',
+    groupClassName: 'dns-toolbar-group',
+    contextSelectClassName: 'dns-context-select',
+  },
+  overlays: {
+    modalClassName: 'dns-modal',
+    modalOverlayClassName: 'dns-modal-overlay',
+    toastClassName: 'dns-toast',
+    toastVariants: ['info','success','warning','error'],
   },
   controls: {
     radiusPx: 6,
