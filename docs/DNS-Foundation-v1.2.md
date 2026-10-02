@@ -1308,4 +1308,24 @@ The package remains private/internal to DNS; F8 does not publish to the public n
 
 ---
 
+## 51. C1 shared capabilities
+
+Foundation 1.1.0 adds a governed capability registry for shared export/import/utility behavior.
+
+Normative contract:
+
+```text
+src/capabilities.ts
+src/capability-runtime.ts
+src/ui/capabilities.ts
+docs/DNS-Shared-Capabilities-v1.md
+```
+
+Native Foundation capabilities cover CSV/JSON import-export, ICS, clipboard and print. Specialist XLSX/PDF/ZIP/image/QR behavior is registered behind adapters.
+
+Tools declare capabilities and retain ownership of datasets, business validation, document content and workflow-specific payloads. F9 may later detect local implementations that bypass this contract.
+
+
+---
+
 **End of DNS Foundation v1.2**
