@@ -5,7 +5,7 @@ import { DNS_FOUNDATION_RUNTIME_VERSION } from './foundation.js';
 export const DNS_FOUNDATION_RELEASE_VERSION = '1.2.0' as const;
 export const DNS_FOUNDATION_RELEASE_CHANNEL = 'stable' as const;
 export const DNS_FOUNDATION_RELEASE_STATUS = 'frozen' as const;
-export const DNS_FOUNDATION_RELEASE_REF = 'release/v1.2.0' as const;
+export const DNS_FOUNDATION_RELEASE_REF = 'foundation-v1.2.0' as const;
 
 export const DNS_FOUNDATION_RELEASE = {
   version: DNS_FOUNDATION_RELEASE_VERSION,
