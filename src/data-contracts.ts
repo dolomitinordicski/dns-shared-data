@@ -1,4 +1,4 @@
-export const DNS_DATA_CONTRACTS_VERSION = '0.6.0' as const;
+export const DNS_DATA_CONTRACTS_VERSION = '0.7.0' as const;
 
 export const DNS_DATA_CONTRACTS = [
   {
@@ -143,17 +143,17 @@ export const DNS_DATA_CONTRACTS = [
   },
   {
     id: 'fair',
-    label: 'FAIR model & results',
+    label: 'FAIR model, approved inputs & results',
     status: 'foundation-defined',
     owner: 'FAIR',
     runtime: 'DNS Platform / target',
-    collections: [],
-    source: 'DNS Foundation v1.2',
-    schema: 'Contract to be finalized during FAIR refactor',
-    write: 'FAIR calculation / authorized FAIR management',
-    read: 'FAIR · Analytics management view',
-    fields: ['seasonId', 'scopeId', 'parameters', 'score', 'contribution', 'approvalStatus'],
-    relations: ['Analytics facts → FAIR', 'FAIR parameters → FAIR result', 'FAIR result → Analytics/Management View'],
+    collections: ['fairInputSnapshots', 'fairResultSnapshots'],
+    source: 'src/fair-governance.ts · docs/DNS-FAIR-Reproducibility-v1.md',
+    schema: 'FAIR Governance v1.0 · persistence implementation pending',
+    write: 'FAIR calculation / authorized FAIR management after institutional approval',
+    read: 'FAIR · Analytics management view · authorized billing preparation',
+    fields: ['snapshotId', 'resultSnapshotId', 'inputSnapshotId', 'seasonId', 'revision', 'status', 'canonicalDatasetVersion', 'fairModelVersion', 'records', 'rows', 'approval', 'integrityHash'],
+    relations: ['Authoritative operational facts → FAIR input snapshot', 'Approved FAIR input snapshot → FAIR calculation', 'FAIR calculation → FAIR result snapshot', 'Approved FAIR result snapshot → Analytics/Management/Billing Preparation'],
   },
 ] as const;
 
