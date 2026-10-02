@@ -13,7 +13,7 @@ This repository contains:
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.3
-- **DNS Design System:** v1.22
+- **DNS Design System:** v1.23
 - **DNS Access Control:** v0.1
 
 ## Source of truth
@@ -61,7 +61,7 @@ firebase.json
 
 ## DNS Design System
 
-The current shared visual and interaction contract is **v1.22.0** and is documented in:
+The current shared visual and interaction contract is **v1.23.0** and is documented in:
 
 ```text
 docs/DNS-Design-System-v1.md
@@ -77,6 +77,25 @@ The GitHub Pages architecture overview is also the visual reference implementati
 
 
 
+
+
+## Foundation identity / membership / access UI
+
+F6 standardizes authenticated context presentation:
+
+```text
+User → Membership → Organization
+User → Access Grant → Scope/Permissions
+```
+
+Foundation renders account context, organization switcher, membership role, access indicators and session actions. Authentication, tokens and authorization decisions remain platform-owned.
+
+Contract:
+
+```text
+docs/DNS-Identity-Access-UI-v1.md
+@dolomitinordicski/dns-shared-data/identity-ui
+```
 
 ## Foundation overlays, forms, uploads & data UI
 
