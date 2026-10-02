@@ -187,6 +187,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Public Analytics read model. Only the exact season document can be
+    // fetched publicly, and only after trusted publication. Listing/searching
+    // the collection and all client writes remain blocked.
+    match /analyticsPublicSnapshots/{seasonId} {
+      allow get: if resource.data.publicationStatus == 'published'
+                 && resource.data.seasonId == seasonId;
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
     // Private authorization metadata.
     match /users/{userId} {
       allow read: if signedIn() && request.auth.uid == userId;
