@@ -1,5 +1,5 @@
 // GENERATED BROWSER MIRROR — source of truth: src/data-contracts.ts
-// Keep this file synchronized with the canonical TypeScript contract.
+// Keep this file synchronized with the canonical TypeScript catalog.
 export const DNS_DATA_CONTRACTS_VERSION = '0.8.0';
 
 export const DNS_DATA_CONTRACTS = [
