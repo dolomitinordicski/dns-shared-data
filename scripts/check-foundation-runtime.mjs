@@ -5,7 +5,7 @@ import {
 
 const errors = [];
 
-if (DNS_FOUNDATION_RUNTIME_VERSION !== '1.1.2') {
+if (DNS_FOUNDATION_RUNTIME_VERSION !== '1.1.3') {
   errors.push('Unexpected Foundation runtime version.');
 }
 
