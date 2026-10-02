@@ -1,4 +1,4 @@
-export const DNS_ACCESSIBILITY_RUNTIME_VERSION = '1.1.0' as const;
+export const DNS_ACCESSIBILITY_RUNTIME_VERSION = '1.2.0' as const;
 
 export type DNSAccessibilityLanguage = 'de' | 'it';
 
@@ -10,6 +10,7 @@ export interface DNSAccessibilitySettings {
   strongFocus: boolean;
   comfortableDensity: boolean;
   grid: boolean;
+  largeReadingText: boolean;
 }
 
 export interface DNSAccessibilityRuntimeOptions {
@@ -27,6 +28,7 @@ export const DNS_ACCESSIBILITY_DEFAULTS: DNSAccessibilitySettings = {
   strongFocus: false,
   comfortableDensity: false,
   grid: false,
+  largeReadingText: false,
 };
 
 const STYLE_ID = 'dns-accessibility-runtime-style';
@@ -46,6 +48,7 @@ const COPY = {
     strongFocus: 'Fokus verstärken',
     comfortableDensity: 'Komfortable Dichte',
     grid: 'Grid',
+    largeReadingText: 'Sehr großer Lesetext',
     reset: 'Zurücksetzen',
     close: 'Schließen',
     local: 'Einstellungen werden nur in diesem Browser gespeichert.',
@@ -64,6 +67,7 @@ const COPY = {
     strongFocus: 'Focus rinforzato',
     comfortableDensity: 'Densità confortevole',
     grid: 'Grid',
+    largeReadingText: 'Testo di lettura molto grande',
     reset: 'Ripristina',
     close: 'Chiudi',
     local: 'Le preferenze vengono salvate solo in questo browser.',
@@ -146,6 +150,11 @@ html.dns-a11y-comfort-density :is(th, td) { padding-top: .75rem !important; padd
 html.dns-a11y-grid table { border-collapse: collapse !important; }
 html.dns-a11y-grid :is(table, th, td) { border-color: var(--dns-table-grid-strong, rgba(65,116,131,.42)) !important; }
 html.dns-a11y-grid :is(th, td) { border-width: 1px !important; border-style: solid !important; }
+html.dns-a11y-large-reading-text :is(.dns-readable-copy, .dns-insight-body, .dns-alert-body, .analytics-editorial-summary p, .analytics-methodology p, .analytics-assumption-note) {
+  font-size: var(--dns-reading-text-large-size, 16px) !important;
+  line-height: var(--dns-reading-text-large-line-height, 1.7) !important;
+  letter-spacing: .005em;
+}
 
 .dns-a11y-trigger {
   display: inline-flex;
@@ -291,6 +300,7 @@ function applySettings(settings: DNSAccessibilitySettings) {
   root.classList.toggle('dns-a11y-strong-focus', settings.strongFocus);
   root.classList.toggle('dns-a11y-comfort-density', settings.comfortableDensity);
   root.classList.toggle('dns-a11y-grid', settings.grid);
+  root.classList.toggle('dns-a11y-large-reading-text', settings.largeReadingText);
   root.dataset.dnsA11yTextScale = String(settings.textScale);
 }
 
@@ -363,6 +373,7 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
             ['strongFocus', c.strongFocus],
             ['comfortableDensity', c.comfortableDensity],
             ['grid', c.grid],
+            ['largeReadingText', c.largeReadingText],
           ].map(([key, label]) => `
             <label class="dns-a11y-toggle">
               <span>${label}</span>
