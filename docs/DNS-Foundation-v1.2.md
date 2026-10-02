@@ -1138,4 +1138,31 @@ Tool repositories may not create independent shell systems or a fourth local she
 
 ---
 
+## 45. F3 print profiles
+
+Foundation print output uses three canonical profiles:
+
+```text
+operational-table
+report
+document
+```
+
+The normative contract is:
+
+```text
+src/print-profiles.ts
+src/ui/print.ts
+docs/DNS-Print-Profiles-v1.md
+```
+
+Operational Table remains the default for current dense DNS tools. Report provides document-flow geometry for analytical/management output. Document provides formal transactional/document geometry.
+
+`creative-export` is not a Foundation print profile. Flyer Studio creative output remains owned by its authoring/export engine; Foundation governs the editor UI and export controls only.
+
+The legacy direct `DNS_DESIGN_SYSTEM.print` token object is retained temporarily for migration compatibility and must be removed from consumer-specific print setup during consolidation.
+
+
+---
+
 **End of DNS Foundation v1.2**
