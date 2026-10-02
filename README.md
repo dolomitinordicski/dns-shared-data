@@ -13,7 +13,7 @@ This repository contains:
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.3
-- **DNS Design System:** v1.20
+- **DNS Design System:** v1.21
 - **DNS Access Control:** v0.1
 
 ## Source of truth
@@ -61,7 +61,7 @@ firebase.json
 
 ## DNS Design System
 
-The current shared visual and interaction contract is **v1.20.0** and is documented in:
+The current shared visual and interaction contract is **v1.21.0** and is documented in:
 
 ```text
 docs/DNS-Design-System-v1.md
@@ -75,6 +75,30 @@ The GitHub Pages architecture overview is also the visual reference implementati
 
 
 
+
+
+## Foundation motion & interaction semantics
+
+F4 replaces application-owned motion values with shared semantic events:
+
+```text
+enter · exit · expand · collapse · modal · drawer · toast · tab · contextChange · loading
+```
+
+Interaction feedback uses semantic roles:
+
+```text
+action · selection · toggle · navigation · destructive
+```
+
+Contract:
+
+```text
+docs/DNS-Motion-Interaction-Semantics-v1.md
+@dolomitinordicski/dns-shared-data/motion-semantics
+```
+
+Consumers trigger semantic motion through `foundation.playMotion()`. Both system reduced-motion and the DNS Accessibility “reduce motion” setting suppress movement and resolve the final state directly.
 
 ## Foundation print profiles
 
