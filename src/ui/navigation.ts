@@ -369,13 +369,8 @@ export function initDNSNavigationStyles(
   const headerTokens = options.headerTokens ?? DNS_DESIGN_SYSTEM.header;
   const motion = options.motion ?? DNS_DESIGN_SYSTEM.motion;
 
-  initDNSNavigationStyles({
-    root: documentRoot,
-    navigation,
-    responsive,
-    headerTokens,
-    motion,
-  });
+  setNavigationVariables(documentRoot.documentElement, navigation, headerTokens, motion);
+  ensureNavigationStyles(documentRoot, navigation, responsive);
 }
 
 function pageTop(element: HTMLElement) {
