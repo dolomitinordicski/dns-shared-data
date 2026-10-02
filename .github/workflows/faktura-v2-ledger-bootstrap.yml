@@ -1,0 +1,75 @@
+name: Faktura v2 ledger bootstrap
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Apply ledger changes (false = dry run)"
+        required: true
+        default: false
+        type: boolean
+      confirmation:
+        description: "When apply=true, type BOOTSTRAP 2026-27"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout Faktura v2 branch
+        uses: actions/checkout@v4
+        with:
+          repository: dolomitinordicski/DNS-Faktura
+          ref: refactor/faktura-v2-domain
+          path: faktura
+
+      - name: Check Firebase credentials
+        shell: bash
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::Missing FIREBASE_SERVICE_ACCOUNT_DNS_CORE repository secret."
+            exit 1
+          fi
+
+      - name: Guard apply mode
+        if: ${{ inputs.apply }}
+        shell: bash
+        run: |
+          if [ "${{ inputs.confirmation }}" != "BOOTSTRAP 2026-27" ]; then
+            echo "::error::Apply mode requires confirmation text: BOOTSTRAP 2026-27"
+            exit 1
+          fi
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Faktura tooling dependencies
+        run: npm --prefix faktura/functions install --ignore-scripts
+
+      - name: Dry-run ledger bootstrap
+        if: ${{ !inputs.apply }}
+        run: node faktura/functions/scripts/ledger-bootstrap.mjs --season=2026-27
+        env:
+          GOOGLE_CLOUD_PROJECT: dns-core
+
+      - name: Apply ledger bootstrap
+        if: ${{ inputs.apply }}
+        run: node faktura/functions/scripts/ledger-bootstrap.mjs --season=2026-27 --apply
+        env:
+          GOOGLE_CLOUD_PROJECT: dns-core
+          ALLOW_FAKTURA_LEDGER_BOOTSTRAP: "YES"
