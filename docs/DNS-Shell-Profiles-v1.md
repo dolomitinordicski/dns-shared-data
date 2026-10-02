@@ -205,3 +205,10 @@ During consolidation:
 - Flyer Studio → `workspace`
 
 Migration changes shell/runtime ownership only. Tool-specific engines remain untouched.
+
+
+## 12. F6 identity/access integration
+
+Portal and authenticated Workspace shells use the shared F6 account, organization, membership and access presentation contract. Operational tools may opt into the same context only when authenticated identity is part of their workflow.
+
+The shell renders resolved context; it does not calculate authorization.
