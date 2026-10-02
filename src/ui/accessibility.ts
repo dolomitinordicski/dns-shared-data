@@ -124,6 +124,10 @@ html.dns-a11y-relaxed-spacing :is(p, li, td, th, label) {
   line-height: 1.65 !important;
   letter-spacing: .015em;
 }
+/* DNS Foundation v1.16: tables use a subtle alternating Deep Glacier Blue tint by default. */
+table tbody tr:nth-child(even) > :is(td, th) {
+  background: var(--dns-table-row-alt, rgba(170,208,209,.18));
+}
 html.dns-a11y-reduce-motion *,
 html.dns-a11y-reduce-motion *::before,
 html.dns-a11y-reduce-motion *::after {
