@@ -10,6 +10,8 @@ export * from './billing-preparation.js';
 export * from './fair-governance.js';
 export * from './localization.js';
 export * from './foundation.js';
+export * from './shell-profiles.js';
+export * from './ui/shell.js';
 export * from './area-allocation-keys.js';
 export * from './ui/motion.js';
 export * from './ui/interaction.js';
