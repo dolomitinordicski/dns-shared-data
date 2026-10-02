@@ -18,6 +18,7 @@ export const DNS_FOUNDATION_RELEASE = {
     foundationRuntime: DNS_FOUNDATION_RUNTIME_VERSION,
     designSystem: DNS_DESIGN_SYSTEM_VERSION,
     dataContracts: DNS_DATA_CONTRACTS_VERSION,
+    capabilities: '1.0.0',
   },
   compatibleShellProfiles: ['operational', 'portal', 'workspace'],
   supportedUILanguages: ['de', 'it'],
