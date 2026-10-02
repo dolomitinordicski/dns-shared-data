@@ -2341,7 +2341,7 @@
     </section>
   </main>
 
-  <footer class="dns-site-footer mt-6 text-white">
+  <footer data-dns-tool-footer class="dns-site-footer mt-6 text-white">
     <div class="mx-auto flex w-full max-w-[1440px] flex-col gap-1 px-5 py-5 md:flex-row md:items-center md:justify-between md:px-8">
       <div class="text-[11px] font-semibold uppercase tracking-[.05em] text-white/80">
         Dolomiti NordicSki · DNS Shared Data
@@ -2351,6 +2351,11 @@
       </div>
     </div>
   </footer>
+
+  <script type="module">
+    import { initDNSFooterRuntime } from './dist/ui/footer.js';
+    initDNSFooterRuntime();
+  </script>
 
   <script>
     function setLang(lang) {
