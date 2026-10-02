@@ -1,4 +1,5 @@
 import { DNS_DESIGN_SYSTEM } from '../design-system.js';
+import { getDNSPrintProfile, type DNSPrintProfile, type DNSPrintProfileId } from '../print-profiles.js';
 
 type WidenToken<T> =
   T extends string ? string :
@@ -12,17 +13,100 @@ export type DNSPrintTokens = WidenToken<typeof DNS_DESIGN_SYSTEM.print>;
 
 export interface DNSPrintRuntimeOptions {
   root?: Document;
+  /**
+   * Canonical F3 print profile. Preferred for new consumers.
+   */
+  profile?: DNSPrintProfileId;
+  /**
+   * Legacy token override kept only for migration compatibility.
+   */
   print?: DNSPrintTokens;
 }
 
 export interface DNSPrintRuntimeHandle {
+  readonly profileId: DNSPrintProfileId | 'legacy';
   printNow(): void;
   disconnect(): void;
 }
 
+
+type RuntimePrintShape = {
+  pageSize: string;
+  orientation: string;
+  marginMm: number;
+  logoHeightMm: number;
+  header: {
+    marginBottomMm: number;
+    dividerWidthMm: number;
+    dividerColor: string;
+  };
+  typography: {
+    titleSizePt: number;
+    metaSizePt: number;
+    bodySizePt: number;
+    tableHeaderSizePt: number;
+    tableBodySizePt: number;
+    totalSizePt: number;
+    lineHeight: number;
+  };
+  table: {
+    borderColor: string;
+    headerBackground: string;
+    headerTextColor: string;
+    bodyTextColor: string;
+    totalBackground: string;
+    totalTextColor: string;
+    cellPaddingMmX: number;
+    cellPaddingMmY: number;
+    repeatHeaderOnPageBreak: boolean;
+    avoidRowBreaks: boolean;
+    useTabularNumbers: boolean;
+  };
+};
+
+function fromProfile(profile: DNSPrintProfile): RuntimePrintShape {
+  return {
+    pageSize: profile.pageSize,
+    orientation: profile.orientation,
+    marginMm: profile.marginMm,
+    logoHeightMm: profile.logoHeightMm,
+    header: {
+      marginBottomMm: profile.header.marginBottomMm,
+      dividerWidthMm: profile.header.dividerWidthMm,
+      dividerColor: profile.header.dividerColor,
+    },
+    typography: profile.typography,
+    table: profile.table,
+  };
+}
+
+function fromLegacy(print: DNSPrintTokens): RuntimePrintShape {
+  return {
+    pageSize: print.pageSize,
+    orientation: print.orientation,
+    marginMm: print.marginMm,
+    logoHeightMm: print.logoHeightMm,
+    header: {
+      marginBottomMm: print.header.marginBottomMm,
+      dividerWidthMm: print.header.dividerWidthMm,
+      dividerColor: print.header.dividerColor,
+    },
+    typography: {
+      titleSizePt: print.typography.titleSizePt,
+      metaSizePt: print.typography.metaSizePt,
+      bodySizePt: 8,
+      tableHeaderSizePt: print.typography.tableHeaderSizePt,
+      tableBodySizePt: print.typography.tableBodySizePt,
+      totalSizePt: print.typography.totalSizePt,
+      lineHeight: print.typography.lineHeight,
+    },
+    table: print.table,
+  };
+}
+
 const STYLE_ID = 'dns-print-runtime-style';
 
-function ensurePrintStyles(documentRoot: Document, print: DNSPrintTokens) {
+function ensurePrintStyles(documentRoot: Document, print: RuntimePrintShape, profileId: DNSPrintProfileId | 'legacy') {
   let style = documentRoot.getElementById(STYLE_ID) as HTMLStyleElement | null;
   if (!style) {
     style = documentRoot.createElement('style');
@@ -61,6 +145,8 @@ function ensurePrintStyles(documentRoot: Document, print: DNSPrintTokens) {
     background: #fff !important;
     color: ${p.table.bodyTextColor} !important;
     font-family: "Be Vietnam Pro", sans-serif;
+    font-size: ${p.typography.bodySizePt}pt;
+    line-height: ${p.typography.lineHeight};
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -146,6 +232,59 @@ function ensurePrintStyles(documentRoot: Document, print: DNSPrintTokens) {
     object-fit: contain;
     vertical-align: middle;
   }
+
+  .dns-print-section {
+    break-inside: avoid-page;
+    margin: 0 0 6mm;
+  }
+
+  .dns-print-section-title {
+    margin: 0 0 2.5mm;
+    font-size: ${profileId === 'operational-table' ? p.typography.titleSizePt : Math.max(11, p.typography.titleSizePt - 2)}pt;
+    line-height: 1.2;
+    color: ${p.table.headerTextColor};
+  }
+
+  .dns-print-copy,
+  .dns-print-methodology,
+  .dns-print-source,
+  .dns-print-note {
+    font-size: ${p.typography.bodySizePt}pt;
+    line-height: ${p.typography.lineHeight};
+  }
+
+  .dns-print-source,
+  .dns-print-methodology {
+    color: #5A7F8A;
+  }
+
+  .dns-print-page-break-before { break-before: page !important; page-break-before: always !important; }
+  .dns-print-page-break-after { break-after: page !important; page-break-after: always !important; }
+  .dns-print-avoid-break { break-inside: avoid !important; page-break-inside: avoid !important; }
+
+  .dns-print-signature-area {
+    margin-top: 12mm;
+    min-height: 24mm;
+    break-inside: avoid;
+  }
+
+  .dns-print-signature-line {
+    display: block;
+    width: 70mm;
+    margin-top: 14mm;
+    border-top: .2mm solid ${p.table.borderColor};
+    padding-top: 1.5mm;
+    font-size: ${p.typography.metaSizePt}pt;
+    color: #5A7F8A;
+  }
+
+  html[data-dns-print-profile="report"] .dns-print-sheet {
+    max-width: 100%;
+  }
+
+  html[data-dns-print-profile="document"] .dns-print-sheet {
+    max-width: 100%;
+  }
 }
 `;
 }
@@ -157,18 +296,28 @@ export function initDNSPrintRuntime(
     options.root ?? (typeof document !== 'undefined' ? document : undefined);
 
   if (!documentRoot || typeof window === 'undefined') {
-    return { printNow() {}, disconnect() {} };
+    return { profileId: options.profile ?? 'operational-table', printNow() {}, disconnect() {} };
   }
 
-  const print = options.print ?? DNS_DESIGN_SYSTEM.print;
-  ensurePrintStyles(documentRoot, print);
+  const profileId: DNSPrintProfileId | 'legacy' =
+    options.profile ?? (options.print ? 'legacy' : 'operational-table');
+
+  const print =
+    profileId === 'legacy'
+      ? fromLegacy(options.print ?? DNS_DESIGN_SYSTEM.print)
+      : fromProfile(getDNSPrintProfile(profileId));
+
+  ensurePrintStyles(documentRoot, print, profileId);
+  documentRoot.documentElement.dataset.dnsPrintProfile = profileId;
 
   return {
+    profileId,
     printNow() {
       window.print();
     },
     disconnect() {
       documentRoot.getElementById(STYLE_ID)?.remove();
+      delete documentRoot.documentElement.dataset.dnsPrintProfile;
     },
   };
 }
