@@ -1,6 +1,8 @@
 name: Audit Faktura rate bindings
 on:
   workflow_dispatch:
+  push:
+    branches: ['audit/faktura-rate-bindings']
 permissions:
   contents: read
   id-token: write
