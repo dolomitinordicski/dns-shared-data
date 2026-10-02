@@ -181,6 +181,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Immutable/read-only Analytics audit copies used only for zero-loss parity checks.
+    match /analyticsAuditSnapshots/{document} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Private authorization metadata.
     match /users/{userId} {
       allow read: if signedIn() && request.auth.uid == userId;
