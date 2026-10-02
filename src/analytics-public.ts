@@ -91,6 +91,9 @@ export interface AnalyticsPublicFairRegion {
   reportingAreaId: ReportingAreaId;
   label: string;
   PN: number;
+  SW: number;
+  KP: number;
+  SA: number;
 }
 
 export interface AnalyticsPublicSnapshot {
