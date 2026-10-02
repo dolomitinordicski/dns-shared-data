@@ -2,15 +2,15 @@ import { DNS_DESIGN_SYSTEM_VERSION } from './design-system.js';
 import { DNS_DATA_CONTRACTS_VERSION } from './data-contracts.js';
 import { DNS_FOUNDATION_RUNTIME_VERSION } from './foundation.js';
 
-export const DNS_FOUNDATION_RELEASE_VERSION = '1.1.3' as const;
+export const DNS_FOUNDATION_RELEASE_VERSION = '1.2.0' as const;
 export const DNS_FOUNDATION_RELEASE_CHANNEL = 'stable' as const;
 export const DNS_FOUNDATION_RELEASE_STATUS = 'frozen' as const;
-export const DNS_FOUNDATION_RELEASE_REF = 'release/v1.1.3' as const;
+export const DNS_FOUNDATION_RELEASE_REF = 'release/v1.2.0' as const;
 
 export const DNS_FOUNDATION_RELEASE = {
   version: DNS_FOUNDATION_RELEASE_VERSION,
   ref: DNS_FOUNDATION_RELEASE_REF,
-  refType: 'immutable-release-branch',
+  refType: 'immutable-git-tag',
   channel: DNS_FOUNDATION_RELEASE_CHANNEL,
   status: DNS_FOUNDATION_RELEASE_STATUS,
   releasedAt: '2026-10-02',
