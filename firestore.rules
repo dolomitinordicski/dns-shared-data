@@ -942,6 +942,14 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Canonical season-scoped IDM Premium Partner program configuration.
+    // Client applications may read it when signed in and active; writes are
+    // performed only by governed Admin SDK seed tooling.
+    match /idmPremiumPrograms/{document} {
+      allow read: if activeUser();
+      allow write: if false;
+    }
+
     // DNS Faktura v2 internal operational state.
     //
     // Public confirmation never reads/writes these collections directly.
