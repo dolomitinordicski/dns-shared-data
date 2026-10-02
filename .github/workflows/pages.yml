@@ -7,6 +7,7 @@ on:
       - 'index.html'
       - 'web-runtime/**'
       - 'brand/**'
+      - 'graphics/**'
       - 'package.json'
       - 'src/**'
       - '.github/workflows/pages.yml'
