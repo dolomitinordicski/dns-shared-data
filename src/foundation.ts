@@ -30,7 +30,7 @@ import { createDNSCapabilityRuntime, type DNSCapabilityAdapter, type DNSCapabili
 import type { DNSCapabilityId } from './capabilities.js';
 import { initDNSCapabilityUIRuntime } from './ui/capabilities.js';
 
-export const DNS_FOUNDATION_RUNTIME_VERSION = '1.1.1' as const;
+export const DNS_FOUNDATION_RUNTIME_VERSION = '1.1.2' as const;
 export const DNS_FOUNDATION_LANGUAGE_EVENT = 'dns:languagechange' as const;
 
 export interface DNSFoundationAccessibilityOptions {
@@ -250,41 +250,54 @@ function initDeferredAccessibility(
   if (options.enabled === false) {
     return {
       setLanguage() {},
+      refresh() {},
       disconnect() {},
     };
   }
 
   const selector = options.mountSelector ?? '[data-dns-accessibility-mount]';
   let runtime: ReturnType<typeof initDNSAccessibilityRuntime> | null = null;
+  let mountedTarget: HTMLElement | null = null;
   let observer: MutationObserver | null = null;
   let currentLanguage = language;
 
+  const resolveTarget = () => {
+    const explicit = options.mountTarget;
+    if (explicit instanceof HTMLElement && explicit.isConnected) return explicit;
+    return documentRoot.querySelector<HTMLElement>(selector);
+  };
+
   const start = (mountTarget: HTMLElement) => {
-    if (runtime) return;
+    if (runtime && mountedTarget === mountTarget && mountTarget.isConnected) return;
+    runtime?.disconnect();
     runtime = initDNSAccessibilityRuntime({
       mountTarget,
       language: currentLanguage,
       storageKey: options.storageKey,
       settings: options.settings,
     });
-    observer?.disconnect();
-    observer = null;
+    mountedTarget = mountTarget;
   };
 
   const tryMount = () => {
-    if (runtime) return;
-    const explicit = options.mountTarget;
-    if (explicit instanceof HTMLElement) {
-      start(explicit);
+    const target = resolveTarget();
+
+    if (runtime && mountedTarget && mountedTarget.isConnected && target === mountedTarget) {
       return;
     }
-    const target = documentRoot.querySelector<HTMLElement>(selector);
+
+    if (runtime && (!mountedTarget?.isConnected || target !== mountedTarget)) {
+      runtime.disconnect();
+      runtime = null;
+      mountedTarget = null;
+    }
+
     if (target) start(target);
   };
 
   tryMount();
 
-  if (!runtime && typeof MutationObserver !== 'undefined') {
+  if (typeof MutationObserver !== 'undefined') {
     observer = new MutationObserver(tryMount);
     observer.observe(documentRoot.documentElement, { childList: true, subtree: true });
     queueMicrotask(tryMount);
@@ -295,11 +308,15 @@ function initDeferredAccessibility(
       currentLanguage = next;
       runtime?.setLanguage(next);
     },
+    refresh() {
+      tryMount();
+    },
     disconnect() {
       observer?.disconnect();
       runtime?.disconnect();
       observer = null;
       runtime = null;
+      mountedTarget = null;
     },
   };
 }
@@ -320,6 +337,7 @@ export function initDNSFoundation(
       declared: options.capabilities,
       adapters: options.capabilityAdapters,
       language,
+      getLanguage: () => language,
     });
     return {
       version: DNS_FOUNDATION_RUNTIME_VERSION,
@@ -437,6 +455,7 @@ export function initDNSFoundation(
     adapters: options.capabilityAdapters,
     printNow: (profile) => print?.printNow(profile),
     language,
+    getLanguage: () => language,
   });
 
   const defaultFooterEnabled = shell.profile.footer.required;
@@ -499,6 +518,7 @@ export function initDNSFoundation(
       chrome?.refresh();
       reveal?.refresh();
       footerRuntime?.refresh();
+      accessibility.refresh();
     },
     playMotion(element, semantic, motionOptions) {
       return semanticMotion?.play(element, semantic, motionOptions) ?? null;
