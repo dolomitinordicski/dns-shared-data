@@ -387,6 +387,30 @@ try {
   await assertFails(setDoc(doc(admin,'ticketSales','2024-25__org__area__day__official__regular'),{...sale,id:'2024-25__org__area__day__official__regular',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketPricingConfigs','historic-price-2024'),{...price,id:'historic-price-2024',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketOrders','historic-order-2024'),{seasonId:'2024-25',organizationId:'org',category:'ticket',status:'draft'}));
+  await env.withSecurityRulesDisabled(async context=>{
+    await setDoc(doc(context.firestore(),'idmPremiumPrograms','2026-27-idm-premium'),{
+      id:'2026-27-idm-premium',
+      seasonId:'2026-27',
+      amountPerReportingArea:15000,
+      reportingAreaIds:['ahrntal','drei-zinnen'],
+      sourceLabel:'IDM Premiumpartner WS2026/27',
+      active:true,
+      revision:1,
+    });
+  });
+  await assertSucceeds(getDoc(doc(admin,'idmPremiumPrograms','2026-27-idm-premium')));
+  await assertSucceeds(getDoc(doc(seller,'idmPremiumPrograms','2026-27-idm-premium')));
+  await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'idmPremiumPrograms','2026-27-idm-premium')));
+  await assertFails(setDoc(doc(admin,'idmPremiumPrograms','client-write'),{
+    id:'client-write',
+    seasonId:'2026-27',
+    amountPerReportingArea:1,
+    reportingAreaIds:['drei-zinnen'],
+    sourceLabel:'blocked',
+    active:true,
+    revision:1,
+  }));
+
   // Faktura v2 internal collections are DNS-admin only.
   const fakturaConfirmation={
     id:'confirmation-test',
