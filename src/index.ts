@@ -12,6 +12,8 @@ export * from './localization.js';
 export * from './foundation.js';
 export * from './shell-profiles.js';
 export * from './print-profiles.js';
+export * from './motion-semantics.js';
+export * from './ui/semantic-motion.js';
 export * from './ui/shell.js';
 export * from './area-allocation-keys.js';
 export * from './ui/motion.js';
