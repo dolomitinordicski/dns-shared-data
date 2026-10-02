@@ -34,6 +34,75 @@ service cloud.firestore {
         : '';
     }
 
+    function validFlyerScope(data) {
+      return data.scopeType in ['network', 'reportingArea', 'organization']
+        && data.scopeId is string
+        && data.scopeId.size() > 0
+        && (data.scopeType != 'network' || data.scopeId == 'dolomiti-nordicski')
+        && (data.scopeType != 'reportingArea'
+            || exists(/databases/$(database)/documents/reportingAreas/$(data.scopeId)))
+        && (data.scopeType != 'organization'
+            || exists(/databases/$(database)/documents/organizations/$(data.scopeId)));
+    }
+
+    function hasFlyerPermission(permission, data) {
+      return isAdmin()
+        || hasGrant('network', 'dolomiti-nordicski', permission)
+        || (data.scopeType == 'reportingArea'
+            && hasGrant('reportingArea', data.scopeId, permission))
+        || (data.scopeType == 'organization'
+            && hasGrant('organization', data.scopeId, permission));
+    }
+
+    function validFlyerDocument(data) {
+      return validFlyerScope(data)
+        && data.schema == 'dns.flyer-document'
+        && data.version == 1
+        && data.seasonId is string
+        && exists(/databases/$(database)/documents/seasons/$(data.seasonId))
+        && data.status in ['draft', 'ready', 'archived']
+        && data.ownerUserId is string
+        && data.ownerUserId.size() > 0
+        && data.document is map
+        && data.updatedBy == request.auth.uid
+        && data.updatedAt == request.time;
+    }
+
+    function validFlyerPublication(data) {
+      return validFlyerScope(data)
+        && data.schema == 'dns.flyer-publication'
+        && data.version == 1
+        && data.seasonId is string
+        && exists(/databases/$(database)/documents/seasons/$(data.seasonId))
+        && data.flyerDocumentId is string
+        && data.flyerDocumentId.size() > 0
+        && data.snapshot is map
+        && data.publishedBy == request.auth.uid
+        && data.publishedAt == request.time;
+    }
+
+    function validFlyerTemplate(data) {
+      return validFlyerScope(data)
+        && data.schema == 'dns.flyer-template'
+        && data.version == 1
+        && data.name is string
+        && data.name.size() > 0
+        && data.blockStack is list
+        && data.updatedBy == request.auth.uid
+        && data.updatedAt == request.time;
+    }
+
+    function validFlyerAsset(data) {
+      return validFlyerScope(data)
+        && data.schema == 'dns.flyer-asset'
+        && data.version == 1
+        && data.assetType in ['image', 'logo', 'icon', 'document']
+        && data.storagePath is string
+        && data.storagePath.size() > 0
+        && data.updatedBy == request.auth.uid
+        && data.updatedAt == request.time;
+    }
+
     function hasOrderPermission(permission, data) {
       return isAdmin()
         || hasGrant('network', 'dolomiti-nordicski', permission)
@@ -783,6 +852,74 @@ service cloud.firestore {
     match /historicalSeasonSources/{document} {
       allow read: if isAdmin();
       allow write: if false;
+    }
+
+    // DNS Flyer Studio working documents.
+    match /flyerDocuments/{document} {
+      allow read: if activeUser() && (
+        resource.data.ownerUserId == request.auth.uid
+        || hasFlyerPermission('flyer.read', resource.data)
+      );
+
+      allow create: if activeUser()
+        && validFlyerDocument(request.resource.data)
+        && request.resource.data.id == document
+        && request.resource.data.ownerUserId == request.auth.uid
+        && (
+          hasFlyerPermission('flyer.write', request.resource.data)
+          || request.resource.data.ownerUserId == request.auth.uid
+        );
+
+      allow update: if activeUser()
+        && validFlyerDocument(request.resource.data)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.scopeType == resource.data.scopeType
+        && request.resource.data.scopeId == resource.data.scopeId
+        && request.resource.data.seasonId == resource.data.seasonId
+        && request.resource.data.ownerUserId == resource.data.ownerUserId
+        && (
+          resource.data.ownerUserId == request.auth.uid
+          || hasFlyerPermission('flyer.write', resource.data)
+        );
+
+      allow delete: if isAdmin()
+        || (activeUser() && resource.data.ownerUserId == request.auth.uid);
+    }
+
+    // Immutable publication snapshots. Published records are append-only.
+    match /flyerPublications/{document} {
+      allow read: if hasFlyerPermission('flyer.read', resource.data);
+
+      allow create: if activeUser()
+        && validFlyerPublication(request.resource.data)
+        && request.resource.data.id == document
+        && hasFlyerPermission('flyer.publish', request.resource.data);
+
+      allow update, delete: if false;
+    }
+
+    // Reusable organization/network Flyer templates.
+    match /flyerTemplates/{document} {
+      allow read: if hasFlyerPermission('flyer.read', resource.data);
+
+      allow create, update: if activeUser()
+        && validFlyerTemplate(request.resource.data)
+        && request.resource.data.id == document
+        && hasFlyerPermission('flyer.templates.manage', request.resource.data);
+
+      allow delete: if isAdmin();
+    }
+
+    // Asset metadata only. Binary files live in Storage, not Firestore.
+    match /flyerAssets/{document} {
+      allow read: if hasFlyerPermission('flyer.read', resource.data);
+
+      allow create, update: if activeUser()
+        && validFlyerAsset(request.resource.data)
+        && request.resource.data.id == document
+        && hasFlyerPermission('flyer.assets.manage', request.resource.data);
+
+      allow delete: if isAdmin();
     }
 
     // Everything else remains closed until its domain rules are implemented.
