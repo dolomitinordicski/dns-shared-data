@@ -54,3 +54,17 @@ Avoid:
 - arbitrary icon variation between tools.
 
 The goal is a small visual accent, not a second design language.
+
+
+---
+
+## F3 profile contract
+
+The canonical profile definitions now live in:
+
+```text
+docs/DNS-Print-Profiles-v1.md
+src/print-profiles.ts
+```
+
+This document remains a UI-pattern reference. Where it differs from the F3 profile contract, the F3 contract is authoritative for profile selection, geometry and creative-export boundaries.
