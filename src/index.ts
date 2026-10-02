@@ -5,6 +5,7 @@ export * from './access-control.js';
 export * from './order-setup-2026-27.js';
 export * from './brand-assets.js';
 export * from './data-contracts.js';
+export * from './analytics-public.js';
 export * from './billing-preparation.js';
 export * from './area-allocation-keys.js';
 export * from './ui/motion.js';
