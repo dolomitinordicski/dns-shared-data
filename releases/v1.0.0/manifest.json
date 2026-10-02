@@ -1,6 +1,6 @@
 {
   "foundationRelease": "1.0.0",
-  "ref": "v1.0.0",
+  "ref": "release/v1.0.0",
   "channel": "stable",
   "status": "frozen",
   "releasedAt": "2026-10-02",
@@ -10,16 +10,28 @@
     "dataContracts": "0.8.0"
   },
   "scope": "F0-F7",
-  "supportedUILanguages": ["de", "it"],
-  "shellProfiles": ["operational", "portal", "workspace"],
+  "supportedUILanguages": [
+    "de",
+    "it"
+  ],
+  "shellProfiles": [
+    "operational",
+    "portal",
+    "workspace"
+  ],
   "consumerPinning": {
     "required": true,
-    "target": "v1.0.0",
-    "prohibited": ["main", "master", "raw-commit-sha"]
+    "target": "release/v1.0.0",
+    "prohibited": [
+      "main",
+      "master",
+      "raw-commit-sha"
+    ]
   },
   "notes": [
     "Internal DNS release; package remains private.",
     "Consumer business/data engines are outside the Foundation compatibility surface.",
     "F9 will enforce consumer drift against this release."
-  ]
+  ],
+  "refType": "immutable-release-branch"
 }
