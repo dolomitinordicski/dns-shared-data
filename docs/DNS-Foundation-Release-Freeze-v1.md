@@ -1,7 +1,7 @@
 # DNS Foundation Release & Freeze Policy v1.0
 
 **Stable Foundation release:** 1.0.0  
-**Release ref:** v1.0.0  
+**Release ref:** `release/release/v1.0.0`  
 **Status:** frozen / stable  
 **Release date:** 2026-10-02
 
@@ -42,7 +42,7 @@ Consumer repositories must not use:
 Approved target for this migration wave:
 
 ```text
-v1.0.0
+release/v1.0.0
 ```
 
 For package-based consumers, pin the repository dependency to the stable release ref.
@@ -113,11 +113,11 @@ Each migration should:
 4. validate production behavior;
 5. remove compatibility bridges only after native Foundation markup/runtime is confirmed.
 
-## 8. Release branch/tag
+## 8. Release ref
 
-The canonical release ref is `v1.0.0`.
+The canonical release ref is `release/v1.0.0`.
 
-The Git object referenced by the stable release must never be moved after publication.
+The release branch is created from the final F8 merge commit and is treated as immutable.
 
 If a release branch is used operationally, it must be treated as immutable after creation. Hotfixes create a new PATCH release instead of rewriting the old release.
 
