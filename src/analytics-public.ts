@@ -94,7 +94,8 @@ export interface AnalyticsPublicFairRegion {
 }
 
 export interface AnalyticsPublicSnapshot {
-  id: string;
+  /** Exact public document ID; MUST equal seasonId. */
+  id: SeasonId;
   seasonId: SeasonId;
   schemaVersion: typeof ANALYTICS_PUBLIC_SCHEMA_VERSION;
   revision: number;
@@ -115,12 +116,16 @@ export interface AnalyticsPublicSnapshot {
 }
 
 /**
- * Public snapshots are immutable publication revisions. A new publication
- * creates a new revision; consumers should select the highest published
- * revision for the requested season.
+ * Public access is exact-document only: analyticsPublicSnapshots/{seasonId}.
+ * Trusted publication may replace the season document with a higher revision;
+ * clients can never write or list this collection.
  */
+export function analyticsPublicSnapshotId(seasonId: SeasonId): SeasonId {
+  return seasonId;
+}
+
 export function isPublishedAnalyticsSnapshot(
   value: AnalyticsPublicSnapshot,
 ): boolean {
-  return value.publicationStatus === 'published';
+  return value.id === value.seasonId && value.publicationStatus === 'published';
 }
