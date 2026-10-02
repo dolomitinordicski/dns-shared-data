@@ -135,6 +135,18 @@
     "./ui/semantic-motion": {
       "types": "./dist/ui/semantic-motion.d.ts",
       "import": "./dist/ui/semantic-motion.js"
+    },
+    "./data-ui": {
+      "types": "./dist/data-ui.d.ts",
+      "import": "./dist/data-ui.js"
+    },
+    "./ui/data-ui": {
+      "types": "./dist/ui/data-ui.d.ts",
+      "import": "./dist/ui/data-ui.js"
+    },
+    "./ui/overlay": {
+      "types": "./dist/ui/overlay.d.ts",
+      "import": "./dist/ui/overlay.js"
     }
   }
 }
