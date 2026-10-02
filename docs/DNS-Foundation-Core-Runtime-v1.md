@@ -241,3 +241,9 @@ foundation.playMotion(element, 'drawer', { direction: 'reverse' });
 The runtime applies Foundation-owned timing/easing/transform values and honors both system and DNS Accessibility reduced-motion preferences.
 
 See `docs/DNS-Motion-Interaction-Semantics-v1.md`.
+
+## 16. Data UI & overlays
+
+F5 is initialized by the Core Runtime by default. Consumers may use the canonical overlay/data UI contracts directly while retaining tool-owned business logic.
+
+See `docs/DNS-Data-UI-Overlays-v1.md`.
