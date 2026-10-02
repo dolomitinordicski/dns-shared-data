@@ -1,3 +1,28 @@
+
+## Stable Foundation release
+
+The shared Foundation is frozen as:
+
+```text
+Foundation package/runtime  1.0.0
+Stable ref                  release/v1.0.0
+DNS Design System           1.24.0
+DNS Data Contracts          0.8.0
+Status                      stable / frozen
+```
+
+Consumer migrations must target the stable release ref rather than `main`, `master` or arbitrary raw commit SHAs.
+
+The package remains private/internal to DNS. Release policy and compatibility rules:
+
+```text
+docs/DNS-Foundation-Release-Freeze-v1.md
+releases/v1.0.0/manifest.json
+@dolomitinordicski/dns-shared-data/release
+```
+
+F8 freezes the compatibility surface completed through F7. Future breaking changes require a new MAJOR Foundation release; compatible features use MINOR and fixes use PATCH.
+
 # DNS Shared Data
 
 Central source of truth for the Dolomiti NordicSki digital ecosystem.
