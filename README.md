@@ -1,3 +1,14 @@
+## Shared Capability Registry
+
+Foundation 1.1.0 adds a governed capability layer for CSV/XLSX/PDF/JSON/ZIP/bundle/image export, CSV/XLSX/JSON import, ICS, clipboard, QR and print. Native capabilities are provided directly where practical; specialist libraries are registered behind adapters.
+
+Consumers declare only the capabilities they expose. Tool-specific data selection, validation and business semantics remain consumer-owned.
+
+```text
+@dolomitinordicski/dns-shared-data/capabilities
+@dolomitinordicski/dns-shared-data/capability-runtime
+```
+
 
 ## Stable Foundation release
 
