@@ -1,6 +1,6 @@
 # DNS Shared Capabilities Contract v1.0
 
-**Foundation release:** 1.1.1  
+**Foundation release:** 1.1.2  
 **Status:** stable shared capability contract
 
 ## 1. Purpose
@@ -118,7 +118,7 @@ await foundation.capabilityRuntime.run('export.csv', {
 await foundation.capabilityRuntime.run('export.xlsx', workbookPayload);
 ```
 
-A declared adapter capability is unavailable until its adapter is registered.
+A declared adapter capability is unavailable until its adapter is registered. Adapter context receives the current Foundation UI language at invocation time, so language changes do not require rebuilding the capability runtime.
 
 ## 6. Tool migration intent
 

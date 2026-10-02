@@ -8,7 +8,7 @@ import { DNS_DATA_CONTRACTS_VERSION } from '../dist/data-contracts.js';
 
 const errors = [];
 const pkg = JSON.parse(fs.readFileSync('package.json','utf8'));
-const current = JSON.parse(fs.readFileSync('releases/v1.1.1/manifest.json','utf8'));
+const current = JSON.parse(fs.readFileSync('releases/v1.1.2/manifest.json','utf8'));
 const previous = JSON.parse(fs.readFileSync('releases/v1.0.0/manifest.json','utf8'));
 
 if (DNS_CAPABILITY_IDS.length !== 16) errors.push('Expected 16 governed capabilities.');
@@ -25,10 +25,28 @@ if (runtime.has('export.xlsx')) errors.push('XLSX must remain unavailable until 
 runtime.register({ id:'test-xlsx', capabilities:['export.xlsx'], execute(){ return {ok:true}; } });
 if (!runtime.has('export.xlsx')) errors.push('Registered XLSX adapter should become available.');
 
-if (pkg.version !== '1.1.1') errors.push('Package must be 1.1.0.');
-if (DNS_FOUNDATION_RELEASE_VERSION !== '1.1.1') errors.push('Release must be 1.1.0.');
-if (DNS_FOUNDATION_RELEASE_REF !== 'release/v1.1.1') errors.push('Release ref must be release/v1.1.1.');
-if (DNS_FOUNDATION_RUNTIME_VERSION !== '1.1.1') errors.push('Runtime must be 1.1.0.');
+let dynamicLanguage = 'de';
+let observedAdapterLanguage = null;
+const languageRuntime = createDNSCapabilityRuntime({
+  declared: ['export.xlsx'],
+  getLanguage: () => dynamicLanguage,
+});
+languageRuntime.register({
+  id: 'test-language',
+  capabilities: ['export.xlsx'],
+  execute(_input, context) {
+    observedAdapterLanguage = context.language;
+    return { ok: true };
+  },
+});
+dynamicLanguage = 'it';
+await languageRuntime.run('export.xlsx', {});
+if (observedAdapterLanguage !== 'it') errors.push('Capability adapter must receive current Foundation language at invocation time.');
+
+if (pkg.version !== '1.1.2') errors.push('Package must be 1.1.2.');
+if (DNS_FOUNDATION_RELEASE_VERSION !== '1.1.2') errors.push('Release must be 1.1.2.');
+if (DNS_FOUNDATION_RELEASE_REF !== 'release/v1.1.2') errors.push('Release ref must be release/v1.1.2.');
+if (DNS_FOUNDATION_RUNTIME_VERSION !== '1.1.2') errors.push('Runtime must be 1.1.2.');
 if (DNS_DESIGN_SYSTEM_VERSION !== '1.25.0') errors.push('Design System must be 1.25.0.');
 if (DNS_DATA_CONTRACTS_VERSION !== '0.8.0') errors.push('Data Contracts must remain 0.8.0.');
 if (current.components.capabilities !== '1.0.0') errors.push('Capability component version mismatch.');
@@ -40,4 +58,4 @@ if (errors.length) {
   errors.forEach(e=>console.error('- '+e));
   process.exit(1);
 }
-console.log('✓ C1 shared capabilities / Foundation 1.1.1 contract valid');
+console.log('✓ C1 shared capabilities / Foundation 1.1.2 contract valid');

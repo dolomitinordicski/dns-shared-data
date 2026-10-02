@@ -1,0 +1,27 @@
+{
+  "foundationRelease": "1.1.2",
+  "ref": "release/v1.1.2",
+  "refType": "immutable-release-branch",
+  "channel": "stable",
+  "status": "frozen",
+  "releasedAt": "2026-10-02",
+  "components": {
+    "foundationRuntime": "1.1.2",
+    "designSystem": "1.25.0",
+    "dataContracts": "0.8.0",
+    "capabilities": "1.0.0"
+  },
+  "scope": "F0-F8 + C1 + F9.A lifecycle compatibility fixes",
+  "supportedUILanguages": ["de", "it"],
+  "shellProfiles": ["operational", "portal", "workspace"],
+  "consumerPinning": {
+    "required": true,
+    "target": "release/v1.1.2",
+    "prohibited": ["main", "master", "raw-commit-sha"]
+  },
+  "fixes": [
+    "Accessibility runtime remounts when React route/shell changes replace its mount target.",
+    "Capability adapters receive the current Foundation language at invocation time.",
+    "Footer and graphics assets are pinned to the immutable 1.1.2 release."
+  ]
+}

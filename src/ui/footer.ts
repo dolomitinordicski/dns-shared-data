@@ -1,6 +1,6 @@
-export const DNS_FOOTER_RUNTIME_VERSION = '1.1.1' as const;
+export const DNS_FOOTER_RUNTIME_VERSION = '1.1.2' as const;
 export const DNS_FOOTER_GRAPHIC_URL =
-  'https://raw.githubusercontent.com/dolomitinordicski/dns-shared-data/release/v1.1.1/graphics/swoosh.svg' as const;
+  'https://raw.githubusercontent.com/dolomitinordicski/dns-shared-data/release/v1.1.2/graphics/swoosh.svg' as const;
 
 const STYLE_ID = 'dns-footer-runtime-style';
 
