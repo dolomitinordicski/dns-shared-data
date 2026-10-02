@@ -282,13 +282,8 @@ export function initDNSNavigationStyles(options = {}) {
   const headerTokens = options.headerTokens ?? {};
   const motion = options.motion ?? {};
   if (!navigation || !responsive) return;
-  initDNSNavigationStyles({
-    root: documentRoot,
-    navigation,
-    responsive,
-    headerTokens,
-    motion,
-  });
+  setNavigationVariables(documentRoot.documentElement, navigation, headerTokens, motion);
+  ensureNavigationStyles(documentRoot, navigation, responsive);
 }
 
 function pageTop(element) {
