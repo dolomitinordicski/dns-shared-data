@@ -5,6 +5,8 @@ on:
     paths:
       - 'firestore.rules'
       - 'tests/seasonal-rules.test.mjs'
+      - 'firestore.indexes.json'
+      - 'firebase.json'
       - '.github/workflows/deploy-firestore-rules.yml'
   push:
     branches: [main]
@@ -27,6 +29,8 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - name: Validate Firestore index manifest
+        run: node -e "JSON.parse(require('fs').readFileSync('firestore.indexes.json','utf8')); console.log('Firestore index manifest valid.')"
       - run: npm run test:rules
 
   deploy:
