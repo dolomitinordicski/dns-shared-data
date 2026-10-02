@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/data-contracts.ts
 // Keep this file synchronized with the canonical TypeScript catalog.
-export const DNS_DATA_CONTRACTS_VERSION = '0.6.0';
+export const DNS_DATA_CONTRACTS_VERSION = '0.7.0';
 
 export const DNS_DATA_CONTRACTS = [
   {
@@ -131,17 +131,17 @@ export const DNS_DATA_CONTRACTS = [
   },
   {
     id: 'analytics',
-    label: 'Analytics measurements',
-    status: 'foundation-defined',
+    label: 'Analytics measurements & public aggregate read model',
+    status: 'implemented',
     owner: 'Analytics',
-    runtime: 'DNS Platform / target',
-    collections: [],
-    source: 'DNS Foundation v1.2',
-    schema: 'Contract to be finalized during Analytics integration',
-    write: 'Analytics ingestion / approved operational sources',
-    read: 'Analytics · FAIR · management views',
-    fields: ['seasonId', 'metricId', 'scopeType', 'scopeId', 'value', 'source'],
-    relations: ['Operational facts → Analytics', 'Analytics → FAIR', 'Analytics → Management View'],
+    runtime: 'DNS_Core',
+    collections: ['analyticsPublicSnapshots'],
+    source: 'src/analytics-public.ts',
+    schema: 'Analytics Public Snapshot v1',
+    write: 'Trusted backend publication only; client writes denied',
+    read: 'Public exact-document read for published aggregate snapshots',
+    fields: ['seasonId', 'revision', 'publicationStatus', 'generatedAt', 'sourceSummary', 'sales', 'annual', 'kp', 'fair'],
+    relations: ['Operational facts → approved aggregate snapshot', 'Public snapshot → Analytics presentation', 'Raw operational data remains private'],
   },
   {
     id: 'fair',
