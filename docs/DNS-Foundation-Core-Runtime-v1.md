@@ -253,3 +253,16 @@ See `docs/DNS-Data-UI-Overlays-v1.md`.
 F6 is initialized by the Core Runtime by default. It provides shared presentation for account, organization, membership and access context without implementing authentication or authorization.
 
 See `docs/DNS-Identity-Access-UI-v1.md`.
+
+## 18. Assets & workspace
+
+F7 initializes shared asset-browser presentation by default. The Workspace runtime is enabled only for `shellProfile: 'workspace'`.
+
+The workspace handle is available as:
+
+```ts
+foundation.workspaceRuntime?.setInspectorState('collapsed');
+foundation.workspaceRuntime?.setMobilePanelOpen(true);
+```
+
+See `docs/DNS-Assets-Workspace-v1.md`.

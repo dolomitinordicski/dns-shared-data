@@ -155,6 +155,22 @@
     "./ui/identity": {
       "types": "./dist/ui/identity.d.ts",
       "import": "./dist/ui/identity.js"
+    },
+    "./assets": {
+      "types": "./dist/assets.d.ts",
+      "import": "./dist/assets.js"
+    },
+    "./workspace": {
+      "types": "./dist/workspace.d.ts",
+      "import": "./dist/workspace.js"
+    },
+    "./ui/assets": {
+      "types": "./dist/ui/assets.d.ts",
+      "import": "./dist/ui/assets.js"
+    },
+    "./ui/workspace": {
+      "types": "./dist/ui/workspace.d.ts",
+      "import": "./dist/ui/workspace.js"
     }
   }
 }

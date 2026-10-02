@@ -21,6 +21,8 @@ import {
 import { initDNSFooterRuntime } from './ui/footer.js';
 import { initDNSDataUIRuntime } from './ui/data-ui.js';
 import { initDNSIdentityUIRuntime } from './ui/identity.js';
+import { initDNSAssetUIRuntime } from './ui/assets.js';
+import { initDNSWorkspaceRuntime, type DNSWorkspaceRuntimeHandle } from './ui/workspace.js';
 import { initDNSShellRuntime } from './ui/shell.js';
 import type { DNSShellProfileId } from './shell-profiles.js';
 import type { DNSPrintProfileId } from './print-profiles.js';
@@ -47,6 +49,8 @@ export interface DNSFoundationRuntimeOptions {
   contentPatterns?: boolean;
   dataUI?: boolean;
   identityUI?: boolean;
+  assetUI?: boolean;
+  workspace?: boolean;
   interaction?: boolean;
   motion?: boolean;
   semanticMotion?: boolean;
@@ -62,6 +66,7 @@ export interface DNSFoundationRuntimeHandle {
   readonly version: typeof DNS_FOUNDATION_RUNTIME_VERSION;
   readonly designSystemVersion: string;
   readonly source: 'package' | 'provided';
+  readonly workspaceRuntime?: DNSWorkspaceRuntimeHandle | null;
   getLanguage(): DNSUILanguage;
   setLanguage(language: DNSUILanguage): void;
   subscribeLanguage(listener: (language: DNSUILanguage) => void): () => void;
@@ -308,6 +313,7 @@ export function initDNSFoundation(
       version: DNS_FOUNDATION_RUNTIME_VERSION,
       designSystemVersion: (options.designSystem ?? DNS_DESIGN_SYSTEM).version,
       source: options.designSystem ? 'provided' : 'package',
+      workspaceRuntime: null,
       getLanguage: () => language,
       setLanguage(next) {
         language = next === 'it' ? 'it' : DNS_DEFAULT_UI_LANGUAGE;
@@ -344,6 +350,10 @@ export function initDNSFoundation(
 
   applyDNSDesignVariables(designSystem, documentRoot);
   const shell = initDNSShellRuntime(shellProfile, documentRoot);
+  const workspaceRuntime =
+    shellProfile === 'workspace' && options.workspace !== false
+      ? initDNSWorkspaceRuntime(documentRoot)
+      : null;
   documentRoot.documentElement.lang = language;
   documentRoot.documentElement.dataset.dnsLanguage = language;
   documentRoot.documentElement.dataset.dnsFoundationRuntime = DNS_FOUNDATION_RUNTIME_VERSION;
@@ -360,6 +370,7 @@ export function initDNSFoundation(
   if (options.contentPatterns !== false) initDNSContentPatterns();
   if (options.dataUI !== false) initDNSDataUIRuntime(documentRoot);
   if (options.identityUI !== false) initDNSIdentityUIRuntime(documentRoot);
+  if (options.assetUI !== false) initDNSAssetUIRuntime(documentRoot);
 
   const interaction =
     options.interaction === false
@@ -449,6 +460,7 @@ export function initDNSFoundation(
     version: DNS_FOUNDATION_RUNTIME_VERSION,
     designSystemVersion: designSystem.version,
     source,
+    workspaceRuntime,
     getLanguage() {
       return language;
     },
@@ -480,6 +492,7 @@ export function initDNSFoundation(
       interaction?.disconnect();
       print?.disconnect();
       accessibility.disconnect();
+      workspaceRuntime?.disconnect();
       shell.disconnect();
       listeners.clear();
       runtimeByDocument.delete(documentRoot);

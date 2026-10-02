@@ -13,7 +13,7 @@ This repository contains:
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.3
-- **DNS Design System:** v1.23
+- **DNS Design System:** v1.24
 - **DNS Access Control:** v0.1
 
 ## Source of truth
@@ -61,7 +61,7 @@ firebase.json
 
 ## DNS Design System
 
-The current shared visual and interaction contract is **v1.23.0** and is documented in:
+The current shared visual and interaction contract is **v1.24.0** and is documented in:
 
 ```text
 docs/DNS-Design-System-v1.md
@@ -78,6 +78,26 @@ The GitHub Pages architecture overview is also the visual reference implementati
 
 
 
+
+
+## Foundation assets & workspace
+
+F7 standardizes shared asset metadata and the authoring workspace:
+
+```text
+assets: brand · region-logo · organization-logo · graphic · icon · photo · template · document
+workspace: toolbar · canvas · inspector · mobile-panel
+```
+
+Contract:
+
+```text
+docs/DNS-Assets-Workspace-v1.md
+@dolomitinordicski/dns-shared-data/assets
+@dolomitinordicski/dns-shared-data/workspace
+```
+
+Portal and Flyer Studio consume the same canonical asset metadata. Workspace chrome is Foundation-owned; creative canvas rendering/export remains tool-owned.
 
 ## Foundation identity / membership / access UI
 
