@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.16.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.17.0' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -267,6 +267,30 @@ export const DNS_DESIGN_SYSTEM = {
     fontFamily: 'Roboto',
     fontSizePx: 10,
     uppercase: true,
+  },
+  readingText: {
+    largeSizePx: 16,
+    largeLineHeight: 1.7,
+    appliesTo: ['dns-readable-copy','dns-insight-body','dns-alert-body','methodology-copy','editorial-copy'],
+  },
+  contentPatterns: {
+    insight: {
+      className: 'dns-insight',
+      titleClassName: 'dns-insight-title',
+      bodyClassName: 'dns-insight-body',
+      background: '#0D4D5E',
+      accent: '#AAD0D1',
+      iconStyle: 'wireframe-document',
+      iconSizePx: 26,
+      borderLeftPx: 4,
+    },
+    alert: {
+      className: 'dns-alert',
+      titleClassName: 'dns-alert-title',
+      bodyClassName: 'dns-alert-body',
+      variants: ['info','success','warning','error'],
+      borderLeftPx: 4,
+    },
   },
   cards: {
     background: '#FFFFFF',
