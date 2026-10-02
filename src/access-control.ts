@@ -36,7 +36,12 @@ export type DNSPermission =
   | 'kp.write'
   | 'kp.verify'
   | 'verification.read'
-  | 'verification.manage';
+  | 'verification.manage'
+  | 'flyer.read'
+  | 'flyer.write'
+  | 'flyer.publish'
+  | 'flyer.templates.manage'
+  | 'flyer.assets.manage';
 
 export interface DNSUserProfile {
   /** Firebase Authentication UID. */
@@ -97,6 +102,7 @@ export const DNS_ROLE_DEFAULT_PERMISSIONS = {
     'ticketSales.read',
     'kp.read',
     'verification.read',
+    'flyer.read',
   ],
   contributor: [
     'season.read',
@@ -108,6 +114,8 @@ export const DNS_ROLE_DEFAULT_PERMISSIONS = {
     'kp.read',
     'kp.write',
     'verification.read',
+    'flyer.read',
+    'flyer.write',
   ],
   reviewer: [
     'season.read',
@@ -120,6 +128,9 @@ export const DNS_ROLE_DEFAULT_PERMISSIONS = {
     'kp.verify',
     'verification.read',
     'verification.manage',
+    'flyer.read',
+    'flyer.write',
+    'flyer.publish',
   ],
 } as const satisfies Record<DNSMembershipRole, readonly DNSPermission[]>;
 
@@ -139,6 +150,11 @@ export const DNS_ADMIN_PERMISSIONS = [
   'kp.verify',
   'verification.read',
   'verification.manage',
+  'flyer.read',
+  'flyer.write',
+  'flyer.publish',
+  'flyer.templates.manage',
+  'flyer.assets.manage',
 ] as const satisfies readonly DNSPermission[];
 
 export const FIRESTORE_ACCESS_COLLECTIONS = {
