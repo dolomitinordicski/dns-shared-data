@@ -1,8 +1,22 @@
 // GENERATED BROWSER MIRROR — source of truth: src/data-contracts.ts
-// Keep this file synchronized with the canonical TypeScript catalog.
-export const DNS_DATA_CONTRACTS_VERSION = '0.7.0';
+// Keep this file synchronized with the canonical TypeScript contract.
+export const DNS_DATA_CONTRACTS_VERSION = '0.8.0';
 
 export const DNS_DATA_CONTRACTS = [
+  {
+    id: 'shared-assets',
+    label: 'Shared assets & templates',
+    status: 'foundation-defined',
+    owner: 'DNS Shared Data / DNS Platform',
+    runtime: 'DNS Platform / target',
+    collections: ['assets'],
+    source: 'src/assets.ts · src/brand-assets.ts · repository brand/graphics/assets',
+    schema: 'Asset Contract v1.0 · persistence implementation pending',
+    write: 'Trusted DNS asset administration',
+    read: 'Authorized Portal / Workspace / operational consumers',
+    fields: ['assetId', 'type', 'label', 'path', 'mimeType', 'status', 'ownerType', 'ownerId', 'language', 'usages', 'variant', 'aspectRatio', 'seasonIds', 'checksum'],
+    relations: ['Asset → canonical owner context', 'Portal → Asset', 'Workspace → Asset', 'Template → creative workflow'],
+  },
   {
     id: 'master-reference',
     label: 'Canonical master data',
