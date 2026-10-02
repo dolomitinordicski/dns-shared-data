@@ -1,6 +1,6 @@
 # DNS Consumer Migration Blueprint v1.0
 
-**Foundation target:** 1.1.2  
+**Foundation target:** 1.1.3  
 **Status:** canonical migration pattern  
 **Pilot validated on:** DNS Data Entry  
 **Purpose:** define the repeatable F9 migration procedure for DNS consumer tools.
@@ -67,14 +67,14 @@ Consumers must pin an immutable Foundation release.
 Current F9 target:
 
 ```text
-release/v1.1.2
+release/v1.1.3
 ```
 
 Approved package form:
 
 ```json
 "@dolomitinordicski/dns-shared-data":
-  "github:dolomitinordicski/dns-shared-data#release/v1.1.2"
+  "github:dolomitinordicski/dns-shared-data#release/v1.1.3"
 ```
 
 Do not use:
@@ -285,7 +285,7 @@ Shared infrastructure and domain logic must remain separate.
 Before merge, verify:
 
 - [ ] branch started from latest stable `main`;
-- [ ] consumer pins `release/v1.1.2`;
+- [ ] consumer pins `release/v1.1.3`;
 - [ ] no Foundation package dependency uses arbitrary SHA;
 - [ ] no canonical Foundation asset points to raw `main`;
 - [ ] `initDNSFoundation()` is the shared bootstrap;
@@ -307,7 +307,7 @@ Before merge, verify:
 DNS Data Entry validated this pattern in F9.
 
 Migration outcome:
-- old commit-SHA Foundation dependency replaced by `release/v1.1.2`;
+- old commit-SHA Foundation dependency replaced by `release/v1.1.3`;
 - XLSX retained as specialist library behind Foundation adapter;
 - fragmented local UI bootstrap replaced by `initDNSFoundation()`;
 - local `designSystem.ts`, `uiRuntime.ts` and Design System fallback removed;

@@ -1,6 +1,6 @@
 # DNS Shared Capabilities Contract v1.0
 
-**Foundation release:** 1.1.2  
+**Foundation release:** 1.1.3  
 **Status:** stable shared capability contract
 
 ## 1. Purpose

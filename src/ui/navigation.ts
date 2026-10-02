@@ -348,6 +348,31 @@ function ensureNavigationStyles(
 `;
 }
 
+
+export interface DNSNavigationStyleRuntimeOptions {
+  root?: Document;
+  navigation?: DNSNavigationTokens;
+  responsive?: DNSResponsiveTokens;
+  headerTokens?: DNSHeaderTokens;
+  motion?: DNSNavigationMotionTokens;
+}
+
+export function initDNSNavigationStyles(
+  options: DNSNavigationStyleRuntimeOptions = {},
+): void {
+  const documentRoot =
+    options.root ?? (typeof document !== 'undefined' ? document : undefined);
+  if (!documentRoot?.head || !documentRoot.documentElement) return;
+
+  const navigation = options.navigation ?? DNS_DESIGN_SYSTEM.navigation;
+  const responsive = options.responsive ?? DNS_DESIGN_SYSTEM.responsive;
+  const headerTokens = options.headerTokens ?? DNS_DESIGN_SYSTEM.header;
+  const motion = options.motion ?? DNS_DESIGN_SYSTEM.motion;
+
+  setNavigationVariables(documentRoot.documentElement, navigation, headerTokens, motion);
+  ensureNavigationStyles(documentRoot, navigation, responsive);
+}
+
 function pageTop(element: HTMLElement) {
   return element.getBoundingClientRect().top + window.scrollY;
 }
