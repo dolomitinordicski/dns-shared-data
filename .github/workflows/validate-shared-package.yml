@@ -14,6 +14,7 @@ on:
       - 'scripts/check-web-navigation.mjs'
       - 'scripts/check-localization-contract.mjs'
       - 'scripts/check-foundation-runtime.mjs'
+      - 'scripts/check-shell-profiles.mjs'
       - 'package.json'
       - 'tsconfig.json'
       - 'tsconfig.package.json'
@@ -30,6 +31,7 @@ on:
       - 'scripts/check-web-navigation.mjs'
       - 'scripts/check-localization-contract.mjs'
       - 'scripts/check-foundation-runtime.mjs'
+      - 'scripts/check-shell-profiles.mjs'
       - 'package.json'
       - 'tsconfig.json'
       - 'tsconfig.package.json'
@@ -83,3 +85,6 @@ jobs:
 
       - name: Verify Foundation runtime contract
         run: node scripts/check-foundation-runtime.mjs
+
+      - name: Verify shell profile contract
+        run: node scripts/check-shell-profiles.mjs
