@@ -1,6 +1,6 @@
 {
   "name": "@dolomitinordicski/dns-shared-data",
-  "version": "1.1.3",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -191,6 +191,10 @@
     "./brand-assets": {
       "types": "./dist/brand-assets.d.ts",
       "import": "./dist/brand-assets.js"
+    },
+    "./kp-setup-2026-27": {
+      "types": "./dist/kp-setup-2026-27.d.ts",
+      "import": "./dist/kp-setup-2026-27.js"
     }
   }
 }
