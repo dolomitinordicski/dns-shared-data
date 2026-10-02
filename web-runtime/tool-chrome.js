@@ -1,5 +1,5 @@
 import { DNS_DESIGN_SYSTEM } from './design-system.js';
-import { initDNSNavigationRuntime } from './navigation.js';
+import { initDNSNavigationRuntime, initDNSNavigationStyles } from './navigation.js';
 
 const DEFAULT_HEADER_SELECTOR = '[data-dns-tool-header]';
 const DEFAULT_NAV_SELECTOR = '[data-dns-tool-nav]';
@@ -71,6 +71,14 @@ export function initDNSToolChromeRuntime(options = {}) {
     return noOpHandle();
   }
 
+  initDNSNavigationStyles({
+    root: documentRoot,
+    navigation: options.navigation ?? DNS_DESIGN_SYSTEM.navigation,
+    responsive: options.responsive ?? DNS_DESIGN_SYSTEM.responsive,
+    headerTokens: options.headerTokens ?? DNS_DESIGN_SYSTEM.header,
+    motion: options.motion ?? DNS_DESIGN_SYSTEM.motion,
+  });
+
   const header =
     options.header ??
     documentRoot.querySelector(options.headerSelector ?? DEFAULT_HEADER_SELECTOR);
@@ -80,7 +88,72 @@ export function initDNSToolChromeRuntime(options = {}) {
     documentRoot.querySelector(options.navSelector ?? DEFAULT_NAV_SELECTOR);
 
   if (!(header instanceof HTMLElement) || !(nav instanceof HTMLElement)) {
-    return noOpHandle();
+    let delegate = null;
+    let disconnected = false;
+    let pendingActiveSection = '';
+    let standaloneHeader = header instanceof HTMLElement ? header : null;
+
+    const prepareStandaloneHeader = (candidate) => {
+      if (!(candidate instanceof HTMLElement)) return;
+      if (standaloneHeader && standaloneHeader !== candidate && standaloneHeader.isConnected) {
+        standaloneHeader.classList.remove('dns-foundation-header');
+        delete standaloneHeader.dataset.dnsScrollState;
+      }
+      standaloneHeader = candidate;
+      standaloneHeader.dataset.dnsToolHeader = '';
+      standaloneHeader.classList.add('dns-foundation-header');
+      standaloneHeader.dataset.dnsScrollState = 'shown';
+    };
+
+    prepareStandaloneHeader(standaloneHeader);
+
+    const tryInitialize = () => {
+      if (disconnected || delegate) return;
+      const lateHeader = documentRoot.querySelector(options.headerSelector ?? DEFAULT_HEADER_SELECTOR);
+      const lateNav = documentRoot.querySelector(options.navSelector ?? DEFAULT_NAV_SELECTOR);
+
+      if (lateHeader instanceof HTMLElement) prepareStandaloneHeader(lateHeader);
+      if (!(lateHeader instanceof HTMLElement) || !(lateNav instanceof HTMLElement)) return;
+
+      observer.disconnect();
+      delegate = initDNSToolChromeRuntime({
+        ...options,
+        root: documentRoot,
+        header: lateHeader,
+        nav: lateNav,
+      });
+      if (pendingActiveSection) delegate.setActiveSection(pendingActiveSection);
+    };
+
+    const observer = new MutationObserver(tryInitialize);
+    observer.observe(documentRoot.documentElement, { childList: true, subtree: true });
+    queueMicrotask(tryInitialize);
+
+    return {
+      get header() { return delegate?.header ?? standaloneHeader; },
+      get nav() { return delegate?.nav ?? null; },
+      refresh() {
+        if (delegate) return delegate.refresh();
+        prepareStandaloneHeader(
+          documentRoot.querySelector(options.headerSelector ?? DEFAULT_HEADER_SELECTOR),
+        );
+      },
+      setActiveSection(id) {
+        pendingActiveSection = id;
+        delegate?.setActiveSection(id);
+      },
+      disconnect() {
+        disconnected = true;
+        observer.disconnect();
+        delegate?.disconnect();
+        if (!delegate && standaloneHeader) {
+          standaloneHeader.classList.remove('dns-foundation-header');
+          delete standaloneHeader.dataset.dnsScrollState;
+        }
+        delegate = null;
+        standaloneHeader = null;
+      },
+    };
   }
 
   header.dataset.dnsToolHeader = '';
