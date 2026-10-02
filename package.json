@@ -107,6 +107,10 @@
     "./fair-governance": {
       "types": "./dist/fair-governance.d.ts",
       "import": "./dist/fair-governance.js"
+    },
+    "./localization": {
+      "types": "./dist/localization.d.ts",
+      "import": "./dist/localization.js"
     }
   }
 }

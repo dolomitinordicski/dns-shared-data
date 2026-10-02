@@ -185,6 +185,33 @@ accessGrants
 Authenticated clients may read only their own authorization context. Browser writes to these collections remain denied.
 
 
+
+## Foundation localization
+
+German/Italian bilingualism is a shared Foundation capability.
+
+Normative contract:
+
+```text
+docs/DNS-Localization-v1.md
+```
+
+Runtime/package contract:
+
+```text
+@dolomitinordicski/dns-shared-data/localization
+```
+
+Operational rules:
+- German (`de`) is the primary, default and fallback UI language;
+- Italian (`it`) is the secondary UI language;
+- automatic browser-language selection is not used;
+- shared browser preference key is `dns-ui-language-v1`;
+- UI language and authored content language are separate concepts;
+- shared Foundation copy and number/date/currency formatting must not be independently reimplemented by tools.
+
+Canonical datasets may retain additional localized metadata (for example existing English display names) for interoperability/history. That does not make those languages supported DNS UI languages.
+
 ## Foundation accessibility
 
 Accessibility preferences are a shared Foundation capability, not a per-tool reinvention.

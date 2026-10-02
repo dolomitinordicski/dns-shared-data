@@ -1054,4 +1054,39 @@ The typed contract is exported from `src/fair-governance.ts`. Persistence implem
 
 ---
 
+## 42. F0.5 localization & bilingualism
+
+The normative localization contract is:
+
+```text
+docs/DNS-Localization-v1.md
+```
+
+Operational DNS user interfaces support:
+
+```text
+de — primary / default / fallback
+it — secondary
+```
+
+Language resolution is Foundation-owned. Applications must not automatically select the UI language from the browser/OS. The resolution order is explicit session choice → authenticated account preference → stored browser preference → German.
+
+UI language is separate from content language. This distinction is required for Partner Portal documents and Flyer Studio authoring, where a German interface may produce Italian or bilingual content.
+
+Foundation owns shared messages and formatting behavior. Tool repositories own only domain-specific vocabulary. Missing Italian text falls back to German; missing text in both supported languages is a development/CI defect.
+
+Canonical IDs remain language-independent. Existing canonical metadata in additional languages may remain for interoperability and does not expand the supported UI-language contract.
+
+The typed contract and formatting helpers are exported from:
+
+```text
+src/localization.ts
+@dolomitinordicski/dns-shared-data/localization
+```
+
+F1 will integrate this contract into the unified `initDNSFoundation()` runtime.
+
+
+---
+
 **End of DNS Foundation v1.2**
