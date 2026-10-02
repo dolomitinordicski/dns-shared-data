@@ -1,7 +1,7 @@
 import { translateDNSFoundation, type DNSUILanguage } from '../localization.js';
 import { openDNSOverlay } from './overlay.js';
 
-export const DNS_UI_PRIMITIVES_VERSION = '1.0.0' as const;
+export const DNS_UI_PRIMITIVES_VERSION = '1.1.0' as const;
 
 export type DNSStatus = 'draft' | 'live' | 'locked' | 'ready' | 'warning' | 'error' | 'archived' | 'synced';
 export type DNSAlertVariant = 'info' | 'success' | 'warning' | 'error';
@@ -16,6 +16,10 @@ export function initDNSUIPrimitives() {
   const style = document.createElement('style');
   style.id = STYLE_ID;
   style.textContent = `
+.dns-card{background:var(--dns-card-bg,#fff);border-radius:var(--dns-card-radius,10px);box-shadow:var(--dns-card-shadow,0 1px 4px rgba(13,77,94,.07))}
+.dns-kicker{color:var(--color-dns-mid,#417483);font:600 var(--dns-label-size,10px)/1.25 var(--font-display,"Be Vietnam Pro",sans-serif);letter-spacing:.08em;text-transform:uppercase}
+.dns-section-title{color:var(--color-dns-deep,#0D4D5E);font-size:var(--dns-section-title-size,11px);font-weight:700;letter-spacing:var(--dns-uppercase-tracking,.07em);text-transform:uppercase}
+.dns-pill{display:inline-flex;align-items:center;gap:.5rem;border:1px solid var(--color-dns-border,rgba(65,116,131,.20));border-radius:var(--dns-badge-radius,20px);background:var(--color-dns-surface,#fff);color:var(--color-dns-mid,#417483);padding:.375rem .75rem;font:600 var(--dns-label-size,10px)/1.2 var(--font-display,"Be Vietnam Pro",sans-serif);letter-spacing:.05em;text-transform:uppercase}
 .dns-status{display:inline-flex;align-items:center;gap:.4rem;min-height:22px;padding:.2rem .5rem;border:1px solid var(--dns-status-border,rgba(65,116,131,.20));border-radius:999px;background:var(--dns-status-bg,#fff);color:var(--dns-status-text,var(--color-dns-mid,#417483));font:600 9px/1 var(--font-alt,Roboto,sans-serif);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
 .dns-status::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.85}
 .dns-status[data-status="draft"]{--dns-status-bg:rgba(90,127,138,.08);--dns-status-text:#5A7F8A}
