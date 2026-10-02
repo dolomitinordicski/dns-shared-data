@@ -5,7 +5,7 @@
 **Data-tool reference:** DNS Analytics  
 **Target:** all DNS digital tools  
 **Runtime source:** DNS_Core / Firestore  
-**Current semantic version:** 1.15.0
+**Current semantic version:** 1.16.0
 
 ## Principle
 
@@ -119,6 +119,7 @@ Analytics remains the reference for:
 - strong data hierarchy;
 - restrained borders;
 - compact tables;
+- alternating table rows using a restrained Deep Glacier Blue tint for scanability;
 - DNS chart palette;
 - deep header and footer.
 
@@ -249,7 +250,10 @@ The common runtime is framework-agnostic and is published from `src/ui/accessibi
 - reduce motion override;
 - stronger keyboard focus;
 - comfortable UI density;
+- Grid mode for stronger table cell boundaries;
 - reset to DNS defaults.
+
+Grid mode strengthens table borders without changing table semantics, column structure or data density. Zebra striping remains enabled by default and uses a light tint derived from Deep Glacier Blue.
 
 The runtime also respects native `prefers-reduced-motion`; the user override is an additional control, not a replacement for operating-system preferences.
 
