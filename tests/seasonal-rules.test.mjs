@@ -10,9 +10,12 @@ try {
     await setDoc(doc(db,'users','seller'),{active:true,globalRoles:[]});
     await setDoc(doc(db,'users','reader'),{active:true,globalRoles:[]});
     await setDoc(doc(db,'users','verifier'),{active:true,globalRoles:[]});
+    await setDoc(doc(db,'users','flyerOwner'),{active:true,globalRoles:[]});
+    await setDoc(doc(db,'users','flyerRogue'),{active:true,globalRoles:[]});
     await setDoc(doc(db,'seasons','2026-27'),{status:'active'});
     await setDoc(doc(db,'seasons','2024-25'),{status:'historical'});
     await setDoc(doc(db,'reportingAreas','area'),{canonicalName:'Area'});
+    await setDoc(doc(db,'reportingAreas','area2'),{canonicalName:'Area 2'});
     await setDoc(doc(db,'organizations','org'),{reportingAreaIds:['area']});
     await setDoc(doc(db,'deliveryLocations','delivery-org'),{id:'delivery-org',organizationId:'org',reportingAreaId:'area',recipientName:'Org',label:'Org delivery',status:'verified'});
     await setDoc(doc(db,'pocketfolderSourceRows','2026-27__source-row-06'),{id:'2026-27__source-row-06',seasonId:'2026-27',sourceRow:6,label:'Antholzertal',comparison2025:3500,requested2026:3000,dnsCopies:100,areaTotal2026:4200,printerTotal2026:4550,backLanguageNote:'Rückseite dt-it-en',rowKind:'area'});
@@ -20,11 +23,14 @@ try {
       await setDoc(doc(db,'accessGrants',`${uid}__organization__org`),{active:true,permissions});
     await setDoc(doc(db,'accessGrants','reader__reportingArea__area'),{active:true,permissions:['kp.read']});
     await setDoc(doc(db,'accessGrants','verifier__reportingArea__area'),{active:true,permissions:['kp.read','kp.verify','ticketOrders.read','ticketOrders.verify']});
+    await setDoc(doc(db,'accessGrants','flyerOwner__reportingArea__area'),{active:true,permissions:[]});
   });
   const admin=env.authenticatedContext('admin').firestore();
   const seller=env.authenticatedContext('seller').firestore();
   const reader=env.authenticatedContext('reader').firestore();
   const verifier=env.authenticatedContext('verifier').firestore();
+  const flyerOwner=env.authenticatedContext('flyerOwner').firestore();
+  const flyerRogue=env.authenticatedContext('flyerRogue').firestore();
   await assertSucceeds(getDoc(doc(seller,'deliveryLocations','delivery-org')));
   await assertSucceeds(getDoc(doc(reader,'deliveryLocations','delivery-org')));
   await assertSucceeds(getDoc(doc(reader,'pocketfolderSourceRows','2026-27__source-row-06')));
@@ -325,6 +331,41 @@ try {
   const weeklyBatch=writeBatch(admin);weeklyBatch.set(doc(admin,'ticketPricingConfigs','price-weekly','revisions','1'),weeklyPrevious);weeklyBatch.set(doc(admin,'ticketPricingConfigs','price-weekly'),{...price,id:'price-weekly',productCode:'wk-area',revision:2,unitPrice:12,settlementUnitPrice:12});await assertSucceeds(weeklyBatch.commit());
   await assertFails(setDoc(doc(seller,'ticketSales',newId),newSale));
   await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'ticketSales',saleId)));
+  const flyerDraft={
+    id:'flyer-area-draft',
+    schema:'dns.flyer-document',
+    version:1,
+    title:'Area Flyer',
+    scopeType:'reportingArea',
+    scopeId:'area',
+    seasonId:'2026-27',
+    status:'draft',
+    ownerUserId:'flyerOwner',
+    document:{schema:'dns.flyer-document',version:1},
+    updatedBy:'flyerOwner',
+    updatedAt:serverTimestamp(),
+  };
+  await assertSucceeds(setDoc(doc(flyerOwner,'flyerDocuments',flyerDraft.id),flyerDraft));
+  await assertSucceeds(getDoc(doc(flyerOwner,'flyerDocuments',flyerDraft.id)));
+  await assertFails(setDoc(doc(flyerOwner,'flyerDocuments','flyer-area2-draft'),{
+    ...flyerDraft,
+    id:'flyer-area2-draft',
+    scopeId:'area2',
+  }));
+  await assertFails(setDoc(doc(flyerRogue,'flyerDocuments','flyer-rogue'),{
+    ...flyerDraft,
+    id:'flyer-rogue',
+    ownerUserId:'flyerRogue',
+    updatedBy:'flyerRogue',
+  }));
+  await assertSucceeds(setDoc(doc(admin,'flyerDocuments','flyer-admin-area2'),{
+    ...flyerDraft,
+    id:'flyer-admin-area2',
+    scopeId:'area2',
+    ownerUserId:'admin',
+    updatedBy:'admin',
+  }));
+
   const historical={seasonId:'2025-26',domain:'sales',organizationId:'org',reportingAreaId:'area',facts:[{quantity:5,amount:50}]};
   await env.withSecurityRulesDisabled(async context=>{
     await setDoc(doc(context.firestore(),'historicalSeasonRecords','history'),historical);
@@ -461,5 +502,5 @@ try {
 
   console.log('Faktura v2 rules passed: internal collections are admin-only, public token collection is not directly readable, and audit events are append-only.');
 
-  console.log('Seasonal rules passed: scoped reads/writes, sourced billing rates/extras, legacy and unified revisioned billing snapshots, READY completeness guards, read-only users, immutable audit history, stale pricing and anonymous access.');
+  console.log('Seasonal rules passed: scoped reads/writes, sourced billing rates/extras, Flyer owner scope grants, legacy and unified revisioned billing snapshots, READY completeness guards, read-only users, immutable audit history, stale pricing and anonymous access.');
 } finally { await env.cleanup(); }
