@@ -1,4 +1,4 @@
-export const DNS_ACCESSIBILITY_RUNTIME_VERSION = '1.0.0' as const;
+export const DNS_ACCESSIBILITY_RUNTIME_VERSION = '1.1.0' as const;
 
 export type DNSAccessibilityLanguage = 'de' | 'it';
 
@@ -9,6 +9,7 @@ export interface DNSAccessibilitySettings {
   reduceMotion: boolean;
   strongFocus: boolean;
   comfortableDensity: boolean;
+  grid: boolean;
 }
 
 export interface DNSAccessibilityRuntimeOptions {
@@ -25,6 +26,7 @@ export const DNS_ACCESSIBILITY_DEFAULTS: DNSAccessibilitySettings = {
   reduceMotion: false,
   strongFocus: false,
   comfortableDensity: false,
+  grid: false,
 };
 
 const STYLE_ID = 'dns-accessibility-runtime-style';
@@ -43,6 +45,7 @@ const COPY = {
     reduceMotion: 'Bewegung reduzieren',
     strongFocus: 'Fokus verstärken',
     comfortableDensity: 'Komfortable Dichte',
+    grid: 'Grid',
     reset: 'Zurücksetzen',
     close: 'Schließen',
     local: 'Einstellungen werden nur in diesem Browser gespeichert.',
@@ -60,6 +63,7 @@ const COPY = {
     reduceMotion: 'Riduci movimento',
     strongFocus: 'Focus rinforzato',
     comfortableDensity: 'Densità confortevole',
+    grid: 'Grid',
     reset: 'Ripristina',
     close: 'Chiudi',
     local: 'Le preferenze vengono salvate solo in questo browser.',
@@ -135,6 +139,9 @@ html.dns-a11y-strong-focus :is(button, a[href], input, select, textarea, [tabind
 }
 html.dns-a11y-comfort-density :is(button, input, select, textarea) { min-height: 44px; }
 html.dns-a11y-comfort-density :is(th, td) { padding-top: .75rem !important; padding-bottom: .75rem !important; }
+html.dns-a11y-grid table { border-collapse: collapse !important; }
+html.dns-a11y-grid :is(table, th, td) { border-color: var(--dns-table-grid-strong, rgba(65,116,131,.42)) !important; }
+html.dns-a11y-grid :is(th, td) { border-width: 1px !important; border-style: solid !important; }
 
 .dns-a11y-trigger {
   display: inline-flex;
@@ -279,6 +286,7 @@ function applySettings(settings: DNSAccessibilitySettings) {
   root.classList.toggle('dns-a11y-reduce-motion', settings.reduceMotion);
   root.classList.toggle('dns-a11y-strong-focus', settings.strongFocus);
   root.classList.toggle('dns-a11y-comfort-density', settings.comfortableDensity);
+  root.classList.toggle('dns-a11y-grid', settings.grid);
   root.dataset.dnsA11yTextScale = String(settings.textScale);
 }
 
@@ -350,6 +358,7 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
             ['reduceMotion', c.reduceMotion],
             ['strongFocus', c.strongFocus],
             ['comfortableDensity', c.comfortableDensity],
+            ['grid', c.grid],
           ].map(([key, label]) => `
             <label class="dns-a11y-toggle">
               <span>${label}</span>
