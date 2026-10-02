@@ -876,7 +876,8 @@ service cloud.firestore {
     // DNS Flyer Studio working documents.
     match /flyerDocuments/{document} {
       allow read: if activeUser() && (
-        resource.data.ownerUserId == request.auth.uid
+        (resource.data.ownerUserId == request.auth.uid
+          && canOwnFlyerScope(resource.data))
         || hasFlyerPermission('flyer.read', resource.data)
       );
 
@@ -900,7 +901,9 @@ service cloud.firestore {
         );
 
       allow delete: if isAdmin()
-        || (activeUser() && resource.data.ownerUserId == request.auth.uid);
+        || (activeUser()
+          && resource.data.ownerUserId == request.auth.uid
+          && canOwnFlyerScope(resource.data));
     }
 
     // Immutable publication snapshots. Published records are append-only.
