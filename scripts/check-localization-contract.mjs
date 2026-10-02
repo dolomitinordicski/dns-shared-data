@@ -3,6 +3,7 @@ import {
   DNS_FALLBACK_UI_LANGUAGE,
   DNS_FOUNDATION_MESSAGES,
   DNS_LOCALES,
+  DNS_OPERATIONAL_TIME_ZONE,
   DNS_UI_LANGUAGES,
   DNS_UI_LANGUAGE_STORAGE_KEY,
   resolveDNSLanguagePreference,
@@ -21,6 +22,7 @@ if (DNS_UI_LANGUAGE_STORAGE_KEY !== 'dns-ui-language-v1') {
 }
 if (DNS_LOCALES.de !== 'de-IT') errors.push('German locale must be de-IT.');
 if (DNS_LOCALES.it !== 'it-IT') errors.push('Italian locale must be it-IT.');
+if (DNS_OPERATIONAL_TIME_ZONE !== 'Europe/Rome') errors.push('Operational timezone must be Europe/Rome.');
 
 for (const [key, entry] of Object.entries(DNS_FOUNDATION_MESSAGES)) {
   if (!entry.de?.trim()) errors.push(`${key}: missing German translation.`);
