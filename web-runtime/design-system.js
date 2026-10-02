@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/design-system.ts
 // Keep this file synchronized with the canonical TypeScript contract.
-export const DNS_DESIGN_SYSTEM_VERSION = '1.24.0';
+export const DNS_DESIGN_SYSTEM_VERSION = '1.25.0';
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -608,6 +608,16 @@ export const DNS_DESIGN_SYSTEM = {
     brandDirectory: 'brand',
     webLogoFile: 'logo-web.png',
     printLogoFile: 'logo.png',
+  },
+  sharedCapabilities: {
+    version: '1.0.0',
+    source: 'capabilities',
+    ids: ['export.csv','export.xlsx','export.pdf','export.json','export.zip','export.bundle','export.png','export.jpeg','export.svg','import.csv','import.xlsx','import.json','calendar.ics','clipboard.copy','qr.generate','print'],
+    rules: [
+      'Consumers declare capabilities instead of implementing independent export/import UI.',
+      'Specialist libraries are hidden behind registered adapters.',
+      'Foundation owns capability naming, UI states and invocation contract; tools own data and business semantics.',
+    ],
   },
   assetSystem: {
     version: '1.0.0',

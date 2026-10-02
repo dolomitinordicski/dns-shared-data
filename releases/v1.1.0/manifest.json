@@ -1,0 +1,22 @@
+{
+  "foundationRelease": "1.1.0",
+  "ref": "release/v1.1.0",
+  "refType": "immutable-release-branch",
+  "channel": "stable",
+  "status": "frozen",
+  "releasedAt": "2026-10-02",
+  "components": {
+    "foundationRuntime": "1.1.0",
+    "designSystem": "1.25.0",
+    "dataContracts": "0.8.0",
+    "capabilities": "1.0.0"
+  },
+  "scope": "F0-F8 + C1",
+  "supportedUILanguages": ["de", "it"],
+  "shellProfiles": ["operational", "portal", "workspace"],
+  "consumerPinning": {
+    "required": true,
+    "target": "release/v1.1.0",
+    "prohibited": ["main", "master", "raw-commit-sha"]
+  }
+}

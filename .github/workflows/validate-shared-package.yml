@@ -21,6 +21,8 @@ on:
       - 'scripts/check-identity-ui.mjs'
       - 'scripts/check-assets-workspace.mjs'
       - 'scripts/check-release-freeze.mjs'
+      - 'scripts/check-capabilities.mjs'
+      - 'scripts/check-capabilities.mjs'
       - 'releases/**'
       - 'package.json'
       - 'tsconfig.json'
@@ -120,3 +122,6 @@ jobs:
 
       - name: Verify F8 release/freeze contract
         run: node scripts/check-release-freeze.mjs
+
+      - name: Verify C1 shared capabilities contract
+        run: node scripts/check-capabilities.mjs

@@ -1,6 +1,6 @@
 {
   "name": "@dolomitinordicski/dns-shared-data",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -175,6 +175,18 @@
     "./release": {
       "types": "./dist/release.d.ts",
       "import": "./dist/release.js"
+    },
+    "./capabilities": {
+      "types": "./dist/capabilities.d.ts",
+      "import": "./dist/capabilities.js"
+    },
+    "./capability-runtime": {
+      "types": "./dist/capability-runtime.d.ts",
+      "import": "./dist/capability-runtime.js"
+    },
+    "./ui/capabilities": {
+      "types": "./dist/ui/capabilities.d.ts",
+      "import": "./dist/ui/capabilities.js"
     }
   }
 }

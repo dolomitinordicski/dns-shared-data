@@ -26,8 +26,11 @@ import { initDNSWorkspaceRuntime, type DNSWorkspaceRuntimeHandle } from './ui/wo
 import { initDNSShellRuntime } from './ui/shell.js';
 import type { DNSShellProfileId } from './shell-profiles.js';
 import type { DNSPrintProfileId } from './print-profiles.js';
+import { createDNSCapabilityRuntime, type DNSCapabilityAdapter, type DNSCapabilityRuntime } from './capability-runtime.js';
+import type { DNSCapabilityId } from './capabilities.js';
+import { initDNSCapabilityUIRuntime } from './ui/capabilities.js';
 
-export const DNS_FOUNDATION_RUNTIME_VERSION = '1.0.0' as const;
+export const DNS_FOUNDATION_RUNTIME_VERSION = '1.1.0' as const;
 export const DNS_FOUNDATION_LANGUAGE_EVENT = 'dns:languagechange' as const;
 
 export interface DNSFoundationAccessibilityOptions {
@@ -60,6 +63,9 @@ export interface DNSFoundationRuntimeOptions {
   footer?: boolean;
   accessibility?: boolean | DNSFoundationAccessibilityOptions;
   shellProfile?: DNSShellProfileId;
+  capabilities?: readonly DNSCapabilityId[];
+  capabilityAdapters?: readonly DNSCapabilityAdapter[];
+  capabilityUI?: boolean;
 }
 
 export interface DNSFoundationRuntimeHandle {
@@ -67,6 +73,7 @@ export interface DNSFoundationRuntimeHandle {
   readonly designSystemVersion: string;
   readonly source: 'package' | 'provided';
   readonly workspaceRuntime?: DNSWorkspaceRuntimeHandle | null;
+  readonly capabilityRuntime: DNSCapabilityRuntime;
   getLanguage(): DNSUILanguage;
   setLanguage(language: DNSUILanguage): void;
   subscribeLanguage(listener: (language: DNSUILanguage) => void): () => void;
@@ -309,11 +316,17 @@ export function initDNSFoundation(
       account: options.accountLanguage,
     });
     const listeners = new Set<(language: DNSUILanguage) => void>();
+    const capabilityRuntime = createDNSCapabilityRuntime({
+      declared: options.capabilities,
+      adapters: options.capabilityAdapters,
+      language,
+    });
     return {
       version: DNS_FOUNDATION_RUNTIME_VERSION,
       designSystemVersion: (options.designSystem ?? DNS_DESIGN_SYSTEM).version,
       source: options.designSystem ? 'provided' : 'package',
       workspaceRuntime: null,
+      capabilityRuntime,
       getLanguage: () => language,
       setLanguage(next) {
         language = next === 'it' ? 'it' : DNS_DEFAULT_UI_LANGUAGE;
@@ -371,6 +384,7 @@ export function initDNSFoundation(
   if (options.dataUI !== false) initDNSDataUIRuntime(documentRoot);
   if (options.identityUI !== false) initDNSIdentityUIRuntime(documentRoot);
   if (options.assetUI !== false) initDNSAssetUIRuntime(documentRoot);
+  if (options.capabilityUI !== false) initDNSCapabilityUIRuntime(documentRoot);
 
   const interaction =
     options.interaction === false
@@ -418,6 +432,13 @@ export function initDNSFoundation(
           profile: options.printProfile ?? 'operational-table',
         });
 
+  const capabilityRuntime = createDNSCapabilityRuntime({
+    declared: options.capabilities,
+    adapters: options.capabilityAdapters,
+    printNow: (profile) => print?.printNow(profile),
+    language,
+  });
+
   const defaultFooterEnabled = shell.profile.footer.required;
   if (options.footer !== false && (options.footer === true || defaultFooterEnabled)) {
     initDNSFooterRuntime(documentRoot);
@@ -461,6 +482,7 @@ export function initDNSFoundation(
     designSystemVersion: designSystem.version,
     source,
     workspaceRuntime,
+    capabilityRuntime,
     getLanguage() {
       return language;
     },
