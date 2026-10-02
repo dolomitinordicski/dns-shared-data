@@ -99,6 +99,10 @@
     "./graphics": {
       "types": "./dist/graphics.d.ts",
       "import": "./dist/graphics.js"
+    },
+    "./ui/footer": {
+      "types": "./dist/ui/footer.d.ts",
+      "import": "./dist/ui/footer.js"
     }
   }
 }
