@@ -28,6 +28,25 @@ service cloud.firestore {
         && permission in get(grantPath).data.permissions;
     }
 
+    function hasAnyGrantForScope(scopeType, scopeId) {
+      let grantId = request.auth.uid + "__" + scopeType + "__" + scopeId;
+      let grantPath = /databases/$(database)/documents/accessGrants/$(grantId);
+      return activeUser()
+        && scopeId != ''
+        && exists(grantPath)
+        && get(grantPath).data.active == true;
+    }
+
+    function canOwnFlyerScope(data) {
+      return isAdmin()
+        || (data.scopeType == 'network'
+            && hasAnyGrantForScope('network', 'dolomiti-nordicski'))
+        || (data.scopeType == 'reportingArea'
+            && hasAnyGrantForScope('reportingArea', data.scopeId))
+        || (data.scopeType == 'organization'
+            && hasAnyGrantForScope('organization', data.scopeId));
+    }
+
     function dataAreaId(data) {
       return data.keys().hasAny(['reportingAreaId'])
         ? data.reportingAreaId
@@ -865,10 +884,7 @@ service cloud.firestore {
         && validFlyerDocument(request.resource.data)
         && request.resource.data.id == document
         && request.resource.data.ownerUserId == request.auth.uid
-        && (
-          hasFlyerPermission('flyer.write', request.resource.data)
-          || request.resource.data.ownerUserId == request.auth.uid
-        );
+        && canOwnFlyerScope(request.resource.data);
 
       allow update: if activeUser()
         && validFlyerDocument(request.resource.data)
@@ -878,7 +894,8 @@ service cloud.firestore {
         && request.resource.data.seasonId == resource.data.seasonId
         && request.resource.data.ownerUserId == resource.data.ownerUserId
         && (
-          resource.data.ownerUserId == request.auth.uid
+          (resource.data.ownerUserId == request.auth.uid
+            && canOwnFlyerScope(resource.data))
           || hasFlyerPermission('flyer.write', resource.data)
         );
 
