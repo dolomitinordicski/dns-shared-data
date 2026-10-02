@@ -1255,4 +1255,27 @@ Frontend access visibility is never a substitute for Security Rules/server autho
 
 ---
 
+## 49. F7 assets & workspace
+
+Foundation defines a canonical shared asset metadata model and the workspace authoring environment.
+
+Normative contract:
+
+```text
+src/assets.ts
+src/workspace.ts
+src/ui/assets.ts
+src/ui/workspace.ts
+docs/DNS-Assets-Workspace-v1.md
+```
+
+Asset metadata covers brand, region/organization logos, graphics, icons, photos, templates and documents with stable IDs, ownership, language, usage and lifecycle state.
+
+The future platform `assets` collection is Foundation-defined; persistence implementation remains pending.
+
+Workspace defines toolbar/canvas/inspector/mobile-panel geometry. Foundation governs workspace chrome, identity, language, accessibility, overlays/forms and asset browser presentation. The creative canvas renderer and exported artifact remain tool-owned.
+
+
+---
+
 **End of DNS Foundation v1.2**
