@@ -95,6 +95,10 @@
     "./ui/primitives": {
       "types": "./dist/ui/primitives.d.ts",
       "import": "./dist/ui/primitives.js"
+    },
+    "./graphics": {
+      "types": "./dist/graphics.d.ts",
+      "import": "./dist/graphics.js"
     }
   }
 }
