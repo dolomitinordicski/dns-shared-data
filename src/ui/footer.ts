@@ -1,6 +1,6 @@
 export const DNS_FOOTER_RUNTIME_VERSION = '1.1.1' as const;
 export const DNS_FOOTER_GRAPHIC_URL =
-  'https://dolomitinordicski.github.io/dns-shared-data/graphics/swoosh.svg' as const;
+  'https://raw.githubusercontent.com/dolomitinordicski/dns-shared-data/release/v1.1.1/graphics/swoosh.svg' as const;
 
 const STYLE_ID = 'dns-footer-runtime-style';
 
@@ -27,6 +27,32 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
   position: relative;
   z-index: 1;
 }
+.dns-tool-footer-shell {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  max-width: var(--dns-shell-max-width, 1440px);
+  min-height: 64px;
+  margin-inline: auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem 1.5rem;
+  padding: 1rem var(--dns-shell-padding-x, 32px);
+}
+.dns-tool-footer-primary {
+  color: rgba(255,255,255,.82);
+  font: 600 11px/1.35 var(--font-display,"Be Vietnam Pro",sans-serif);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.dns-tool-footer-meta {
+  max-width: calc(100% - 210px);
+  color: rgba(255,255,255,.62);
+  font: 400 10px/1.45 var(--font-alt,Roboto,sans-serif);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  text-align: right;
+}
 .dns-footer-graphic {
   position: absolute;
   right: -18px;
@@ -39,6 +65,16 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
   user-select: none;
 }
 @media (max-width: 767px) {
+  .dns-tool-footer-shell {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding-inline: var(--dns-shell-padding-x-mobile, 16px);
+  }
+  .dns-tool-footer-meta {
+    max-width: calc(100% - 96px);
+    text-align: left;
+  }
   .dns-footer-graphic {
     right: -42px;
     top: 50%;
