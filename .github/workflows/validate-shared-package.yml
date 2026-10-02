@@ -28,6 +28,8 @@ on:
       - 'tsconfig.json'
       - 'tsconfig.package.json'
       - '.github/workflows/validate-shared-package.yml'
+      - '.github/workflows/release-foundation.yml'
+      - 'docs/DNS-Foundation-Propagation-v1.md'
   pull_request:
     paths:
       - 'src/**'
@@ -52,6 +54,8 @@ on:
       - 'tsconfig.json'
       - 'tsconfig.package.json'
       - '.github/workflows/validate-shared-package.yml'
+      - '.github/workflows/release-foundation.yml'
+      - 'docs/DNS-Foundation-Propagation-v1.md'
   workflow_dispatch:
 
 permissions:
