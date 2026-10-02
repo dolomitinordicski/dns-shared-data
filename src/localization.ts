@@ -9,6 +9,7 @@ export type DNSContentLanguage = (typeof DNS_CONTENT_LANGUAGES)[number];
 export const DNS_DEFAULT_UI_LANGUAGE: DNSUILanguage = 'de';
 export const DNS_FALLBACK_UI_LANGUAGE: DNSUILanguage = 'de';
 export const DNS_UI_LANGUAGE_STORAGE_KEY = 'dns-ui-language-v1' as const;
+export const DNS_OPERATIONAL_TIME_ZONE = 'Europe/Rome' as const;
 
 export const DNS_LOCALES: Record<DNSUILanguage, string> = {
   de: 'de-IT',
@@ -84,6 +85,16 @@ export function translateDNSMessage(
   return entry?.[language] ?? entry?.[DNS_FALLBACK_UI_LANGUAGE];
 }
 
+export function resolveDNSLocalizedText(
+  value: Partial<Record<DNSUILanguage, string>> | null | undefined,
+  language: DNSUILanguage = DNS_DEFAULT_UI_LANGUAGE,
+): string | undefined {
+  const requested = value?.[language]?.trim();
+  if (requested) return requested;
+  const fallback = value?.[DNS_FALLBACK_UI_LANGUAGE]?.trim();
+  return fallback || undefined;
+}
+
 export function formatDNSNumber(
   value: number,
   language: DNSUILanguage = DNS_DEFAULT_UI_LANGUAGE,
@@ -122,7 +133,28 @@ export function formatDNSDate(
   options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' },
 ): string {
   const date = value instanceof Date ? value : new Date(value);
-  return new Intl.DateTimeFormat(DNS_LOCALES[language], options).format(date);
+  return new Intl.DateTimeFormat(DNS_LOCALES[language], {
+    timeZone: DNS_OPERATIONAL_TIME_ZONE,
+    ...options,
+  }).format(date);
+}
+
+export function formatDNSDateTime(
+  value: Date | number | string,
+  language: DNSUILanguage = DNS_DEFAULT_UI_LANGUAGE,
+  options: Intl.DateTimeFormatOptions = {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  },
+): string {
+  const date = value instanceof Date ? value : new Date(value);
+  return new Intl.DateTimeFormat(DNS_LOCALES[language], {
+    timeZone: DNS_OPERATIONAL_TIME_ZONE,
+    ...options,
+  }).format(date);
 }
 
 export interface DNSLanguagePreferenceSource {
