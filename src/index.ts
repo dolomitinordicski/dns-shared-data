@@ -4,6 +4,7 @@ export * from './design-system.js';
 export * from './access-control.js';
 export * from './order-setup-2026-27.js';
 export * from './brand-assets.js';
+export * from './graphics.js';
 export * from './data-contracts.js';
 export * from './billing-preparation.js';
 export * from './area-allocation-keys.js';
@@ -16,6 +17,7 @@ export * from './ui/accessibility.js';
 export * from './ui/navigation.js';
 export * from './ui/tool-chrome.js';
 export * from './ui/print.js';
+export * from './ui/footer.js';
 
 export * from './ui/content-patterns.js';
 export * from './ui/primitives.js';
