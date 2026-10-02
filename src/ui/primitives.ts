@@ -1,9 +1,12 @@
+import { translateDNSFoundation, type DNSUILanguage } from '../localization.js';
+import { openDNSOverlay } from './overlay.js';
+
 export const DNS_UI_PRIMITIVES_VERSION = '1.0.0' as const;
 
 export type DNSStatus = 'draft' | 'live' | 'locked' | 'ready' | 'warning' | 'error' | 'archived' | 'synced';
 export type DNSAlertVariant = 'info' | 'success' | 'warning' | 'error';
 export type DNSButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'danger' | 'icon';
-export type DNSEmptyState = 'loading' | 'empty' | 'error' | 'offline';
+export type DNSEmptyState = 'loading' | 'empty' | 'error' | 'offline' | 'unauthorized' | 'forbidden' | 'not-found' | 'saving' | 'saved' | 'syncing' | 'stale';
 
 const STYLE_ID = 'dns-ui-primitives-style';
 const TOAST_ROOT_ID = 'dns-toast-root';
@@ -126,18 +129,21 @@ export interface DNSConfirmOptions {
   confirmLabel?: string;
   cancelLabel?: string;
   destructive?: boolean;
+  language?: DNSUILanguage;
 }
 
 export function confirmDNSAction(options: DNSConfirmOptions): Promise<boolean> {
   if (typeof document === 'undefined') return Promise.resolve(false);
   initDNSUIPrimitives();
+
   return new Promise((resolve) => {
     const overlay = document.createElement('div');
     overlay.className = 'dns-modal-overlay';
-    overlay.setAttribute('role', 'dialog');
-    overlay.setAttribute('aria-modal', 'true');
+
     const modal = document.createElement('div');
     modal.className = 'dns-modal';
+    modal.setAttribute('role', 'dialog');
+
     const titleId = 'dns-modal-title-' + Date.now();
     modal.setAttribute('aria-labelledby', titleId);
     modal.innerHTML =
@@ -147,22 +153,41 @@ export function confirmDNSAction(options: DNSConfirmOptions): Promise<boolean> {
       '<button type="button" class="dns-button" data-action="cancel" data-variant="secondary"></button>' +
       '<button type="button" class="dns-button" data-action="confirm" data-variant="' + (options.destructive ? 'danger' : 'primary') + '"></button>' +
       '</div>';
+
     const title = modal.querySelector('.dns-modal-title');
     const body = modal.querySelector('.dns-modal-body');
-    if (title) title.textContent = options.title;
-    if (body) body.textContent = options.message;
     const cancel = modal.querySelector<HTMLButtonElement>('[data-action="cancel"]');
     const confirm = modal.querySelector<HTMLButtonElement>('[data-action="confirm"]');
-    if (cancel) cancel.textContent = options.cancelLabel ?? 'Abbrechen';
-    if (confirm) confirm.textContent = options.confirmLabel ?? 'Bestätigen';
+    const language = options.language ?? 'de';
+
+    if (title) title.textContent = options.title;
+    if (body) body.textContent = options.message;
+    if (cancel) cancel.textContent = options.cancelLabel ?? translateDNSFoundation('action.cancel', language);
+    if (confirm) confirm.textContent = options.confirmLabel ?? translateDNSFoundation('action.confirm', language);
+
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
-    const done = (value: boolean) => { document.removeEventListener('keydown', onKey); overlay.remove(); resolve(value); };
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') done(false); };
+
+    let settled = false;
+    const done = (value: boolean) => {
+      if (settled) return;
+      settled = true;
+      overlayHandle.disconnect();
+      overlay.remove();
+      resolve(value);
+    };
+
     cancel?.addEventListener('click', () => done(false));
     confirm?.addEventListener('click', () => done(true));
-    overlay.addEventListener('click', (event) => { if (event.target === overlay) done(false); });
-    document.addEventListener('keydown', onKey);
-    confirm?.focus();
+
+    const overlayHandle = openDNSOverlay({
+      type: 'confirm',
+      element: overlay,
+      initialFocus: confirm,
+      closeOnBackdrop: true,
+      onClose(reason) {
+        if (reason !== 'programmatic') done(false);
+      },
+    });
   });
 }

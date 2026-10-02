@@ -1211,4 +1211,24 @@ F4 defines modal/drawer/toast motion only. Their focus, Escape, focus-return and
 
 ---
 
+## 47. F5 overlays, forms, upload & data UI
+
+Foundation defines common operational UI semantics for overlays, forms, uploads, data controls and application states.
+
+Normative contract:
+
+```text
+src/data-ui.ts
+src/ui/data-ui.ts
+src/ui/overlay.ts
+docs/DNS-Data-UI-Overlays-v1.md
+```
+
+Overlay accessibility lifecycle (focus trap, Escape policy, focus return) is Foundation-owned. Forms expose required/valid/error/readonly/disabled/dirty/saving/saved states. Upload/drop zones expose idle/dragging/uploading/success/error/disabled states. Shared data controls cover search/filter/sort/pagination/columns/selection/bulk/export.
+
+Tool repositories retain business validation, persistence, query logic, upload destinations and domain workflows.
+
+
+---
+
 **End of DNS Foundation v1.2**

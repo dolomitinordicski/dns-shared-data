@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.21.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.22.0' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -356,7 +356,7 @@ export const DNS_DESIGN_SYSTEM = {
     className: 'dns-status',
   },
   applicationStates: {
-    values: ['loading','empty','error','offline'],
+    values: ['loading','empty','error','offline','unauthorized','forbidden','not-found','saving','saved','syncing','stale'],
     className: 'dns-state',
   },
   actions: {
@@ -365,6 +365,7 @@ export const DNS_DESIGN_SYSTEM = {
     minHeightPx: 36,
   },
   forms: {
+    states: ['default','required','valid','error','readonly','disabled','dirty','saving','saved'],
     fieldClassName: 'dns-field',
     labelClassName: 'dns-field-label',
     helpClassName: 'dns-field-help',
@@ -400,10 +401,38 @@ export const DNS_DESIGN_SYSTEM = {
     contextSelectClassName: 'dns-context-select',
   },
   overlays: {
+    version: '1.0.0',
+    values: ['modal','confirm','drawer','popover','dropdown','menu','tooltip','toast','blocking'],
     modalClassName: 'dns-modal',
     modalOverlayClassName: 'dns-modal-overlay',
     toastClassName: 'dns-toast',
     toastVariants: ['info','success','warning','error'],
+    rules: [
+      'Blocking overlays trap focus and restore focus on close.',
+      'Escape closes modal/confirm/drawer/popover/dropdown/menu/tooltip unless explicitly blocking.',
+      'Overlay accessibility and lifecycle are Foundation-owned; business state remains tool-owned.',
+    ],
+  },
+  uploads: {
+    version: '1.0.0',
+    className: 'dns-upload',
+    states: ['idle','dragging','uploading','success','error','disabled'],
+    rules: [
+      'Foundation owns upload/drop-zone states and accessibility semantics.',
+      'Storage destination, validation and persistence remain tool-owned.',
+    ],
+  },
+  dataUi: {
+    version: '1.0.0',
+    actions: ['search','filter','sort','paginate','columns','select','bulk','export'],
+    toolbarClassName: 'dns-data-toolbar',
+    bulkClassName: 'dns-bulk-bar',
+    paginationClassName: 'dns-pagination',
+    rules: [
+      'Foundation owns shared controls and state presentation, not tool query/business logic.',
+      'Bulk actions require explicit visible selection.',
+      'Search/filter/sort/pagination/export semantics must remain keyboard accessible.',
+    ],
   },
   controls: {
     radiusPx: 6,
@@ -699,6 +728,18 @@ export const DNS_DESIGN_SYSTEM = {
         'Fixed pixel sticky offsets are not allowed.',
         'On scroll down the Foundation header hides while the menu bar remains visible; on scroll up the header reveals again.',
         'Tool-specific header hide/show behavior is not allowed.',
+      ],
+    },
+    dataUiRuntime: {
+      codeSource: 'dns-shared-data/ui/data-ui',
+      overlaySource: 'dns-shared-data/ui/overlay',
+      contractSource: 'dns-shared-data/data-ui',
+      version: '1.0.0',
+      requiredForFoundationAlignedTools: true,
+      rules: [
+        'Foundation owns overlay accessibility, form states, upload/drop-zone presentation and shared data UI controls.',
+        'Tool repositories retain query, persistence, validation and business workflow logic.',
+        'Application state is explicit and may not be communicated by motion alone.',
       ],
     },
     semanticMotionRuntime: {

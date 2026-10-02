@@ -17,6 +17,7 @@ on:
       - 'scripts/check-shell-profiles.mjs'
       - 'scripts/check-print-profiles.mjs'
       - 'scripts/check-motion-semantics.mjs'
+      - 'scripts/check-data-ui.mjs'
       - 'package.json'
       - 'tsconfig.json'
       - 'tsconfig.package.json'
@@ -36,6 +37,7 @@ on:
       - 'scripts/check-shell-profiles.mjs'
       - 'scripts/check-print-profiles.mjs'
       - 'scripts/check-motion-semantics.mjs'
+      - 'scripts/check-data-ui.mjs'
       - 'package.json'
       - 'tsconfig.json'
       - 'tsconfig.package.json'
@@ -98,3 +100,6 @@ jobs:
 
       - name: Verify motion semantics contract
         run: node scripts/check-motion-semantics.mjs
+
+      - name: Verify F5 data UI contract
+        run: node scripts/check-data-ui.mjs

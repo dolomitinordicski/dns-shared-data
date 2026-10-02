@@ -19,6 +19,7 @@ import {
   type DNSAccessibilitySettings,
 } from './ui/accessibility.js';
 import { initDNSFooterRuntime } from './ui/footer.js';
+import { initDNSDataUIRuntime } from './ui/data-ui.js';
 import { initDNSShellRuntime } from './ui/shell.js';
 import type { DNSShellProfileId } from './shell-profiles.js';
 import type { DNSPrintProfileId } from './print-profiles.js';
@@ -43,6 +44,7 @@ export interface DNSFoundationRuntimeOptions {
   persistLanguage?: boolean;
   primitives?: boolean;
   contentPatterns?: boolean;
+  dataUI?: boolean;
   interaction?: boolean;
   motion?: boolean;
   semanticMotion?: boolean;
@@ -354,6 +356,7 @@ export function initDNSFoundation(
 
   if (options.primitives !== false) initDNSUIPrimitives();
   if (options.contentPatterns !== false) initDNSContentPatterns();
+  if (options.dataUI !== false) initDNSDataUIRuntime(documentRoot);
 
   const interaction =
     options.interaction === false

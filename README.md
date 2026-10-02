@@ -13,7 +13,7 @@ This repository contains:
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.3
-- **DNS Design System:** v1.21
+- **DNS Design System:** v1.22
 - **DNS Access Control:** v0.1
 
 ## Source of truth
@@ -61,7 +61,7 @@ firebase.json
 
 ## DNS Design System
 
-The current shared visual and interaction contract is **v1.21.0** and is documented in:
+The current shared visual and interaction contract is **v1.22.0** and is documented in:
 
 ```text
 docs/DNS-Design-System-v1.md
@@ -76,6 +76,25 @@ The GitHub Pages architecture overview is also the visual reference implementati
 
 
 
+
+
+## Foundation overlays, forms, uploads & data UI
+
+F5 standardizes shared operational UI:
+- accessible overlays and focus lifecycle;
+- form states including dirty/saving/saved;
+- upload/drop-zone states;
+- search/filter/sort/pagination/column/selection/bulk/export controls;
+- expanded application states including unauthorized/forbidden/not-found/syncing/stale.
+
+Contract:
+
+```text
+docs/DNS-Data-UI-Overlays-v1.md
+@dolomitinordicski/dns-shared-data/data-ui
+```
+
+Foundation owns presentation/accessibility; tools retain business validation, persistence, queries and workflow logic.
 
 ## Foundation motion & interaction semantics
 
