@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/design-system.ts
 // Keep this file synchronized with the canonical TypeScript contract.
-export const DNS_DESIGN_SYSTEM_VERSION = '1.20.0';
+export const DNS_DESIGN_SYSTEM_VERSION = '1.21.0';
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -137,6 +137,28 @@ export const DNS_DESIGN_SYSTEM = {
       easing: 'cubic-bezier(.2,.8,.2,1)',
       willChange: 'transform',
     },
+  },
+  motionSemantics: {
+    version: '1.0.0',
+    source: 'motion-semantics',
+    values: ['enter','exit','expand','collapse','modal','drawer','toast','tab','contextChange','loading'],
+    rules: [
+      'Applications declare semantic motion intent rather than local durations/transforms.',
+      'Motion supports orientation, feedback, continuity and state understanding; it is not decorative.',
+      'Exit motion must never delay authoritative state completion.',
+      'Reduced-motion preferences remove movement and delays while preserving final state.',
+      'Bounce, spring and gratuitous large-scale page choreography are not part of the DNS interaction language.',
+    ],
+  },
+  interactionSemantics: {
+    version: '1.0.0',
+    source: 'motion-semantics',
+    values: ['action','selection','toggle','navigation','destructive'],
+    rules: [
+      'Semantic interaction roles reuse shared hover/press/focus feedback.',
+      'Selection/toggle/navigation state remains represented through ARIA or explicit state attributes.',
+      'Destructive meaning comes from the action variant and copy, not from exaggerated motion.',
+    ],
   },
   interaction: {
     focusVisible: {
@@ -679,6 +701,18 @@ export const DNS_DESIGN_SYSTEM = {
         'Fixed pixel sticky offsets are not allowed.',
         'On scroll down the Foundation header hides while the menu bar remains visible; on scroll up the header reveals again.',
         'Tool-specific header hide/show behavior is not allowed.',
+      ],
+    },
+    semanticMotionRuntime: {
+      codeSource: 'dns-shared-data/ui/semantic-motion',
+      semanticSource: 'dns-shared-data/motion-semantics',
+      version: '1.0.0',
+      requiredForSemanticMotion: true,
+      rules: [
+        'Use Foundation semantic presets instead of application-owned durations/easing/transforms.',
+        'Semantic motion is opt-in by event or component state and is never applied as decorative global choreography.',
+        'All semantic motion must respect prefers-reduced-motion and accessibility reduce-motion settings.',
+        'Interaction feedback uses data-dns-interaction semantic roles where appropriate.',
       ],
     },
     motionRuntime: {
