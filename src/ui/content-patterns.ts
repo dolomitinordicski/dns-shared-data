@@ -61,6 +61,12 @@ export function initDNSContentPatterns() {
 }
 .dns-insight .dns-insight-title { color: var(--color-dns-light, #AAD0D1); }
 .dns-insight .dns-insight-body { color: #fff; }
+.dns-insight-body > :first-child,
+.dns-alert-body > :first-child { margin-top: 0; }
+.dns-insight-body > :last-child,
+.dns-alert-body > :last-child { margin-bottom: 0; }
+.dns-insight-body p,
+.dns-alert-body p { margin: 0 0 .35rem; }
 
 .dns-alert { grid-template-columns: 24px minmax(0,1fr); }
 .dns-alert::before {
