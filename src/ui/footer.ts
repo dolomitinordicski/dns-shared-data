@@ -1,4 +1,4 @@
-import { DNS_FOUNDATION_RELEASE_VERSION } from '../release.js';
+import { DNS_FOUNDATION_RELEASE_VERSION } from '../version.js';
 
 export const DNS_FOOTER_RUNTIME_VERSION = '1.2.0' as const;
 export const DNS_FOOTER_GRAPHIC_URL =
