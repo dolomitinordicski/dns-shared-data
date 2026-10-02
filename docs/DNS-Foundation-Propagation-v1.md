@@ -44,6 +44,10 @@ Never move or recreate an existing `foundation-vX.Y.Z` tag. Publish a new SemVer
 - A failed consumer build leaves its current pin in place and reports the failure in Actions.
 - The weekly check is a safety net; a maintainer may dispatch the update workflow immediately after publishing a release.
 
+## GitHub Actions setting for consumer PRs
+
+Each consumer repository must allow GitHub Actions to create pull requests in **Settings → Actions → General → Workflow permissions**. The workflows use the repository-scoped `GITHUB_TOKEN`; no personal access token or cross-repository secret is needed. If that setting is disabled, the updater will report a failed PR-creation step and will not alter the consumer's default branch.
+
 ## Current release bootstrap
 
 The repository currently declares Foundation package version `1.1.2`. The existing `release/v1.1.2` reference is a branch, and the consumer manifests contain commit pins. After this policy is merged, publish `foundation-v1.1.2` once from the validated current main commit, then let the consumer update PRs move the existing tools to that immutable release.
