@@ -942,6 +942,60 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // DNS Faktura v2 internal operational state.
+    //
+    // Public confirmation never reads/writes these collections directly.
+    // Public token resolution/submission is handled only by the Faktura
+    // server-side Firebase Functions boundary using the Admin SDK.
+    //
+    // Client-side access is restricted to active DNS administrators until
+    // a narrower Faktura operator grant model is introduced.
+    match /fakturaConfirmations/{document} {
+      allow read, create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /fakturaBillingSheets/{document} {
+      allow read, create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /fakturaPayments/{document} {
+      allow read, create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /fakturaDeliveries/{document} {
+      allow read, create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /fakturaManualSources/{document} {
+      allow read, create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // Token documents contain only hashes, but remain strictly internal.
+    // Anonymous/signed-in non-admin clients may not get, list or query them.
+    match /fakturaConfirmationTokens/{document} {
+      allow read, create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // Quantity-consumption ledger is trusted operational state.
+    match /fakturaConfirmationLedgers/{document} {
+      allow read, create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // Audit log is append-only from DNS admin clients. Server-side Admin SDK
+    // writes are not governed by client rules.
+    match /fakturaEvents/{document} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
     // Everything else remains closed until its domain rules are implemented.
     match /{document=**} {
       allow read, write: if false;
