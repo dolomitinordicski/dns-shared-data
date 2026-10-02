@@ -14,6 +14,8 @@ export * from './shell-profiles.js';
 export * from './print-profiles.js';
 export * from './motion-semantics.js';
 export * from './data-ui.js';
+export * from './identity-ui.js';
+export * from './ui/identity.js';
 export * from './ui/data-ui.js';
 export * from './ui/overlay.js';
 export * from './ui/semantic-motion.js';
