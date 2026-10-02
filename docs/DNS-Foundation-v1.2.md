@@ -3,7 +3,7 @@
 **Dolomiti NordicSki Digital Platform**  
 **Status:** Foundation Specification  
 **Date:** 30 September 2026  
-**Canonical Dataset:** v1.1  
+**Canonical Dataset:** v1.6  
 **Source of truth repository:** `dolomitinordicski/dns-shared-data`
 
 ---
@@ -982,17 +982,15 @@ Initial ownership rules:
 
 ## 38. Change control
 
-A canonical ID should be treated as immutable once used in production.
+Canonical IDs remain immutable once used in production and historical readability must be preserved through aliases/mappings.
 
-Display names may change.
+The normative change-control process is defined in:
 
-Aliases may be added.
+```text
+docs/DNS-Canonical-Change-Control-v1.md
+```
 
-Relationships may change over time.
-
-If an entity is replaced, merged or retired, the old ID should generally remain resolvable for historical data.
-
-Changes to canonical master data should occur in `dns-shared-data` first.
+Canonical changes are classified as MAJOR / MINOR / PATCH. Money-moving structural changes require a traceable proposal, FAIR impact simulation, institutional approval and a future effective season. Repository write authority does not substitute for approval authority.
 
 ---
 
@@ -1035,6 +1033,24 @@ DNS Foundation v1.2 establishes:
 13. XGLA4 retained as the accounting authority;
 14. Poll personal data isolated from shared master data;
 15. app-by-app migration instead of a destructive platform rewrite.
+
+---
+
+## 41. F0 governance layer
+
+The Foundation governance baseline is completed by:
+
+- `DNS-Canonical-Change-Control-v1.md` — canonical decision/change process;
+- `DNS-Canonical-Dataset-Changelog.md` — release/change record;
+- `DNS-FAIR-Reproducibility-v1.md` — approved FAIR input/result snapshot contract;
+- `DNS-Data-Governance-Compliance-v1.md` — public compliance register and verification gaps;
+- `DNS-Implementation-State-Policy-v1.md` — current vs target/planned vocabulary;
+- `DNS-Operational-Runbook-v1.md` — operational handover baseline.
+
+For approved FAIR seasons, immutable input and result snapshots are required so a historical contribution can be reproduced without reading mutable live operational data.
+
+The typed contract is exported from `src/fair-governance.ts`. Persistence implementation remains a separate controlled step.
+
 
 ---
 
