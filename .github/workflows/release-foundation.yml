@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm install
+        run: npm install --ignore-scripts --no-audit --no-fund
       - name: Validate package
         run: |
           npm run build:package
@@ -34,12 +34,18 @@ jobs:
         id: release
         env:
           REQUESTED_VERSION: ${{ inputs.version }}
+          RELEASE_REF: ${{ github.ref }}
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const requested = process.env.REQUESTED_VERSION;
           const actual = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;
-          if (!/^\\d+\\.\\d+\\.\\d+$/.test(requested ?? '')) {
+          const parts = (requested ?? '').split('.');
+          const numeric = value => value.length > 0 && [...value].every(char => char >= '0' && char <= '9');
+          if (process.env.RELEASE_REF !== 'refs/heads/main') {
+            throw new Error('Foundation releases may only be created from main.');
+          }
+          if (parts.length !== 3 || parts.some(part => !numeric(part))) {
             throw new Error('Version must use plain SemVer, for example 1.1.2.');
           }
           if (requested !== actual) {
