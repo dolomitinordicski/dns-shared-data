@@ -15,9 +15,9 @@ Consumers declare only the capabilities they expose. Tool-specific data selectio
 The shared Foundation is frozen as:
 
 ```text
-Foundation package/runtime  1.0.0
-Stable ref                  release/v1.0.0
-DNS Design System           1.24.0
+Foundation package/runtime  1.1.0
+Stable ref                  release/v1.1.0
+DNS Design System           1.25.0
 DNS Data Contracts          0.8.0
 Status                      stable / frozen
 ```
@@ -28,11 +28,11 @@ The package remains private/internal to DNS. Release policy and compatibility ru
 
 ```text
 docs/DNS-Foundation-Release-Freeze-v1.md
-releases/v1.0.0/manifest.json
+releases/v1.1.0/manifest.json
 @dolomitinordicski/dns-shared-data/release
 ```
 
-F8 freezes the compatibility surface completed through F7. Future breaking changes require a new MAJOR Foundation release; compatible features use MINOR and fixes use PATCH.
+Foundation 1.1.0 preserves the frozen F0–F8 compatibility surface and adds C1 Shared Capabilities as a backward-compatible MINOR extension.
 
 # DNS Shared Data
 
@@ -49,7 +49,7 @@ This repository contains:
 - **DNS Foundation:** v1.2
 - **Canonical Dataset:** v1.6
 - **Seasonal Operational Dataset:** v0.3
-- **DNS Design System:** v1.24
+- **DNS Design System:** v1.25
 - **DNS Access Control:** v0.1
 
 ## Source of truth
