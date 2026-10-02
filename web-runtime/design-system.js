@@ -1,6 +1,6 @@
 // GENERATED BROWSER MIRROR — source of truth: src/design-system.ts
 // Keep this file synchronized with the canonical TypeScript contract.
-export const DNS_DESIGN_SYSTEM_VERSION = '1.23.0';
+export const DNS_DESIGN_SYSTEM_VERSION = '1.24.0';
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -609,6 +609,34 @@ export const DNS_DESIGN_SYSTEM = {
     webLogoFile: 'logo-web.png',
     printLogoFile: 'logo.png',
   },
+  assetSystem: {
+    version: '1.0.0',
+    contractSource: 'assets',
+    types: ['brand','region-logo','organization-logo','graphic','icon','photo','template','document'],
+    statuses: ['draft','active','deprecated','archived'],
+    usages: ['web','print','portal','workspace','export','download'],
+    rules: [
+      'Asset IDs are stable and language-independent.',
+      'Canonical assets declare owner context, status, language and intended usage.',
+      'Portal and Workspace consume canonical asset metadata rather than maintaining local registries.',
+      'Unofficial or guessed logos must never be promoted to canonical assets.',
+      'Creative templates are shared assets; rendered creative output remains tool-owned.',
+    ],
+  },
+  workspaceUi: {
+    version: '1.0.0',
+    contractSource: 'workspace',
+    regions: ['toolbar','canvas','inspector','mobile-panel'],
+    inspectorMinPx: 280,
+    inspectorMaxPx: 380,
+    mobileBreakpointPx: 1023,
+    rules: [
+      'Foundation governs workspace chrome, not creative canvas output.',
+      'Desktop supports toolbar, canvas and optional inspector.',
+      'Tablet/mobile may collapse inspector controls into a bottom sheet/mobile panel.',
+      'Workspace consumes the same Foundation accessibility, identity, language, form and overlay systems.',
+    ],
+  },
   printProfiles: {
     version: '1.0.0',
     default: 'operational-table',
@@ -749,6 +777,19 @@ export const DNS_DESIGN_SYSTEM = {
         'Fixed pixel sticky offsets are not allowed.',
         'On scroll down the Foundation header hides while the menu bar remains visible; on scroll up the header reveals again.',
         'Tool-specific header hide/show behavior is not allowed.',
+      ],
+    },
+    workspaceRuntime: {
+      codeSource: 'dns-shared-data/ui/workspace',
+      contractSource: 'dns-shared-data/workspace',
+      assetUiSource: 'dns-shared-data/ui/assets',
+      assetContractSource: 'dns-shared-data/assets',
+      version: '1.0.0',
+      requiredForWorkspaceProfile: true,
+      rules: [
+        'Workspace runtime is enabled only for the workspace shell profile.',
+        'Canvas rendering and export engines remain consumer-owned.',
+        'Asset browser UI consumes canonical asset metadata and does not own binary persistence.',
       ],
     },
     identityUiRuntime: {
