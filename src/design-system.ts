@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.19.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.20.0' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -537,6 +537,20 @@ export const DNS_DESIGN_SYSTEM = {
     webLogoFile: 'logo-web.png',
     printLogoFile: 'logo.png',
   },
+  printProfiles: {
+    version: '1.0.0',
+    default: 'operational-table',
+    values: ['operational-table', 'report', 'document'],
+    source: 'print-profiles',
+    creativeExportBoundary: 'creative-export is tool-owned and is not a Foundation print profile',
+    rules: [
+      'Printable DNS artifacts declare a canonical Foundation print profile.',
+      'Operational Table is the default for current dense operational tools.',
+      'Report is document-flow oriented and keeps narrative, methodology and sources.',
+      'Document is for formal confirmations/forms and other transactional documents.',
+      'Flyer Studio creative export is rendered by the authoring engine, not by the Foundation print runtime.',
+    ],
+  },
   print: {
     profile: 'operational-table',
     pageSize: 'A4',
@@ -678,12 +692,16 @@ export const DNS_DESIGN_SYSTEM = {
     },
     printRuntime: {
       codeSource: 'dns-shared-data/ui/print',
+      profileSource: 'dns-shared-data/print-profiles',
+      version: '1.0.0',
       requiredForPrintableTools: true,
       rules: [
-        'Printable DNS tools consume the shared print runtime and print tokens.',
+        'Printable DNS tools consume the shared print runtime and one canonical print profile.',
         'window.open/document.write print implementations are not allowed.',
         'Printable documents render through a body-level dns-print-sheet portal.',
-        'Tool-specific print content is allowed; page geometry and print styling are Foundation-owned.',
+        'Tool-specific print content is allowed; page geometry and shared print styling are Foundation-owned.',
+        'Legacy direct print-token overrides are migration-only and must be removed during consumer consolidation.',
+        'Creative export from Flyer Studio is explicitly outside the Foundation print runtime.',
       ],
     },
     printPortal: {
