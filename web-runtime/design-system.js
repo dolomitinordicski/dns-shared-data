@@ -716,12 +716,13 @@ export const DNS_DESIGN_SYSTEM = {
       ],
     },
     motionRuntime: {
-      configSource: 'DNS_Core / designSystem/current',
-      codeSource: 'dns-shared-data or local application bundle',
+      configSource: 'DNS_DESIGN_SYSTEM.motion / versioned dns-shared-data package',
+      codeSource: 'dns-shared-data/ui/motion',
       executeCodeFromFirestore: false,
       rules: [
-        'Firestore provides declarative motion and interaction tokens only.',
-        'Shared JavaScript helpers must be versioned source code, never remote executable code.',
+        'The versioned dns-shared-data package is the canonical motion-token source.',
+        'Firestore does not override Foundation motion timing, easing or semantic presets.',
+        'Shared JavaScript helpers are versioned source code, never remote executable code.',
         'All motion helpers must respect prefers-reduced-motion.',
         'Hover transforms apply only to genuinely interactive elements.',
       ],
