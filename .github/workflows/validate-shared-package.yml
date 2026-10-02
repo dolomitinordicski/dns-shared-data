@@ -19,6 +19,7 @@ on:
       - 'scripts/check-motion-semantics.mjs'
       - 'scripts/check-data-ui.mjs'
       - 'scripts/check-identity-ui.mjs'
+      - 'scripts/check-assets-workspace.mjs'
       - 'package.json'
       - 'tsconfig.json'
       - 'tsconfig.package.json'
@@ -40,6 +41,7 @@ on:
       - 'scripts/check-motion-semantics.mjs'
       - 'scripts/check-data-ui.mjs'
       - 'scripts/check-identity-ui.mjs'
+      - 'scripts/check-assets-workspace.mjs'
       - 'package.json'
       - 'tsconfig.json'
       - 'tsconfig.package.json'
@@ -108,3 +110,6 @@ jobs:
 
       - name: Verify F6 identity UI contract
         run: node scripts/check-identity-ui.mjs
+
+      - name: Verify F7 assets/workspace contract
+        run: node scripts/check-assets-workspace.mjs
