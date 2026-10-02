@@ -103,6 +103,10 @@
     "./ui/footer": {
       "types": "./dist/ui/footer.d.ts",
       "import": "./dist/ui/footer.js"
+    },
+    "./fair-governance": {
+      "types": "./dist/fair-governance.d.ts",
+      "import": "./dist/fair-governance.js"
     }
   }
 }
