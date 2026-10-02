@@ -111,6 +111,10 @@
     "./localization": {
       "types": "./dist/localization.d.ts",
       "import": "./dist/localization.js"
+    },
+    "./foundation": {
+      "types": "./dist/foundation.d.ts",
+      "import": "./dist/foundation.js"
     }
   }
 }

@@ -1,3 +1,4 @@
+import { translateDNSFoundation } from '../localization.js';
 import { initDNSContentPatterns } from './content-patterns.js';
 import { initDNSUIPrimitives } from './primitives.js';
 
@@ -36,46 +37,27 @@ export const DNS_ACCESSIBILITY_DEFAULTS: DNSAccessibilitySettings = {
 
 const STYLE_ID = 'dns-accessibility-runtime-style';
 
-const COPY = {
-  de: {
-    open: 'Barrierefreiheit',
-    title: 'Barrierefreiheit',
-    kicker: 'DNS Foundation',
-    textSize: 'Textgröße',
-    standard: 'Standard',
-    medium: 'Größer',
-    large: 'Sehr groß',
-    highContrast: 'Hoher Kontrast',
-    relaxedSpacing: 'Mehr Textabstand',
-    reduceMotion: 'Bewegung reduzieren',
-    strongFocus: 'Fokus verstärken',
-    comfortableDensity: 'Komfortable Dichte',
-    grid: 'Grid',
-    largeReadingText: 'Sehr großer Lesetext',
-    reset: 'Zurücksetzen',
-    close: 'Schließen',
-    local: 'Einstellungen werden nur in diesem Browser gespeichert.',
-  },
-  it: {
-    open: 'Accessibilità',
-    title: 'Accessibilità',
-    kicker: 'DNS Foundation',
-    textSize: 'Dimensione testo',
-    standard: 'Standard',
-    medium: 'Più grande',
-    large: 'Molto grande',
-    highContrast: 'Contrasto elevato',
-    relaxedSpacing: 'Spaziatura testo',
-    reduceMotion: 'Riduci movimento',
-    strongFocus: 'Focus rinforzato',
-    comfortableDensity: 'Densità confortevole',
-    grid: 'Grid',
-    largeReadingText: 'Testo di lettura molto grande',
-    reset: 'Ripristina',
-    close: 'Chiudi',
-    local: 'Le preferenze vengono salvate solo in questo browser.',
-  },
-} as const;
+function getAccessibilityCopy(language: DNSAccessibilityLanguage) {
+  return {
+    open: translateDNSFoundation('accessibility.open', language),
+    title: translateDNSFoundation('accessibility.title', language),
+    kicker: translateDNSFoundation('accessibility.kicker', language),
+    textSize: translateDNSFoundation('accessibility.textSize', language),
+    standard: translateDNSFoundation('accessibility.standard', language),
+    medium: translateDNSFoundation('accessibility.medium', language),
+    large: translateDNSFoundation('accessibility.large', language),
+    highContrast: translateDNSFoundation('accessibility.highContrast', language),
+    relaxedSpacing: translateDNSFoundation('accessibility.relaxedSpacing', language),
+    reduceMotion: translateDNSFoundation('accessibility.reduceMotion', language),
+    strongFocus: translateDNSFoundation('accessibility.strongFocus', language),
+    comfortableDensity: translateDNSFoundation('accessibility.comfortableDensity', language),
+    grid: translateDNSFoundation('accessibility.grid', language),
+    largeReadingText: translateDNSFoundation('accessibility.largeReadingText', language),
+    reset: translateDNSFoundation('accessibility.reset', language),
+    close: translateDNSFoundation('accessibility.close', language),
+    local: translateDNSFoundation('accessibility.local', language),
+  };
+}
 
 function normalizeSettings(input: Partial<DNSAccessibilitySettings> = {}): DNSAccessibilitySettings {
   const scale = input.textScale === 115 || input.textScale === 130 ? input.textScale : 100;
@@ -343,13 +325,13 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
   const sync = () => {
     applySettings(settings);
     writeStoredSettings(storageKey, settings);
-    trigger.title = COPY[language].open;
-    trigger.setAttribute('aria-label', COPY[language].open);
+    trigger.title = getAccessibilityCopy(language).open;
+    trigger.setAttribute('aria-label', getAccessibilityCopy(language).open);
   };
 
   const updatePanel = () => {
     if (!overlay) return;
-    const c = COPY[language];
+    const c = getAccessibilityCopy(language);
     const panel = overlay.querySelector<HTMLElement>('.dns-a11y-panel');
     if (!panel) return;
 

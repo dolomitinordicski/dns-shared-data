@@ -52,6 +52,26 @@ export const DNS_FOUNDATION_MESSAGES = {
   'status.synced': { de: 'Synchronisiert', it: 'Sincronizzato' },
   'language.de': { de: 'Deutsch', it: 'Tedesco' },
   'language.it': { de: 'Italienisch', it: 'Italiano' },
+  'accessibility.open': { de: 'Barrierefreiheit', it: 'Accessibilità' },
+  'accessibility.title': { de: 'Barrierefreiheit', it: 'Accessibilità' },
+  'accessibility.kicker': { de: 'DNS Foundation', it: 'DNS Foundation' },
+  'accessibility.textSize': { de: 'Textgröße', it: 'Dimensione testo' },
+  'accessibility.standard': { de: 'Standard', it: 'Standard' },
+  'accessibility.medium': { de: 'Größer', it: 'Più grande' },
+  'accessibility.large': { de: 'Sehr groß', it: 'Molto grande' },
+  'accessibility.highContrast': { de: 'Hoher Kontrast', it: 'Contrasto elevato' },
+  'accessibility.relaxedSpacing': { de: 'Mehr Textabstand', it: 'Spaziatura testo' },
+  'accessibility.reduceMotion': { de: 'Bewegung reduzieren', it: 'Riduci movimento' },
+  'accessibility.strongFocus': { de: 'Fokus verstärken', it: 'Focus rinforzato' },
+  'accessibility.comfortableDensity': { de: 'Komfortable Dichte', it: 'Densità confortevole' },
+  'accessibility.grid': { de: 'Grid', it: 'Grid' },
+  'accessibility.largeReadingText': { de: 'Sehr großer Lesetext', it: 'Testo di lettura molto grande' },
+  'accessibility.reset': { de: 'Zurücksetzen', it: 'Ripristina' },
+  'accessibility.close': { de: 'Schließen', it: 'Chiudi' },
+  'accessibility.local': {
+    de: 'Einstellungen werden nur in diesem Browser gespeichert.',
+    it: 'Le preferenze vengono salvate solo in questo browser.',
+  },
 } as const;
 
 export type DNSFoundationMessageKey = keyof typeof DNS_FOUNDATION_MESSAGES;

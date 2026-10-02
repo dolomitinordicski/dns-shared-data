@@ -2352,11 +2352,6 @@
     </div>
   </footer>
 
-  <script type="module">
-    import { initDNSFooterRuntime } from './dist/ui/footer.js';
-    initDNSFooterRuntime();
-  </script>
-
   <script>
     function setLang(lang) {
       const activeLang = lang === 'it' ? 'it' : 'de';
@@ -2369,11 +2364,11 @@
       btnDe.classList.toggle('is-active', activeLang === 'de');
       btnIt.classList.toggle('is-active', activeLang === 'it');
 
-      localStorage.setItem('dns-shared-data-lang', activeLang);
-      window.dnsAccessibilityRuntime?.setLanguage(activeLang);
+      localStorage.setItem('dns-ui-language-v1', activeLang);
+      window.dnsFoundation?.setLanguage(activeLang);
     }
 
-    const savedLang = localStorage.getItem('dns-shared-data-lang');
+    const savedLang = localStorage.getItem('dns-ui-language-v1');
     setLang(savedLang === 'it' ? 'it' : 'de');
 
 
@@ -2694,12 +2689,9 @@
       DNS_SYSTEM_STATUS_CRITERIA,
       DNS_SYSTEM_STATUS_VERIFIED_AT,
     } from './dist/system-status.js';
-    import { initDNSRevealRuntime } from './dist/ui/motion.js';
-    import { initDNSInteractionRuntime } from './dist/ui/interaction.js';
-    import { initDNSToolChromeRuntime } from './dist/ui/tool-chrome.js';
-    import { initDNSAccessibilityRuntime } from './dist/ui/accessibility.js';
+    import { initDNSFoundation } from './dist/foundation.js';
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
-    import { collection, doc, getDoc, getDocs, getFirestore } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
+    import { collection, getDocs, getFirestore } from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: 'AIzaSyAgxv6Z45-AfrusbFnCSyvYChRUBu6-vXc',
@@ -2713,20 +2705,6 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
-    const accessibilityMount = document.getElementById('dns-accessibility-mount');
-    window.dnsAccessibilityRuntime = initDNSAccessibilityRuntime({
-      mountTarget: accessibilityMount,
-      language: document.documentElement.dataset.lang === 'it' ? 'it' : 'de',
-      storageKey: DNS_DESIGN_SYSTEM.accessibility.storageKey,
-    });
-
-    const navigationRuntime = initDNSToolChromeRuntime({
-      navigation: DNS_DESIGN_SYSTEM.navigation,
-      responsive: DNS_DESIGN_SYSTEM.responsive,
-      headerTokens: DNS_DESIGN_SYSTEM.header,
-      motion: DNS_DESIGN_SYSTEM.motion,
-    });
 
     let dnsCoreHeaderStatus = { state: 'loading', reportingAreas: 0, organizations: 0 };
 
@@ -2775,7 +2753,6 @@
 
     document.getElementById('dns-home-link')?.addEventListener('click', (event) => {
       event.preventDefault();
-      navigationRuntime.setActiveSection('system-map');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       if (window.location.hash) {
         history.replaceState(null, '', window.location.pathname + window.location.search);
@@ -2933,139 +2910,6 @@
 
     renderSystemStatus();
 
-    function isPlainObject(value) {
-      return value && typeof value === 'object' && !Array.isArray(value);
-    }
-
-    function mergeTokens(base, override) {
-      if (!isPlainObject(override)) return base;
-      const result = { ...base };
-
-      for (const [key, value] of Object.entries(override)) {
-        if (Array.isArray(value)) {
-          result[key] = value;
-        } else if (isPlainObject(value) && isPlainObject(base?.[key])) {
-          result[key] = mergeTokens(base[key], value);
-        } else if (value !== undefined) {
-          result[key] = value;
-        }
-      }
-
-      return result;
-    }
-
-    function px(value) { return `${value}px`; }
-    function ms(value) { return `${value}ms`; }
-
-    function applyVariables(ds) {
-      const root = document.documentElement;
-      const { colors, typography, shape, spacing, shadow, motion, interaction, header, footer, cards, controls, navigation, contextSelector } = ds;
-      const vars = {
-        '--color-dns-deep': colors.deep,
-        '--color-dns-mid': colors.mid,
-        '--color-dns-light': colors.light,
-        '--color-dns-bg': colors.background,
-        '--color-dns-surface': colors.surface,
-        '--color-dns-dark-text': colors.darkText,
-        '--color-dns-gray': colors.gray,
-        '--color-dns-primary-dark': colors.primaryDark,
-        '--color-dns-secondary-dark': colors.secondaryDark,
-        '--color-dns-muted': colors.mutedText,
-        '--color-dns-positive': colors.positive,
-        '--color-dns-negative': colors.negative,
-        '--color-dns-border': colors.border,
-        '--color-dns-subtle-border': colors.subtleBorder,
-
-        '--font-display': `"${typography.primaryFamily}", sans-serif`,
-        '--font-alt': `"${typography.secondaryFamily}", sans-serif`,
-        '--dns-base-font-size': px(typography.baseFontSizePx),
-        '--dns-section-title-size': px(typography.sectionTitlePx),
-        '--dns-label-size': px(typography.labelPx),
-        '--dns-micro-size': px(typography.microPx),
-        '--dns-value-size': px(typography.valuePx),
-        '--dns-heading-size': px(typography.headingPx),
-        '--dns-uppercase-tracking': `${typography.uppercaseTrackingEm}em`,
-
-        '--dns-card-radius': px(shape.cardRadiusPx),
-        '--dns-control-radius': px(shape.controlRadiusPx),
-        '--dns-badge-radius': px(shape.badgeRadiusPx),
-        '--dns-page-x': `${spacing.pageXRem}rem`,
-        '--dns-page-y': `${spacing.pageYRem}rem`,
-        '--dns-card-padding': `${spacing.cardPaddingRem}rem`,
-        '--dns-card-gap': px(spacing.cardGapPx),
-        '--dns-compact-gap': px(spacing.compactGapPx),
-
-        '--dns-card-shadow': shadow.card,
-        '--dns-header-shadow': shadow.header,
-        '--dns-floating-shadow': shadow.floatingControl,
-
-        '--dns-motion-fast': ms(motion.fastMs),
-        '--dns-motion-standard': ms(motion.standardMs),
-        '--dns-motion-reveal': ms(motion.reveal.durationMs),
-        '--dns-motion-easing': motion.easing,
-
-        '--dns-focus-color': interaction.focusVisible.color,
-        '--dns-focus-width': px(interaction.focusVisible.widthPx),
-        '--dns-focus-offset': px(interaction.focusVisible.offsetPx),
-        '--dns-hover-scale': String(interaction.hover.scale),
-        '--dns-press-scale': String(interaction.press.scale),
-        '--dns-disabled-opacity': String(interaction.controls.disabledOpacity),
-
-        '--dns-header-bg': header.background,
-        '--dns-header-logo-height': px(header.logoHeightPx),
-        '--dns-header-title-color': header.titleColor,
-        '--dns-header-subtitle-color': header.subtitleColor,
-        '--dns-header-title-size': px(header.titleSizePx),
-        '--dns-header-subtitle-size': px(header.subtitleSizePx),
-
-        '--dns-footer-bg': footer.background,
-        '--dns-footer-text': footer.textColor,
-        '--dns-footer-size': px(footer.fontSizePx),
-
-        '--dns-card-bg': cards.background,
-        '--dns-card-accent': cards.defaultAccent,
-        '--dns-card-accent-strong': cards.strongAccent,
-        '--dns-card-accent-width': px(cards.accentWidthPx),
-
-        '--dns-control-border': controls.border,
-        '--dns-control-focus': controls.focusColor,
-        '--dns-control-primary-bg': controls.primaryBackground,
-        '--dns-control-primary-hover': controls.primaryHoverBackground,
-        '--dns-control-secondary-bg': controls.secondaryBackground,
-        '--dns-control-secondary-text': controls.secondaryText,
-        '--dns-context-selected-bg': contextSelector?.selected?.background ?? colors.light,
-        '--dns-context-selected-text': contextSelector?.selected?.text ?? colors.deep,
-        '--dns-context-selected-border': contextSelector?.selected?.border ?? colors.mid,
-        '--dns-context-hover-bg': contextSelector?.hover?.background ?? 'rgba(170,208,209,.35)',
-
-        '--dns-tab-bg': navigation.tabs.containerBackground,
-        '--dns-tab-text': navigation.tabs.textColor,
-        '--dns-tab-active': navigation.tabs.activeTextColor,
-        '--dns-tab-hover': navigation.tabs.hoverTextColor,
-        '--dns-tab-indicator': navigation.tabs.activeIndicatorColor,
-        '--dns-tab-indicator-width': px(navigation.tabs.activeIndicatorWidthPx),
-        '--dns-tab-size': px(navigation.tabs.fontSizePx),
-        '--dns-tab-weight': String(navigation.tabs.fontWeight),
-        '--dns-tab-tracking': `${navigation.tabs.letterSpacingEm}em`,
-        '--dns-nav-surface-opacity': String(navigation.tabs.surfaceOpacity ?? 1),
-        '--dns-nav-surface-bg': navigation.tabs.surfaceBackground ?? navigation.tabs.containerBackground,
-        '--dns-nav-backdrop-blur': px(navigation.tabs.backdropBlurPx ?? 0),
-        '--dns-scroll-progress-height': px(navigation.tabs.scrollProgress?.heightPx ?? 0),
-        '--dns-scroll-progress-color': navigation.tabs.scrollProgress?.color ?? colors.light,
-        '--dns-scroll-progress-track': navigation.tabs.scrollProgress?.track ?? 'transparent',
-      };
-
-      for (const [name, value] of Object.entries(vars)) {
-        root.style.setProperty(name, value);
-      }
-
-      document.querySelectorAll('[data-design-value]').forEach((element) => {
-        const path = element.dataset.designValue;
-        const value = path?.split('.').reduce((current, key) => current?.[key], ds);
-        if (value !== undefined && value !== null) element.textContent = String(value);
-      });
-    }
-
     function markReferenceMotion() {
       document.querySelectorAll('main > section').forEach((section) => {
         section.dataset.dnsReveal = '';
@@ -3082,93 +2926,19 @@
       });
     }
 
-    function initRuntime(designSystem) {
-      markReferenceMotion();
+    markReferenceMotion();
 
-      const interactionRuntime = initDNSInteractionRuntime({
-        interaction: designSystem.interaction,
-        motion: designSystem.motion,
-      });
+    const foundationRuntime = initDNSFoundation({
+      language: document.documentElement.dataset.lang === 'it' ? 'it' : 'de',
+      accessibility: {
+        mountTarget: document.getElementById('dns-accessibility-mount'),
+        storageKey: DNS_DESIGN_SYSTEM.accessibility.storageKey,
+      },
+    });
 
-      const revealRuntime = initDNSRevealRuntime({
-        motion: designSystem.motion,
-        selector: '[data-dns-reveal]',
-        observeMutations: true,
-      });
+    window.dnsFoundation = foundationRuntime;
+    foundationRuntime.refresh();
 
-      return () => {
-        revealRuntime.disconnect();
-        interactionRuntime.disconnect();
-      };
-    }
-
-    function runtimeSignature(designSystem) {
-      return JSON.stringify({
-        motion: designSystem.motion,
-        interaction: designSystem.interaction,
-      });
-    }
-
-    let activeDesignSystem = DNS_DESIGN_SYSTEM;
-    let disconnectRuntime = null;
-
-    // Render and interaction start immediately from the canonical local fallback.
-    // Remote Firestore tokens are enhancement/configuration, never a prerequisite
-    // for the first stable paint.
-    applyVariables(activeDesignSystem);
-    disconnectRuntime = initRuntime(activeDesignSystem);
-    document.body.dataset.dnsDesignSource = 'package';
-    document.body.dataset.dnsDesignVersion = activeDesignSystem.version;
-
-    async function loadDesignSystem() {
-      try {
-        const snapshot = await getDoc(doc(db, 'designSystem', 'current'));
-        if (!snapshot.exists()) return;
-
-        const remoteDesignSystem = mergeTokens(DNS_DESIGN_SYSTEM, snapshot.data());
-
-        const semverParts = (value) => String(value ?? '0.0.0').split('.').map((part) => Number(part) || 0);
-        const compareSemver = (a, b) => {
-          const av = semverParts(a);
-          const bv = semverParts(b);
-          for (let index = 0; index < Math.max(av.length, bv.length, 3); index += 1) {
-            const delta = (av[index] ?? 0) - (bv[index] ?? 0);
-            if (delta !== 0) return delta;
-          }
-          return 0;
-        };
-
-        // DNS Shared Data is the reference consumer: an older DNS_Core token
-        // document must never downgrade the canonical package shipped by this repo.
-        if (compareSemver(remoteDesignSystem.version, activeDesignSystem.version) < 0) {
-          console.info(
-            'DNS_Core Design System is older than the canonical package; keeping local Foundation.',
-            { remote: remoteDesignSystem.version, local: activeDesignSystem.version },
-          );
-          return;
-        }
-
-        const sameVersion = remoteDesignSystem.version === activeDesignSystem.version;
-        const sameRuntime = runtimeSignature(remoteDesignSystem) === runtimeSignature(activeDesignSystem);
-
-        if (!sameVersion) {
-          applyVariables(remoteDesignSystem);
-        }
-
-        if (!sameRuntime) {
-          disconnectRuntime?.();
-          disconnectRuntime = initRuntime(remoteDesignSystem);
-        }
-
-        activeDesignSystem = remoteDesignSystem;
-        document.body.dataset.dnsDesignSource = 'dns-core';
-        document.body.dataset.dnsDesignVersion = remoteDesignSystem.version ?? DNS_DESIGN_SYSTEM.version;
-      } catch (error) {
-        console.warn('DNS Design System remote load failed; using canonical package fallback.', error);
-      }
-    }
-
-    void loadDesignSystem();
   </script>
 
 </body>

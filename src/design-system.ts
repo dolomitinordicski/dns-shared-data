@@ -618,6 +618,18 @@ export const DNS_DESIGN_SYSTEM = {
     },
   },
   implementationPatterns: {
+    foundationRuntime: {
+      codeSource: 'dns-shared-data/foundation',
+      version: '1.0.0',
+      requiredForFoundationAlignedTools: true,
+      rules: [
+        'Foundation-aligned tools initialize shared behavior through initDNSFoundation().',
+        'Consumer-owned Design System fallbacks and applyVariables bridges are migration-only and must be removed.',
+        'The versioned dns-shared-data package is the canonical default Design System source.',
+        'Tool-specific business, calculation and persistence engines remain application-owned.',
+        'Static and framework consumers use the same built Foundation runtime.',
+      ],
+    },
     navigationRuntime: {
       codeSource: 'dns-shared-data/ui/navigation',
       requiredForSharedNavigation: true,

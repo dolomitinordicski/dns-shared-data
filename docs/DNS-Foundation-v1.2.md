@@ -1089,4 +1089,28 @@ F1 will integrate this contract into the unified `initDNSFoundation()` runtime.
 
 ---
 
+## 43. F1 unified Core Runtime
+
+The canonical Foundation orchestration runtime is defined in:
+
+```text
+src/foundation.ts
+docs/DNS-Foundation-Core-Runtime-v1.md
+```
+
+Consumers use:
+
+```text
+@dolomitinordicski/dns-shared-data/foundation
+```
+
+The runtime centralizes Design System CSS variables and shared primitives/content patterns/interaction/motion/navigation/print/footer/accessibility/localization initialization.
+
+The default runtime source is the versioned Shared Data package. Consumer-owned Design System fallbacks, local variable bridges and independent initialization of shared behavior are migration debt and must be removed during the consolidation pass.
+
+F1 does not change any application business or calculation engine.
+
+
+---
+
 **End of DNS Foundation v1.2**

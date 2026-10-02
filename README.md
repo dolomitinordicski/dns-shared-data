@@ -73,6 +73,27 @@ The v1.11 contract includes shared motion, focus, hover/press, tab and reduced-m
 
 The GitHub Pages architecture overview is also the visual reference implementation of this contract. It consumes the canonical tokens at runtime, prefers `DNS_Core / designSystem/current`, falls back to the versioned package mirror, and uses the shared motion/interaction behavior. The committed `web-runtime/design-system.js` browser mirror is CI-checked against `src/design-system.ts` to prevent silent drift.
 
+
+## Unified Foundation runtime
+
+F1 introduces the canonical orchestration entry point:
+
+```ts
+import { initDNSFoundation } from '@dolomitinordicski/dns-shared-data/foundation';
+```
+
+Contract:
+
+```text
+docs/DNS-Foundation-Core-Runtime-v1.md
+```
+
+The runtime owns the shared Design System → CSS-variable bridge and initializes the common Foundation capabilities from one source: primitives, content patterns, interaction, motion, tool chrome, print, footer, accessibility and DE/IT language state.
+
+Application repositories must migrate away from local Design System fallbacks, local `applyVariables()` functions and one-by-one shared runtime initialization during the consumer consolidation pass. Tool-specific business/calculation engines remain application-owned.
+
+The same built module is published on GitHub Pages at `dist/foundation.js`, allowing static tools such as Hub to consume the identical runtime instead of maintaining a parallel static implementation.
+
 ## Shared UI runtime
 
 DNS motion and interaction behavior is implemented as versioned, framework-agnostic source code in:
