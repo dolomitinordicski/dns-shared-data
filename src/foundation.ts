@@ -30,7 +30,7 @@ import { createDNSCapabilityRuntime, type DNSCapabilityAdapter, type DNSCapabili
 import type { DNSCapabilityId } from './capabilities.js';
 import { initDNSCapabilityUIRuntime } from './ui/capabilities.js';
 
-export const DNS_FOUNDATION_RUNTIME_VERSION = '1.1.2' as const;
+export const DNS_FOUNDATION_RUNTIME_VERSION = '1.1.3' as const;
 export const DNS_FOUNDATION_LANGUAGE_EVENT = 'dns:languagechange' as const;
 
 export interface DNSFoundationAccessibilityOptions {
