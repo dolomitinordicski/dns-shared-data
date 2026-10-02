@@ -2,10 +2,11 @@ export const DNS_DATA_UI_RUNTIME_VERSION = '1.0.0' as const;
 
 const STYLE_ID = 'dns-data-ui-runtime-style';
 
-export function initDNSDataUIRuntime(documentRoot: Document = document) {
-  if (!documentRoot?.head || documentRoot.getElementById(STYLE_ID)) return;
+export function initDNSDataUIRuntime(documentRoot?: Document) {
+  const root = documentRoot ?? (typeof document !== 'undefined' ? document : undefined);
+  if (!root?.head || root.getElementById(STYLE_ID)) return;
 
-  const style = documentRoot.createElement('style');
+  const style = root.createElement('style');
   style.id = STYLE_ID;
   style.textContent = [
     '.dns-field[data-state="valid"] :is(.dns-input,.dns-select,.dns-textarea){border-color:#0F6E56}',
@@ -44,5 +45,5 @@ export function initDNSDataUIRuntime(documentRoot: Document = document) {
     '@media(max-width:767px){.dns-data-toolbar{align-items:stretch}.dns-data-toolbar-main,.dns-data-toolbar-actions{width:100%}.dns-data-search{width:100%}}',
     '@media(prefers-reduced-motion:reduce){.dns-state[data-state="saving"] .dns-state-icon,.dns-state[data-state="syncing"] .dns-state-icon{animation:none}}',
   ].join('\n');
-  documentRoot.head.appendChild(style);
+  root.head.appendChild(style);
 }
