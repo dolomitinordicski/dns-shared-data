@@ -69,21 +69,33 @@ function ensureInteractionStyles(
 }
 
 [data-dns-hover],
-[data-dns-press] {
+[data-dns-press],
+[data-dns-interaction] {
   transition-property: ${transitionProperties};
   transition-duration: var(--dns-control-duration);
   transition-timing-function: var(--dns-motion-easing);
 }
 
 @media ${interaction.hover.pointerMediaQuery} {
-  [data-dns-hover]:hover {
+  [data-dns-hover]:hover,
+  [data-dns-interaction]:hover {
     transform: scale(var(--dns-hover-scale));
   }
 }
 
-[data-dns-press][data-dns-pressed="true"] {
+[data-dns-press][data-dns-pressed="true"],
+[data-dns-interaction][data-dns-pressed="true"] {
   transform: scale(var(--dns-press-scale));
   transition-duration: var(--dns-press-duration);
+}
+
+
+[data-dns-interaction="selection"][aria-selected="true"],
+[data-dns-interaction="navigation"][aria-current],
+[data-dns-interaction="toggle"][aria-pressed="true"],
+[data-dns-interaction="toggle"][aria-expanded="true"] {
+  outline: 1px solid color-mix(in srgb, var(--dns-focus-color) 48%, transparent);
+  outline-offset: 1px;
 }
 
 a[data-dns-link] {
@@ -98,7 +110,8 @@ a[data-dns-link]:focus-visible {
 
 @media ${motion.reducedMotion.mediaQuery} {
   [data-dns-hover],
-  [data-dns-press] {
+  [data-dns-press],
+  [data-dns-interaction] {
     transition-duration: ${motion.reducedMotion.durationMs}ms !important;
     transform: none !important;
   }
@@ -136,7 +149,7 @@ export function initDNSInteractionRuntime(
     const target = event.target;
     if (!(target instanceof Element)) return;
 
-    const element = target.closest<HTMLElement>('[data-dns-press]');
+    const element = target.closest<HTMLElement>('[data-dns-press], [data-dns-interaction]');
     if (!element || isDisabled(element)) return;
 
     clearPressed();
