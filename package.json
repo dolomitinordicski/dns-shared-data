@@ -127,6 +127,14 @@
     "./print-profiles": {
       "types": "./dist/print-profiles.d.ts",
       "import": "./dist/print-profiles.js"
+    },
+    "./motion-semantics": {
+      "types": "./dist/motion-semantics.d.ts",
+      "import": "./dist/motion-semantics.js"
+    },
+    "./ui/semantic-motion": {
+      "types": "./dist/ui/semantic-motion.d.ts",
+      "import": "./dist/ui/semantic-motion.js"
     }
   }
 }

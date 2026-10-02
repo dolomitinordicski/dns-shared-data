@@ -1165,4 +1165,50 @@ The legacy direct `DNS_DESIGN_SYSTEM.print` token object is retained temporarily
 
 ---
 
+## 46. F4 motion & interaction semantics
+
+Foundation defines semantic motion intent instead of application-owned durations/transforms.
+
+Canonical motion events:
+
+```text
+enter
+exit
+expand
+collapse
+modal
+drawer
+toast
+tab
+contextChange
+loading
+```
+
+Canonical interaction roles:
+
+```text
+action
+selection
+toggle
+navigation
+destructive
+```
+
+The normative contract is:
+
+```text
+src/motion-semantics.ts
+src/ui/semantic-motion.ts
+docs/DNS-Motion-Interaction-Semantics-v1.md
+```
+
+Motion is functional and restrained. It supports orientation, feedback and continuity; decorative choreography is not part of the DNS Foundation language.
+
+Both `prefers-reduced-motion` and the DNS Accessibility reduce-motion setting are authoritative and must resolve semantic animation to a non-moving final state.
+
+F4 defines modal/drawer/toast motion only. Their focus, Escape, focus-return and overlay behavior belong to F5.
+
+
+---
+
 **End of DNS Foundation v1.2**
