@@ -1,4 +1,4 @@
-export const DNS_DESIGN_SYSTEM_VERSION = '1.22.0' as const;
+export const DNS_DESIGN_SYSTEM_VERSION = '1.23.0' as const;
 
 export const DNS_DESIGN_SYSTEM = {
   id: 'v1',
@@ -400,6 +400,25 @@ export const DNS_DESIGN_SYSTEM = {
     groupClassName: 'dns-toolbar-group',
     contextSelectClassName: 'dns-context-select',
   },
+  identityUi: {
+    version: '1.0.0',
+    accountClassName: 'dns-account-context',
+    organizationClassName: 'dns-organization-context',
+    organizationSwitcherClassName: 'dns-organization-switcher',
+    membershipRoleClassName: 'dns-membership-role',
+    accessIndicatorClassName: 'dns-access-indicator',
+    accessStateClassName: 'dns-access-state',
+    sessionActionClassName: 'dns-session-action',
+    accessStates: ['allowed','restricted','no-access','inactive'],
+    membershipStates: ['active','inactive','not-yet-valid','expired'],
+    rules: [
+      'User, membership, organization and access grant remain distinct concepts.',
+      'Foundation renders resolved identity/access context and does not authorize requests.',
+      'Organization switching must not change UI language automatically.',
+      'Frontend visibility is not security enforcement.',
+      'Generic partner roles are prohibited in favor of canonical memberships and scoped grants.',
+    ],
+  },
   overlays: {
     version: '1.0.0',
     values: ['modal','confirm','drawer','popover','dropdown','menu','tooltip','toast','blocking'],
@@ -728,6 +747,18 @@ export const DNS_DESIGN_SYSTEM = {
         'Fixed pixel sticky offsets are not allowed.',
         'On scroll down the Foundation header hides while the menu bar remains visible; on scroll up the header reveals again.',
         'Tool-specific header hide/show behavior is not allowed.',
+      ],
+    },
+    identityUiRuntime: {
+      codeSource: 'dns-shared-data/ui/identity',
+      contractSource: 'dns-shared-data/identity-ui',
+      accessModelSource: 'dns-shared-data/access-control',
+      version: '1.0.0',
+      requiredForPortalAndAuthenticatedWorkspace: true,
+      rules: [
+        'Foundation owns identity/access presentation, organization switching UI and session-action presentation.',
+        'Authentication, token/session handling and authorization decisions remain platform-owned.',
+        'Access-denied UI must not be treated as a substitute for Firestore/server authorization.',
       ],
     },
     dataUiRuntime: {

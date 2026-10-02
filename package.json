@@ -147,6 +147,14 @@
     "./ui/overlay": {
       "types": "./dist/ui/overlay.d.ts",
       "import": "./dist/ui/overlay.js"
+    },
+    "./identity-ui": {
+      "types": "./dist/identity-ui.d.ts",
+      "import": "./dist/identity-ui.js"
+    },
+    "./ui/identity": {
+      "types": "./dist/ui/identity.d.ts",
+      "import": "./dist/ui/identity.js"
     }
   }
 }

@@ -1231,4 +1231,28 @@ Tool repositories retain business validation, persistence, query logic, upload d
 
 ---
 
+## 48. F6 identity, membership & access UI
+
+Foundation standardizes authenticated-context presentation while preserving the existing access-control model:
+
+```text
+User → Membership → Organization
+User → Access Grant → Scope/Permissions
+```
+
+Normative contract:
+
+```text
+src/identity-ui.ts
+src/ui/identity.ts
+docs/DNS-Identity-Access-UI-v1.md
+```
+
+Foundation owns account/organization context presentation, membership/access indicators, organization-switcher UI and session-action presentation. Authentication, credentials, session tokens and authorization decisions remain platform-owned.
+
+Frontend access visibility is never a substitute for Security Rules/server authorization.
+
+
+---
+
 **End of DNS Foundation v1.2**
