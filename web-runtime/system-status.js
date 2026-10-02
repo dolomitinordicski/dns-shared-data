@@ -1,7 +1,7 @@
 // GENERATED BROWSER MIRROR — source of truth: src/system-status.ts
 // Keep this file synchronized with the canonical TypeScript registry.
-export const DNS_SYSTEM_STATUS_VERSION = '0.11.0';
-export const DNS_SYSTEM_STATUS_VERIFIED_AT = '2026-10-02';
+export const DNS_SYSTEM_STATUS_VERSION = '0.10.0';
+export const DNS_SYSTEM_STATUS_VERIFIED_AT = '2026-10-01';
 
 export const DNS_SYSTEM_STATUS_CRITERIA = [
   { id: 'designSystem', label: 'Design System' },
@@ -22,7 +22,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/dns-shared-data',
     phase: 'foundation-source',
     firebaseProject: 'dns-core',
-    datasetVersion: 'Canonical v1.6 · Operational schema 4 · Design System v1.18.0 · Asset manifest v2',
+    datasetVersion: 'Canonical v1.6 · Operational schema 4 · Design System v1.13.2 · Asset manifest v2',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -34,7 +34,7 @@ export const DNS_SYSTEM_STATUS = [
       dataContracts: 'adopted',
       accessibility: 'adopted',
     },
-    note: 'Canonical source and first reference consumer for shared contracts, assets, design tokens, UI primitives and Firebase rules/seeds.',
+    note: 'Canonical source for shared contracts, assets, design tokens and Firebase rules/seeds.',
   },
   {
     id: 'data-entry',
@@ -42,7 +42,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/DNS-Data-Entry',
     phase: 'foundation-aligned',
     firebaseProject: 'dns-core',
-    datasetVersion: 'Shared package pinned to Foundation / Design System v1.18.0',
+    datasetVersion: 'Shared package pinned to Foundation / Design System v1.13.2',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -62,7 +62,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/DNS-Polls-tool',
     phase: 'foundation-aligned',
     firebaseProject: 'separate Polls / PII domain',
-    datasetVersion: 'Shared package pinned to Foundation / Design System v1.18.0',
+    datasetVersion: 'Shared package pinned to Foundation / Design System v1.12.1',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'partial',
@@ -74,7 +74,7 @@ export const DNS_SYSTEM_STATUS = [
       dataContracts: 'na',
       accessibility: 'adopted',
     },
-    note: 'Foundation shell v1.18 is adopted with shared navigation, motion, interaction and Accessibility v1. Privacy-sensitive poll data remains intentionally isolated in the separate Polls / PII domain; organization logos are N/A because Polls does not render canonical organizations.',
+    note: 'Foundation shell v1.13.2 is adopted with shared navigation, motion, interaction and Accessibility v1. Privacy-sensitive poll data remains intentionally isolated in the separate Polls / PII domain; organization logos are N/A because Polls does not render canonical organizations.',
   },
   {
     id: 'flyer-studio',
@@ -82,7 +82,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/DNS-Flyer-Studio',
     phase: 'in-migration',
     firebaseProject: 'app-specific Firebase configuration',
-    datasetVersion: 'Shared package pinned to Foundation / Design System v1.18.0',
+    datasetVersion: 'No shared package pin detected',
     criteria: {
       designSystem: 'notYet',
       sharedData: 'partial',
@@ -102,7 +102,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/fairmodel',
     phase: 'foundation-ui-aligned',
     firebaseProject: 'fair-modell · separate operational persistence',
-    datasetVersion: 'Foundation / Design System v1.18.0 · FAIR contract foundation-defined',
+    datasetVersion: 'Foundation / Design System v1.13.2 · FAIR contract foundation-defined',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -122,7 +122,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/analytics',
     phase: 'foundation-ui-aligned',
     firebaseProject: 'dns-core master connection · operational analytics migration pending A.3',
-    datasetVersion: 'Foundation / Design System v1.18.0 · A.2.1 compatibility dataset · Analytics measurement contract pending A.3',
+    datasetVersion: 'Foundation / Design System v1.13.2 · A.2.1 compatibility dataset · Analytics measurement contract pending A.3',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -142,7 +142,7 @@ export const DNS_SYSTEM_STATUS = [
     repo: 'dolomitinordicski/DNS-Faktura',
     phase: 'unified-billing-snapshots',
     firebaseProject: 'dns-core · rates/extras/unified snapshots · FAIR source read from fair-modell · allocation keys in DNS_Core',
-    datasetVersion: 'F.5 · Billing Preparation v0.6 · Unified FAIR + IDM + Orders + Extras snapshots · Foundation v1.18',
+    datasetVersion: 'F.5 · Billing Preparation v0.6 · Unified FAIR + IDM + Orders + Extras snapshots · Foundation v1.15',
     criteria: {
       designSystem: 'adopted',
       sharedData: 'adopted',
@@ -154,7 +154,7 @@ export const DNS_SYSTEM_STATUS = [
       dataContracts: 'adopted',
       accessibility: 'adopted',
     },
-    note: 'F.5 implemented in DNS-Faktura: FAIR, IDM, Orders and Seasonal Extras are combined into revisioned unified billingRuns with immutable multi-source billingLines and source provenance. Legacy F.2.3 Orders-only snapshots remain untouched. Unified DRAFT snapshots may be saved while sources are incomplete; READY requires complete sources, zero unpriced Orders and an explicitly approved/final FAIR status. Foundation v1.18 and centralized DNS_Core allocation keys are adopted. Official invoices, payments and accounting integration remain out of scope.',
+    note: 'F.5 implemented in DNS-Faktura: FAIR, IDM, Orders and Seasonal Extras are combined into revisioned unified billingRuns with immutable multi-source billingLines and source provenance. Legacy F.2.3 Orders-only snapshots remain untouched. Unified DRAFT snapshots may be saved while sources are incomplete; READY requires complete sources, zero unpriced Orders and an explicitly approved/final FAIR status. Foundation v1.15 and centralized DNS_Core allocation keys are adopted. Official invoices, payments and accounting integration remain out of scope.',
   },
   {
     id: 'partner-portal',
