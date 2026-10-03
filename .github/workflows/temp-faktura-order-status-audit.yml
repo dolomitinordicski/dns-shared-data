@@ -1,0 +1,66 @@
+name: TEMP Faktura order status audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-faktura-order-status-audit.yml'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check credentials
+        shell: bash
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::Missing FIREBASE_SERVICE_ACCOUNT_DNS_CORE"
+            exit 1
+          fi
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - name: Read-only order status audit
+        shell: bash
+        run: |
+          node --input-type=module <<'EOF'
+          import { applicationDefault, initializeApp } from 'firebase-admin/app';
+          import { getFirestore } from 'firebase-admin/firestore';
+          initializeApp({ credential: applicationDefault(), projectId: 'dns-core' });
+          const db=getFirestore();
+          const [orders,lines]=await Promise.all([
+            db.collection('ticketOrders').where('seasonId','==','2026-27').get(),
+            db.collection('ticketOrderLines').where('seasonId','==','2026-27').get(),
+          ]);
+          const counts={};
+          const byOrg={};
+          for(const d of orders.docs){
+            const x=d.data();
+            counts[x.status]=(counts[x.status]||0)+1;
+            const k=x.organizationId||'MISSING';
+            byOrg[k]=byOrg[k]||{orders:0,statuses:{}};
+            byOrg[k].orders++;
+            byOrg[k].statuses[x.status]=(byOrg[k].statuses[x.status]||0)+1;
+          }
+          console.log(JSON.stringify({
+            seasonId:'2026-27',
+            orderHeaders:orders.size,
+            orderLines:lines.size,
+            statuses:counts,
+            organizations:Object.keys(byOrg).length,
+            byOrganization:byOrg
+          },null,2));
+          EOF
+        env:
+          GOOGLE_CLOUD_PROJECT: dns-core
