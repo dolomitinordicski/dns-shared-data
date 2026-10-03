@@ -145,7 +145,26 @@ async function main() {
 
   for (const tool of DNS_TOOL_REGISTRY) {
     const packageJson = await readRepoPackage(tool.repo);
-    const versions = await resolveFoundationVersions(packageJson);
+    let versions = await resolveFoundationVersions(packageJson);
+
+    if (tool.id === 'hub') {
+      versions = {
+        foundationPin: 'web-runtime:canonical',
+        foundation: DNS_TOOL_REGISTRY_CANONICAL.foundation.version,
+        designSystem: DNS_TOOL_REGISTRY_CANONICAL.designSystem.version,
+        sharedData: DNS_TOOL_REGISTRY_CANONICAL.sharedData.version,
+      };
+    }
+
+    if (tool.id === 'dns-core') {
+      versions = {
+        foundationPin: null,
+        foundation: null,
+        designSystem: null,
+        sharedData: null,
+      };
+    }
+
     const web = await probeWeb(tool.url);
 
     let firebase;
@@ -169,23 +188,29 @@ async function main() {
     }
 
     const foundationState =
-      tool.id === 'shared-data'
-        ? 'up-to-date'
-        : versionState(
+      tool.id === 'dns-core'
+        ? 'na'
+        : tool.id === 'shared-data'
+          ? 'up-to-date'
+          : versionState(
             versions.foundation,
             DNS_TOOL_REGISTRY_CANONICAL.foundation.version,
           );
     const designSystemState =
-      tool.id === 'shared-data'
-        ? 'up-to-date'
-        : versionState(
+      tool.id === 'dns-core'
+        ? 'na'
+        : tool.id === 'shared-data'
+          ? 'up-to-date'
+          : versionState(
             versions.designSystem,
             DNS_TOOL_REGISTRY_CANONICAL.designSystem.version,
           );
     const sharedDataState =
-      tool.id === 'shared-data'
-        ? 'up-to-date'
-        : versionState(
+      tool.id === 'dns-core'
+        ? 'na'
+        : tool.id === 'shared-data'
+          ? 'up-to-date'
+          : versionState(
             versions.sharedData,
             DNS_TOOL_REGISTRY_CANONICAL.sharedData.version,
           );
