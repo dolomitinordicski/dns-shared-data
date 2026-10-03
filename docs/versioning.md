@@ -23,7 +23,7 @@ A published immutable Foundation tag (`foundation-vX.Y.Z`) is propagated to regi
 
 For npm-based consumers, the Foundation sync workflow:
 1. updates the immutable Foundation pin;
-2. increments the consumer app PATCH version with `npm version patch --no-git-tag-version`;
+2. increments the consumer app PATCH version deterministically in `package.json` and `package-lock.json`;
 3. installs dependencies;
 4. runs the consumer's available validate/build/test/lint checks;
 5. opens or refreshes the Foundation update PR.
