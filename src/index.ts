@@ -48,3 +48,5 @@ export * from './ui/primitives.js';
 export * from './analytics-public.js';
 
 export * from './idm-premium-programs.js';
+
+export * from './tool-registry.js';
