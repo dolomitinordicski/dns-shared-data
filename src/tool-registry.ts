@@ -109,6 +109,23 @@ export const DNS_TOOL_REGISTRY: readonly DNSToolRegistryEntry[] = [
     visible: true,
   },
   {
+    id: 'workspace',
+    label: 'DNS Workspace',
+    shortLabel: 'Workspace',
+    description: {
+      de: 'Neue zentrale Anwendungsshell und radiale Navigation für alle DNS Tools.',
+      it: 'Nuova shell applicativa centrale e navigazione radiale per tutti i tool DNS.',
+    },
+    url: 'https://dolomitinordicski.github.io/dns-workspace/',
+    repo: 'dolomitinordicski/dns-workspace',
+    lifecycle: 'development',
+    group: 'platform',
+    backend: { kind: 'none', label: 'Foundation registry · W0' },
+    dependencies: ['shared-data'],
+    order: 3,
+    visible: true,
+  },
+  {
     id: 'data-entry',
     label: 'DNS Data Entry',
     shortLabel: 'Data Entry',

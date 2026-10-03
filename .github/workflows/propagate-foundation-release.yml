@@ -58,7 +58,7 @@ jobs:
           app-id: ${{ secrets.DNS_FOUNDATION_PROPAGATION_APP_ID }}
           private-key: ${{ secrets.DNS_FOUNDATION_PROPAGATION_APP_PRIVATE_KEY }}
           owner: dolomitinordicski
-          repositories: DNS-Data-Entry,DNS-Polls-tool,fairmodel,analytics,DNS-Faktura,DNS-Flyer-Studio
+          repositories: DNS-Data-Entry,DNS-Polls-tool,fairmodel,analytics,DNS-Faktura,DNS-Flyer-Studio,dns-workspace
           permission-contents: write
 
       - name: Dispatch exact release to every Foundation consumer
@@ -75,6 +75,7 @@ jobs:
             'analytics',
             'DNS-Faktura',
             'DNS-Flyer-Studio',
+            'dns-workspace',
           ];
           for (const repo of repositories) {
             const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/dispatches`, {
