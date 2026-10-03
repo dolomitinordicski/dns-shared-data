@@ -176,7 +176,7 @@ async function main() {
 
     const web = await probeWeb(tool.url);
 
-    let firebase;
+    let firebase: ProbeResult;
     switch (tool.backend.kind) {
       case 'dns-core':
         firebase = dnsCoreProbe;
