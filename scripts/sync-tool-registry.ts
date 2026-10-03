@@ -11,7 +11,16 @@ const PROJECT_ID = 'dns-core';
 const COLLECTION = 'toolRegistryPublic';
 const META_DOC = '_meta';
 
-function parseSemver(value) {
+type ParsedSemver = { raw: string; major: number; minor: number; patch: number };
+type ProbeState = 'active' | 'pending' | 'offline' | 'na';
+type ProbeResult = { state: ProbeState; reason?: string; httpStatus?: number };
+type PackageJsonShape = {
+  version?: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+};
+
+function parseSemver(value: unknown): ParsedSemver | null {
   if (typeof value !== 'string') return null;
   const match = value.match(/(\d+)\.(\d+)\.(\d+)/);
   if (!match) return null;
@@ -23,14 +32,14 @@ function parseSemver(value) {
   };
 }
 
-function compareSemver(a, b) {
+function compareSemver(a: ParsedSemver | null, b: ParsedSemver | null) {
   if (!a || !b) return 0;
   if (a.major !== b.major) return a.major - b.major;
   if (a.minor !== b.minor) return a.minor - b.minor;
   return a.patch - b.patch;
 }
 
-async function fetchText(url, timeoutMs = 8000) {
+async function fetchText(url: string, timeoutMs = 8000) {
   const response = await fetch(url, {
     redirect: 'follow',
     signal: AbortSignal.timeout(timeoutMs),
@@ -42,7 +51,7 @@ async function fetchText(url, timeoutMs = 8000) {
   return response.text();
 }
 
-async function probeWeb(url) {
+async function probeWeb(url: string | null): Promise<ProbeResult> {
   if (!url) return { state: 'na', reason: 'no-public-url' };
   try {
     const response = await fetch(url, {
@@ -62,7 +71,7 @@ async function probeWeb(url) {
   }
 }
 
-async function readRepoPackage(repo) {
+async function readRepoPackage(repo: string | null): Promise<PackageJsonShape | null> {
   if (!repo) return null;
   try {
     const raw = await fetchText(
@@ -74,7 +83,7 @@ async function readRepoPackage(repo) {
   }
 }
 
-async function resolveFoundationVersions(packageJson) {
+async function resolveFoundationVersions(packageJson: PackageJsonShape | null) {
   const pin =
     packageJson?.dependencies?.['@dolomitinordicski/dns-shared-data'] ??
     packageJson?.devDependencies?.['@dolomitinordicski/dns-shared-data'] ??
@@ -105,7 +114,7 @@ async function resolveFoundationVersions(packageJson) {
   };
 }
 
-function versionState(current, canonical) {
+function versionState(current: string | null, canonical: string) {
   const a = parseSemver(current);
   const b = parseSemver(canonical);
   if (!a || !b) return 'unknown';
@@ -115,7 +124,7 @@ function versionState(current, canonical) {
   return 'ahead';
 }
 
-function aggregateConnectivity(web, firebase) {
+function aggregateConnectivity(web: ProbeResult, firebase: ProbeResult): ProbeState {
   if (web.state === 'offline' || firebase.state === 'offline') return 'offline';
   if (web.state === 'pending' || firebase.state === 'pending') return 'pending';
   if (web.state === 'active' && (firebase.state === 'active' || firebase.state === 'na')) {
@@ -129,7 +138,7 @@ async function main() {
   initializeApp({ credential: applicationDefault(), projectId: PROJECT_ID });
   const db = getFirestore();
 
-  let dnsCoreProbe = { state: 'pending', reason: 'not-checked' };
+  let dnsCoreProbe: ProbeResult = { state: 'pending', reason: 'not-checked' };
   try {
     await db.collection('seasons').limit(1).get();
     dnsCoreProbe = { state: 'active' };
