@@ -116,8 +116,23 @@ function ensurePrintStyles(documentRoot: Document, print: RuntimePrintShape, pro
   }
 
   const p = print;
+  const pageWidthMm = p.orientation === 'landscape' ? 297 : 210;
+  const preflightWidthMm = Math.max(1, pageWidthMm - (p.marginMm * 2));
   style.textContent = `
-.dns-print-sheet { display: none; }
+.dns-print-sheet {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: -200vw;
+  width: ${preflightWidthMm}mm;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  visibility: hidden;
+  pointer-events: none;
+  overflow: visible;
+  background: #fff;
+}
 
 @media print {
   @page {
@@ -141,6 +156,8 @@ function ensurePrintStyles(documentRoot: Document, print: RuntimePrintShape, pro
     display: block !important;
     position: static !important;
     width: 100% !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #fff !important;

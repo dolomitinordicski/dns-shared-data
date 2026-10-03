@@ -6,7 +6,7 @@ import { DNS_FOUNDATION_RELEASE_VERSION } from './version.js';
 export { DNS_FOUNDATION_RELEASE_VERSION } from './version.js';
 export const DNS_FOUNDATION_RELEASE_CHANNEL = 'stable' as const;
 export const DNS_FOUNDATION_RELEASE_STATUS = 'frozen' as const;
-export const DNS_FOUNDATION_RELEASE_REF = 'foundation-v1.2.0' as const;
+export const DNS_FOUNDATION_RELEASE_REF = 'foundation-v1.2.1' as const;
 
 export const DNS_FOUNDATION_RELEASE = {
   version: DNS_FOUNDATION_RELEASE_VERSION,
@@ -14,7 +14,7 @@ export const DNS_FOUNDATION_RELEASE = {
   refType: 'immutable-git-tag',
   channel: DNS_FOUNDATION_RELEASE_CHANNEL,
   status: DNS_FOUNDATION_RELEASE_STATUS,
-  releasedAt: '2026-10-02',
+  releasedAt: '2026-10-03',
   components: {
     foundationRuntime: DNS_FOUNDATION_RUNTIME_VERSION,
     designSystem: DNS_DESIGN_SYSTEM_VERSION,
