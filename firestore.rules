@@ -942,6 +942,13 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Public, non-sensitive operational registry used by DNS Hub.
+    // Metadata and health are written only by trusted Admin SDK automation.
+    match /toolRegistryPublic/{document} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Canonical season-scoped IDM Premium Partner program configuration.
     // Client applications may read it when signed in and active; writes are
     // performed only by governed Admin SDK seed tooling.
