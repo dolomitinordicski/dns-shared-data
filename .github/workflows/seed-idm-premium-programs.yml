@@ -1,4 +1,4 @@
-name: Seed Faktura billing rates 2026-27
+name: Seed IDM Premium programs
 
 on:
   workflow_dispatch:
@@ -28,6 +28,7 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - run: npm run seed:billing-rates:2026-27:apply
+      - run: npm run typecheck
+      - run: npm run seed:idm-premium-programs:apply
         env:
           GOOGLE_CLOUD_PROJECT: dns-core

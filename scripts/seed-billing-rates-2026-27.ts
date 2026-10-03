@@ -37,6 +37,7 @@ type BillingRateSeed = {
   currency: 'EUR';
   source: Record<string, unknown>;
   active: true;
+  prepaymentRequired: boolean;
   revision: number;
   notes: string;
 };
@@ -59,6 +60,7 @@ function wristbandRate(catalogItemId: string): BillingRateSeed {
       calculatedPurchaseUnitPrice: 0.159,
     },
     active: true,
+    prepaymentRequired: true,
     revision: 1,
     notes:
       'Preisquelle: 15,90 EUR netto je 100er-Pack. Fakturierbare Menge ausschließlich aus DNS Data Entry.',
@@ -83,6 +85,7 @@ function ticketRate(catalogItemId: string): BillingRateSeed {
       calculatedPurchaseUnitPrice: ticketUnitPrice,
     },
     active: true,
+    prepaymentRequired: true,
     revision: 1,
     notes:
       'Durchschnittlicher Netto-Stückpreis aus 2.200,00 EUR / 24.415 Stück. Gutschrift 2025 (-100 EUR) nicht in den Stückpreis eingerechnet.',
@@ -190,8 +193,20 @@ async function seed() {
       current.active === rate.active;
 
     if (sameKnownSeed) {
-      console.log(`= unchanged ${rate.id}`);
-      continue;
+      if (current.prepaymentRequired === rate.prepaymentRequired) {
+        console.log(`= unchanged ${rate.id}`);
+        continue;
+      }
+
+      if (current.prepaymentRequired === undefined) {
+        await ref.set({
+          prepaymentRequired: rate.prepaymentRequired,
+          updatedBy: 'dns-core-admin-seed',
+          updatedAt: FieldValue.serverTimestamp(),
+        }, { merge: true });
+        console.log(`✓ normalized explicit prepayment policy ${rate.id}`);
+        continue;
+      }
     }
 
     console.log(

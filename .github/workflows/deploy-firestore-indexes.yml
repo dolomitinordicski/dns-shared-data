@@ -1,4 +1,4 @@
-name: Seed Faktura billing rates 2026-27
+name: Deploy Firestore indexes
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ permissions:
   id-token: write
 
 jobs:
-  seed:
+  deploy:
     runs-on: ubuntu-latest
     env:
       FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
@@ -28,6 +28,9 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - run: npm run seed:billing-rates:2026-27:apply
+      - name: Validate index manifest JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('firestore.indexes.json','utf8')); console.log('Firestore index manifest valid.')"
+      - name: Deploy indexes only
+        run: npx --yes firebase-tools@14.12.0 deploy --only firestore:indexes --project dns-core
         env:
           GOOGLE_CLOUD_PROJECT: dns-core

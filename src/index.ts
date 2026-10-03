@@ -46,3 +46,5 @@ export * from './ui/content-patterns.js';
 export * from './ui/primitives.js';
 
 export * from './analytics-public.js';
+
+export * from './idm-premium-programs.js';
