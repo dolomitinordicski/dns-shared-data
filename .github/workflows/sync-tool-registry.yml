@@ -1,0 +1,46 @@
+name: Sync DNS Hub tool registry
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'src/tool-registry.ts'
+      - 'src/release.ts'
+      - 'src/version.ts'
+      - 'src/design-system.ts'
+      - 'scripts/sync-tool-registry.ts'
+      - '.github/workflows/sync-tool-registry.yml'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Firebase credentials
+        shell: bash
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::Missing FIREBASE_SERVICE_ACCOUNT_DNS_CORE repository secret."
+            exit 1
+          fi
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run typecheck
+      - name: Synchronize public DNS tool registry
+        run: npm run sync:tool-registry:apply
+        env:
+          GOOGLE_CLOUD_PROJECT: dns-core

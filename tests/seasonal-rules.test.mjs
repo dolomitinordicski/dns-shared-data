@@ -411,6 +411,19 @@ try {
     revision:1,
   }));
 
+  // DNS Hub consumes only the public operational registry.
+  await env.withSecurityRulesDisabled(async context=>{
+    await setDoc(doc(context.firestore(),'toolRegistryPublic','data-entry'),{
+      id:'data-entry',
+      lifecycle:'production',
+      health:{connectivity:'active'},
+    });
+  });
+  await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),'toolRegistryPublic','data-entry')));
+  await assertSucceeds(getDocs(collection(env.unauthenticatedContext().firestore(),'toolRegistryPublic')));
+  await assertFails(setDoc(doc(env.unauthenticatedContext().firestore(),'toolRegistryPublic','blocked'),{id:'blocked'}));
+  await assertFails(setDoc(doc(admin,'toolRegistryPublic','blocked-admin'),{id:'blocked-admin'}));
+
   // Faktura v2 internal collections are DNS-admin only.
   const fakturaConfirmation={
     id:'confirmation-test',
