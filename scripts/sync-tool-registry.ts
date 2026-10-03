@@ -156,9 +156,12 @@ async function main() {
     const packageJson = await readRepoPackage(tool.repo);
     let versions = await resolveFoundationVersions(packageJson);
 
-    if (tool.id === 'hub') {
+    if (tool.id === 'hub' || tool.id === 'shared-data') {
       versions = {
-        foundationPin: 'web-runtime:canonical',
+        foundationPin:
+          tool.id === 'hub'
+            ? 'web-runtime:canonical'
+            : DNS_TOOL_REGISTRY_CANONICAL.foundation.ref,
         foundation: DNS_TOOL_REGISTRY_CANONICAL.foundation.version,
         designSystem: DNS_TOOL_REGISTRY_CANONICAL.designSystem.version,
         sharedData: DNS_TOOL_REGISTRY_CANONICAL.sharedData.version,
