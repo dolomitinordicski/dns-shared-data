@@ -1011,6 +1011,56 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Collective procurement v0.1: conservative, admin-only staging rules.
+    // Ticket order matrices and Faktura collections are deliberately untouched.
+    // Partner scope access is denied until allocation-specific emulator tests
+    // and canonical organization mapping have been approved.
+    function validCollectiveHeader(data, document) {
+      return data.keys().hasOnly([
+          'id','seasonId','title','supplierId','status','sourceRevision',
+          'supplierDocumentIds','updatedBy','updatedAt'
+        ])
+        && data.id == document
+        && data.seasonId is string
+        && exists(/databases/$(database)/documents/seasons/$(data.seasonId))
+        && data.title is string && data.title.size() > 0
+        && data.supplierId is string && data.supplierId.size() > 0
+        && data.status in ['draft','reviewed','confirmed','closed']
+        && data.sourceRevision is int && data.sourceRevision >= 1
+        && data.supplierDocumentIds is list
+        && data.supplierDocumentIds.size() > 0
+        && data.updatedBy == request.auth.uid
+        && data.updatedAt == request.time;
+    }
+
+    match /collectiveOrders/{document} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && validCollectiveHeader(request.resource.data, document)
+        && request.resource.data.status == 'draft';
+      allow update: if isAdmin()
+        && validCollectiveHeader(request.resource.data, document)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.seasonId == resource.data.seasonId
+        && request.resource.data.sourceRevision == resource.data.sourceRevision + 1
+        && resource.data.status != 'closed'
+        && (
+          (resource.data.status == 'draft' && request.resource.data.status in ['draft','reviewed'])
+          || (resource.data.status == 'reviewed' && request.resource.data.status in ['reviewed','confirmed'])
+          || (resource.data.status == 'confirmed' && request.resource.data.status == 'closed')
+        );
+      allow delete: if false;
+
+      // Neither allocations nor supplier costs can be accessed by app clients
+      // until dedicated rules, identity checks and emulator cases are in place.
+      match /allocations/{allocationId} {
+        allow read, write: if false;
+      }
+      match /supplierCosts/{costId} {
+        allow read, write: if false;
+      }
+    }
+
     // Everything else remains closed until its domain rules are implemented.
     match /{document=**} {
       allow read, write: if false;
