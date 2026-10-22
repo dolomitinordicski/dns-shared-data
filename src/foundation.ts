@@ -1,4 +1,3 @@
-export { applyDNSRegionAccent, resolveDNSRegionAccent, DNS_REGION_ACCENTS } from './region-accent.js';
 import { DNS_DESIGN_SYSTEM, type DNSDesignSystem } from './design-system.js';
 import {
   DNS_DEFAULT_UI_LANGUAGE,
@@ -343,7 +342,6 @@ export function initDNSFoundation(
       adapters: options.capabilityAdapters,
       language,
       getLanguage: () => language,
-      setReportingAreaContext() {},
     });
     return {
       version: DNS_FOUNDATION_RUNTIME_VERSION,
@@ -352,6 +350,7 @@ export function initDNSFoundation(
       workspaceRuntime: null,
       capabilityRuntime,
       getLanguage: () => language,
+      setReportingAreaContext() {},
       setLanguage(next) {
         language = next === 'it' ? 'it' : DNS_DEFAULT_UI_LANGUAGE;
         listeners.forEach((listener) => listener(language));
