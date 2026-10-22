@@ -1,3 +1,4 @@
+export { applyDNSRegionAccent, resolveDNSRegionAccent, DNS_REGION_ACCENTS } from './region-accent.js';
 import { DNS_DESIGN_SYSTEM, type DNSDesignSystem } from './design-system.js';
 import {
   DNS_DEFAULT_UI_LANGUAGE,
@@ -24,6 +25,7 @@ import { initDNSIdentityUIRuntime } from './ui/identity.js';
 import { initDNSAssetUIRuntime } from './ui/assets.js';
 import { initDNSWorkspaceRuntime, type DNSWorkspaceRuntimeHandle } from './ui/workspace.js';
 import { initDNSShellRuntime } from './ui/shell.js';
+import { applyDNSRegionAccent } from './region-accent.js';
 import type { DNSShellProfileId } from './shell-profiles.js';
 import type { DNSPrintProfileId } from './print-profiles.js';
 import { createDNSCapabilityRuntime, type DNSCapabilityAdapter, type DNSCapabilityRuntime } from './capability-runtime.js';
@@ -42,6 +44,8 @@ export interface DNSFoundationAccessibilityOptions {
 }
 
 export interface DNSFoundationRuntimeOptions {
+  /** Verified reporting area context (from DNS Core access, not arbitrary user input). */
+  reportingAreaId?: string | null;
   root?: Document;
   designSystem?: DNSDesignSystem;
   language?: DNSUILanguage;
@@ -75,6 +79,7 @@ export interface DNSFoundationRuntimeHandle {
   readonly workspaceRuntime?: DNSWorkspaceRuntimeHandle | null;
   readonly capabilityRuntime: DNSCapabilityRuntime;
   getLanguage(): DNSUILanguage;
+  setReportingAreaContext(areaId: string | null): void;
   setLanguage(language: DNSUILanguage): void;
   subscribeLanguage(listener: (language: DNSUILanguage) => void): () => void;
   refresh(): void;
@@ -338,6 +343,7 @@ export function initDNSFoundation(
       adapters: options.capabilityAdapters,
       language,
       getLanguage: () => language,
+      setReportingAreaContext() {},
     });
     return {
       version: DNS_FOUNDATION_RUNTIME_VERSION,
@@ -380,6 +386,7 @@ export function initDNSFoundation(
   const listeners = new Set<(language: DNSUILanguage) => void>();
 
   applyDNSDesignVariables(designSystem, documentRoot);
+  applyDNSRegionAccent(options.reportingAreaId, documentRoot);
   const shell = initDNSShellRuntime(shellProfile, documentRoot);
   const workspaceRuntime =
     shellProfile === 'workspace' && options.workspace !== false
@@ -506,6 +513,9 @@ export function initDNSFoundation(
     getLanguage() {
       return language;
     },
+    setReportingAreaContext(areaId) {
+      applyDNSRegionAccent(areaId, documentRoot);
+    },
     setLanguage(next) {
       applyLanguage(next, true);
     },
@@ -536,6 +546,7 @@ export function initDNSFoundation(
       footerRuntime?.disconnect();
       workspaceRuntime?.disconnect();
       shell.disconnect();
+      applyDNSRegionAccent(null, documentRoot);
       listeners.clear();
       runtimeByDocument.delete(documentRoot);
       delete documentRoot.documentElement.dataset.dnsFoundationRuntime;
