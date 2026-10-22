@@ -58,7 +58,7 @@ jobs:
           app-id: ${{ secrets.DNS_FOUNDATION_PROPAGATION_APP_ID }}
           private-key: ${{ secrets.DNS_FOUNDATION_PROPAGATION_APP_PRIVATE_KEY }}
           owner: dolomitinordicski
-          repositories: DNS-Data-Entry,DNS-Polls-tool,fairmodel,analytics,DNS-Faktura,DNS-Flyer-Studio,dns-workspace
+          # Use the installation's configured repository access; dispatch targets remain explicitly allowlisted below.
           permission-contents: write
 
       - name: Dispatch exact release to every Foundation consumer
