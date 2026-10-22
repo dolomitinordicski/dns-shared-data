@@ -5,7 +5,7 @@ import {
 
 const errors = [];
 
-if (DNS_FOUNDATION_RUNTIME_VERSION !== '1.2.1') {
+if (DNS_FOUNDATION_RUNTIME_VERSION !== '1.3.0') {
   errors.push('Unexpected Foundation runtime version.');
 }
 
@@ -36,6 +36,8 @@ if (observed !== 'it') {
 }
 
 unsubscribe();
+runtime.setReportingAreaContext('drei-zinnen');
+runtime.setReportingAreaContext(null);
 runtime.printNow();
 runtime.refresh();
 runtime.disconnect();
