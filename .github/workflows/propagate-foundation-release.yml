@@ -68,15 +68,21 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           const owner = 'dolomitinordicski';
-          const repositories = [
-            'DNS-Data-Entry',
-            'DNS-Polls-tool',
-            'fairmodel',
-            'analytics',
-            'DNS-Faktura',
-            'DNS-Flyer-Studio',
-            'dns-workspace',
-          ];
+          const excluded = new Set(['360artool', 'dns-shared-data']);
+          const repositories = [];
+          for (let page = 1; ; page++) {
+            const response = await fetch(`https://api.github.com/installation/repositories?per_page=100&page=${page}`, {
+              headers: { Authorization: `Bearer ${process.env.GH_TOKEN}`, Accept: 'application/vnd.github+json' },
+            });
+            if (!response.ok) throw new Error(`Repository discovery failed: ${response.status} ${await response.text()}`);
+            const entries = (await response.json()).repositories ?? [];
+            for (const entry of entries) {
+              if (entry.owner?.login?.toLowerCase() === owner && !excluded.has(entry.name.toLowerCase())) repositories.push(entry.name);
+            }
+            if (entries.length < 100) break;
+          }
+          if (!repositories.length) throw new Error('No eligible Foundation repositories found');
+          console.log(`Targets: ${repositories.join(', ')}`);
           for (const repo of repositories) {
             const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/dispatches`, {
               method: 'POST',
