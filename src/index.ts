@@ -50,3 +50,5 @@ export * from './analytics-public.js';
 export * from './idm-premium-programs.js';
 
 export * from './tool-registry.js';
+
+export * from './region-accent.js';
