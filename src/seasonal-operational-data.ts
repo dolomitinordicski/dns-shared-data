@@ -458,8 +458,8 @@ export const PRICING_SCOPE_PRECEDENCE = [
 export const FIRESTORE_OPERATIONAL_COLLECTIONS = {
   /** Active DNS Core pricing collection written by DNS Data Entry. */
   ticketPricingConfigs: 'ticketPricingConfigs',
-  /** @deprecated Historical key retained for consumer compatibility; resolves to the active collection. */
-  pricingConfigs: 'ticketPricingConfigs',
+  /** @deprecated Historical collection alias retained unchanged for existing consumers. */
+  pricingConfigs: 'pricingConfigs',
   orderCatalogItems: 'orderCatalogItems',
   orderSetupImports: 'orderSetupImports',
   publicOrderShares: 'publicOrderShares',
