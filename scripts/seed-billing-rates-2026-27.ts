@@ -26,7 +26,17 @@ const TICKET_ITEM_IDS = [
   '2026-27-press',
 ] as const;
 
-const ticketUnitPrice = Math.round((2200 / 24415) * 100000000) / 100000000;
+function roundUpToCent(value: number) {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error('INVALID_MONEY_VALUE');
+  }
+  return Math.ceil(value * 100 - 1e-9) / 100;
+}
+
+const legacyWristbandUnitPrice = 15.9 / 100;
+const legacyTicketUnitPrice = 2200 / 24415;
+const wristbandUnitPrice = roundUpToCent(legacyWristbandUnitPrice);
+const ticketUnitPrice = roundUpToCent(legacyTicketUnitPrice);
 
 type BillingRateSeed = {
   id: string;
@@ -49,7 +59,7 @@ function wristbandRate(catalogItemId: string): BillingRateSeed {
     seasonId: SEASON_ID,
     sourceType: 'order',
     catalogItemId,
-    billingUnitPrice: 0.159,
+    billingUnitPrice: wristbandUnitPrice,
     currency: 'EUR',
     source: {
       documentLabel: 'Brady Italia / PDC · ordine 1013437506',
@@ -57,7 +67,7 @@ function wristbandRate(catalogItemId: string): BillingRateSeed {
       documentDate: '2026-09-02',
       packSize: 100,
       packPriceNet: 15.9,
-      calculatedPurchaseUnitPrice: 0.159,
+      calculatedPurchaseUnitPrice: wristbandUnitPrice,
     },
     active: true,
     prepaymentRequired: true,
@@ -184,6 +194,19 @@ async function seed() {
     }
 
     const current = existing.data() as Record<string, unknown>;
+    const currentSource =
+      current.source &&
+      typeof current.source === 'object' &&
+      !Array.isArray(current.source)
+        ? (current.source as Record<string, unknown>)
+        : undefined;
+
+    const legacyUnitPrice = WRISTBAND_ITEM_IDS.includes(
+      rate.catalogItemId as (typeof WRISTBAND_ITEM_IDS)[number],
+    )
+      ? legacyWristbandUnitPrice
+      : legacyTicketUnitPrice;
+
     const sameKnownSeed =
       current.seasonId === rate.seasonId &&
       current.sourceType === rate.sourceType &&
@@ -207,6 +230,38 @@ async function seed() {
         console.log(`✓ normalized explicit prepayment policy ${rate.id}`);
         continue;
       }
+    }
+
+    const isKnownLegacySeed =
+      (
+        current.updatedBy === 'dns-core-admin-seed' ||
+        currentSource?.documentLabel === rate.source.documentLabel
+      ) &&
+      current.seasonId === rate.seasonId &&
+      current.sourceType === rate.sourceType &&
+      current.catalogItemId === rate.catalogItemId &&
+      current.currency === rate.currency &&
+      current.active === true &&
+      current.billingUnitPrice === legacyUnitPrice;
+
+    if (isKnownLegacySeed) {
+      const currentRevision =
+        typeof current.revision === 'number' &&
+        Number.isInteger(current.revision) &&
+        current.revision >= 1
+          ? current.revision
+          : 1;
+
+      await ref.set({
+        ...rate,
+        revision: currentRevision + 1,
+        updatedBy: 'dns-core-admin-seed',
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      console.log(
+        `✓ migrated ${rate.id}: ${legacyUnitPrice.toFixed(8)} -> ${rate.billingUnitPrice.toFixed(2)} EUR`,
+      );
+      continue;
     }
 
     console.log(
