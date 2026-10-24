@@ -1061,6 +1061,71 @@ service cloud.firestore {
       }
     }
 
+
+    // DNS Design Control v1. Private reader index is maintained by trusted
+    // backend tooling only; it selects a canonical grant, never grants access.
+    function indexedFlyerPolicyReader() {
+      let readerPath = /databases/$(database)/documents/flyerPolicyReaders/$(request.auth.uid);
+      let reader = get(readerPath).data;
+      return exists(readerPath)
+        && reader.keys().hasOnly(['scopeType', 'scopeId'])
+        && reader.scopeType in ['reportingArea', 'organization']
+        && reader.scopeId is string
+        && reader.scopeId.size() > 0 && reader.scopeId.size() <= 128
+        && hasGrant(reader.scopeType, reader.scopeId, 'flyer.read');
+    }
+
+    function canReadFlyerDesignPolicy() {
+      return activeUser() && (
+        isAdmin()
+        || hasGrant('network', 'dolomiti-nordicski', 'flyer.read')
+        || indexedFlyerPolicyReader()
+      );
+    }
+
+    function validFlyerDesignOverride(value) {
+      return value is map
+        && value.keys().hasOnly(['corners', 'pills', 'heroFade'])
+        && (!('corners' in value) || value.corners in ['square', 'soft', 'round'])
+        && (!('pills' in value) || value.pills in ['square', 'soft', 'pill'])
+        && (!('heroFade' in value) || value.heroFade in ['none', 'top', 'right', 'bottom', 'left']);
+    }
+
+    function validFlyerDesignPolicy(data) {
+      return data.keys().hasAll(['schemaVersion', 'global', 'perFlyer', 'updatedAt', 'updatedBy'])
+        && data.keys().hasOnly(['schemaVersion', 'global', 'perFlyer', 'updatedAt', 'updatedBy'])
+        && data.schemaVersion is int && data.schemaVersion == 1
+        && validFlyerDesignOverride(data.global)
+        && data.global.keys().hasAll(['corners', 'pills', 'heroFade'])
+        && data.perFlyer is map
+        && data.perFlyer.keys().hasOnly(['official_price_list', 'regional_price_list', 'ticket_online_weekly_dns', 'ticket_online_weekly_area', 'ticket_online_daily', 'hotel_skipass_package', 'gift_voucher', 'service_voucher', 'hotel_manifesto'])
+        && (!('official_price_list' in data.perFlyer) || validFlyerDesignOverride(data.perFlyer['official_price_list']))
+        && (!('regional_price_list' in data.perFlyer) || validFlyerDesignOverride(data.perFlyer['regional_price_list']))
+        && (!('ticket_online_weekly_dns' in data.perFlyer) || validFlyerDesignOverride(data.perFlyer['ticket_online_weekly_dns']))
+        && (!('ticket_online_weekly_area' in data.perFlyer) || validFlyerDesignOverride(data.perFlyer['ticket_online_weekly_area']))
+        && (!('ticket_online_daily' in data.perFlyer) || validFlyerDesignOverride(data.perFlyer['ticket_online_daily']))
+        && (!('hotel_skipass_package' in data.perFlyer) || validFlyerDesignOverride(data.perFlyer['hotel_skipass_package']))
+        && (!('gift_voucher' in data.perFlyer) || validFlyerDesignOverride(data.perFlyer['gift_voucher']))
+        && (!('service_voucher' in data.perFlyer) || validFlyerDesignOverride(data.perFlyer['service_voucher']))
+        && (!('hotel_manifesto' in data.perFlyer) || validFlyerDesignOverride(data.perFlyer['hotel_manifesto']))
+        && data.updatedBy == request.auth.uid
+        // Repository writes an ISO string, not serverTimestamp().
+        && data.updatedAt is string && data.updatedAt.size() == 24
+        && data.updatedAt.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z$');
+    }
+
+    match /flyerDesignPolicies/{policyId} {
+      allow get: if policyId == 'dns-global' && canReadFlyerDesignPolicy();
+      allow list: if false;
+      allow create, update: if policyId == 'dns-global'
+        && isAdmin() && validFlyerDesignPolicy(request.resource.data);
+      allow delete: if policyId == 'dns-global' && isAdmin();
+    }
+
+    match /flyerPolicyReaders/{userId} {
+      allow read, write: if false;
+    }
+
     // Everything else remains closed until its domain rules are implemented.
     match /{document=**} {
       allow read, write: if false;
