@@ -16,18 +16,20 @@ test('dry run fetches only and never writes',async()=>{
  const calls=[];
  const result=await cloneDoiTemplates({apiKey:'test',fetchImpl:async(url,opt)=>{
   calls.push({url,method:opt.method||'GET'});
+  if(url.includes('?limit='))return {ok:true,json:async()=>({templates:[]})};
   const id=Number(url.split('/').at(-1));
   return {ok:true,json:async()=>({id,name:'Agency',sender:{email:'welcome@dolomitinordicski.com',name:'DNS'},
    subject:'Confirm',htmlContent:'<a href="{{ doubleoptin }}">Confirm</a>'})};
  }});
  assert.equal(result.length,3);
- assert.deepEqual(calls.map(x=>x.method),['GET','GET','GET']);
+ assert.deepEqual(calls.map(x=>x.method),['GET','GET','GET','GET']);
  assert.equal(result[0].action,'DRY_RUN');
 });
 test('apply creates inactive clones and verifies new IDs',async()=>{
  const calls=[];let next=100;
  const result=await cloneDoiTemplates({apiKey:'test',apply:true,fetchImpl:async(url,opt)=>{
   const method=opt.method||'GET';calls.push(method);
+  if(url.includes('?limit='))return {ok:true,json:async()=>({templates:[]})};
   if(method==='POST') {
    const body=JSON.parse(opt.body);
    assert.equal(body.isActive,false);
@@ -42,4 +44,22 @@ test('apply creates inactive clones and verifies new IDs',async()=>{
  }});
  assert.deepEqual(result.map(x=>x.newId),[101,102,103]);
  assert.equal(calls.filter(x=>x==='POST').length,3);
+});
+
+test('existing inactive clone is reused instead of duplicated',async()=>{
+ let writes=0;
+ const names=['DNS Digital Pass DOI – IT','DNS Digital Pass DOI – DE','DNS Digital Pass DOI – EN'];
+ const result=await cloneDoiTemplates({apiKey:'test',apply:true,fetchImpl:async(url,opts)=>{
+  if(url.includes('?limit='))return {ok:true,json:async()=>({templates:names.map((name,i)=>({id:i+9,name}))})};
+  if(opts.method==='POST'){writes++;throw Error('unexpected create');}
+  const id=Number(url.split('/').at(-1));
+  if(id>=9)return {ok:true,json:async()=>({id,name:names[id-9],subject:'Confirm',isActive:false,
+   doiTemplate:false,htmlContent:'<a href="{{ params.DOIurl }}">Confirm</a>'})};
+  return {ok:true,json:async()=>({id,name:'Agency',subject:'Confirm',
+   sender:{email:'welcome@dolomitinordicski.com'},
+   htmlContent:'<a href="{{ doubleoptin }}">Confirm</a>'})};
+ }});
+ assert.equal(writes,0);
+ assert.deepEqual(result.map(x=>x.action),['REUSE_EXISTING','REUSE_EXISTING','REUSE_EXISTING']);
+ assert.equal(result.every(x=>x.readyForDoi===false),true);
 });
