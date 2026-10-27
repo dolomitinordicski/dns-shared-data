@@ -22,6 +22,10 @@ export type DNSMembershipRole =
   | 'reviewer';
 
 export type DNSPermission =
+  | 'passActivation.issue'
+  | 'passSale.attest'
+  | 'passValidation.check'
+  | 'passCredential.revoke'
   | 'season.read'
   | 'season.manage'
   | 'pricing.read'
@@ -135,6 +139,10 @@ export const DNS_ROLE_DEFAULT_PERMISSIONS = {
 } as const satisfies Record<DNSMembershipRole, readonly DNSPermission[]>;
 
 export const DNS_ADMIN_PERMISSIONS = [
+  'passActivation.issue',
+  'passSale.attest',
+  'passValidation.check',
+  'passCredential.revoke',
   'season.read',
   'season.manage',
   'pricing.read',

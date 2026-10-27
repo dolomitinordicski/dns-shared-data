@@ -22,7 +22,7 @@ class MemoryDb {
   }
 }
 const assignment = { physicalPassId: 'season2026-dns-1234', organizationId: 'toblach',
-  seasonId: '2026-27', productCode: 'DNS_SEASON', eligibleForDnsSeasonPilot: true };
+  seasonId: '2026-27', productCode: 'sk-dns', eligibleForDnsSeasonPilot: true, sourceRevision: 'matrix-v1', printedNumber: '001234' };
 const actor = { uid: 'operatorA', grants: [
   { organizationId: 'toblach', permissions: ['passActivation.issue', 'passSale.attest'] },
 ] };
@@ -37,18 +37,18 @@ test('six-character uppercase human-readable activation code and keyed verifier'
 test('prepare and Validate attest sale atomically, without storing plaintext', async () => {
   const db = new MemoryDb();
   const a = await prepareActivation({ db, actor, passNumber: '1234',
-    seasonId: '2026-27', productCode: 'DNS_SEASON',
+    seasonId: '2026-27', productCode: 'sk-dns',
     resolveAssignment: async () => assignment, hmacSecret, now: 1000 });
   assert.equal(a.code.length, 6);
   const record = db.values.get('passActivationChallenges/' + assignment.physicalPassId);
   assert.equal(record.code, undefined);
   assert.equal(record.status, 'PREPARED');
   await assert.rejects(prepareActivation({ db, actor, passNumber: '1234',
-    seasonId: '2026-27', productCode: 'DNS_SEASON',
+    seasonId: '2026-27', productCode: 'sk-dns',
     resolveAssignment: async () => assignment, hmacSecret, now: 1001 }), /PREPARATION_ALREADY_EXISTS/);
-  const first = await validateSale({ db, actor, physicalPassId: assignment.physicalPassId, now: 1100 });
+  const first = await validateSale({ db, actor, physicalPassId: assignment.physicalPassId, preparationId: db.values.get('passActivationChallenges/' + assignment.physicalPassId)?.nonce, now: 1100 });
   assert.equal(first.alreadyValidated, false);
-  const second = await validateSale({ db, actor, physicalPassId: assignment.physicalPassId, now: 1101 });
+  const second = await validateSale({ db, actor, physicalPassId: assignment.physicalPassId, preparationId: db.values.get('passActivationChallenges/' + assignment.physicalPassId)?.nonce, now: 1101 });
   assert.equal(second.alreadyValidated, true);
   assert.equal(db.values.get('passActivationChallenges/' + assignment.physicalPassId).status, 'ENABLED');
 });
@@ -59,13 +59,13 @@ test('wrong organization cannot issue or validate; cannot Validate expired prepa
     { organizationId: 'other', permissions: ['passActivation.issue', 'passSale.attest'] },
   ] };
   await assert.rejects(prepareActivation({ db, actor: wrong, passNumber: '1234',
-    seasonId: '2026-27', productCode: 'DNS_SEASON',
+    seasonId: '2026-27', productCode: 'sk-dns',
     resolveAssignment: async () => assignment, hmacSecret }), /FORBIDDEN/);
   await prepareActivation({ db, actor, passNumber: '1234',
-    seasonId: '2026-27', productCode: 'DNS_SEASON',
+    seasonId: '2026-27', productCode: 'sk-dns',
     resolveAssignment: async () => assignment, hmacSecret, now: 1000 });
   await assert.rejects(validateSale({ db, actor: wrong,
-    physicalPassId: assignment.physicalPassId, now: 1100 }), /FORBIDDEN/);
+    physicalPassId: assignment.physicalPassId, preparationId: db.values.get('passActivationChallenges/' + assignment.physicalPassId)?.nonce, now: 1100 }), /FORBIDDEN/);
   await assert.rejects(validateSale({ db, actor,
-    physicalPassId: assignment.physicalPassId, now: 1000 + 11 * 60 * 1000 }), /INVALID_PREPARATION/);
+    physicalPassId: assignment.physicalPassId, preparationId: db.values.get('passActivationChallenges/' + assignment.physicalPassId)?.nonce, now: 1000 + 11 * 60 * 1000 }), /INVALID_PREPARATION/);
 });

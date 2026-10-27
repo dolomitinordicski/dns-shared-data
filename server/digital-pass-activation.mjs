@@ -37,7 +37,7 @@ function assertOperator(actor, assignment, requiredPermission) {
 }
 
 function requireAssignment(assignment) {
-  if (!assignment || !assignment.physicalPassId || !assignment.organizationId ||
+  if (!assignment || assignment.seasonId !== '2026-27' || assignment.productCode !== 'sk-dns' || !assignment.sourceRevision || !assignment.physicalPassId || !assignment.organizationId ||
       !assignment.seasonId || !assignment.productCode ||
       assignment.eligibleForDnsSeasonPilot !== true) {
     throw new Error('NOT_ELIGIBLE');
@@ -60,6 +60,7 @@ export async function prepareActivation({
   assertOperator(actor, assignment, 'passActivation.issue');
   const code = generateActivationCode();
   const id = assignment.physicalPassId;
+  const nonce = randomUUID();
   const ref = db.collection('passActivationChallenges').doc(id);
   const auditRef = db.collection('passAuditEvents').doc(randomUUID());
   await db.runTransaction(async tx => {
@@ -74,7 +75,7 @@ export async function prepareActivation({
       }
       // A fresh prepare cannot overwrite any recorded sale, even when
       // a previously enabled code has expired.
-      if (value.saleAttestedAt) throw new Error('SALE_ALREADY_ATTESTED');
+      if (value.saleAttestedAt != null) throw new Error('SALE_ALREADY_ATTESTED');
     }
     tx.set(ref, {
       physicalPassId: id,
@@ -86,18 +87,20 @@ export async function prepareActivation({
       createdAt: now,
       expiresAt: now + 10 * 60 * 1000,
       operatorUid: actor.uid,
-      nonce: randomUUID(),
+      nonce,
+      sourceRevision: assignment.sourceRevision,
+      printedNumber: assignment.printedNumber,
     });
     tx.create(auditRef, { action: 'PASS_ACTIVATION_PREPARED', targetId: id,
       actorId: actor.uid, organizationId: assignment.organizationId, at: now });
   });
-  return { physicalPassId: id, code, expiresAt: now + 10 * 60 * 1000 };
+  return { physicalPassId: id, preparationId: nonce, code, expiresAt: now + 10 * 60 * 1000 };
 }
 
 /** Validate is operator's physical-sale attestation, not guest code redemption.
  * Transaction serializes concurrent validation and prevents two sales. */
 export async function validateSale({
-  db, actor, physicalPassId, now = Date.now(),
+  db, actor, physicalPassId, preparationId, now = Date.now(),
 }) {
   const ref = db.collection('passActivationChallenges').doc(physicalPassId);
   const auditRef = db.collection('passAuditEvents').doc(randomUUID());
@@ -106,6 +109,7 @@ export async function validateSale({
     if (!snap.exists) throw new Error('NO_PREPARATION');
     const record = snap.data();
     assertOperator(actor, record, 'passSale.attest');
+    if (!preparationId || record.nonce !== preparationId) throw new Error('STALE_PREPARATION');
     if (record.status === 'ENABLED' && record.operatorUid === actor.uid)
       return { status: 'SOLD_ATTESTED', alreadyValidated: true };
     if (record.status !== 'PREPARED' || record.expiresAt <= now)
