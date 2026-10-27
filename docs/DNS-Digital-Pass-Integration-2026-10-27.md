@@ -47,3 +47,9 @@ Node domain tests use a serialized in-memory transaction double. They prove busi
 
 User confirmed 15 November 2026 through 30 April 2027 inclusive, Europe/Rome.
 Runtime uses [2026-11-15T00:00:00+01:00, 2027-05-01T00:00:00+02:00), with an exclusive end after the last valid day. Privacy URL: https://www.dolomitinordicski.com/de/privacy (provided by user; fetching its contents was unsuccessful, so Digital Pass coverage/legal review is NOT verified). Email-link provider status: user explicitly confirmed "Da verificare".
+
+## Existing marketing adapter discovered during final reconciliation
+
+PR #168 (https://github.com/dolomitinordicski/dns-shared-data/pull/168) already provides the isolated Brevo DOI adapter and IT/DE/EN template documentation. Reuse that adapter; do not create a parallel marketing sender or consent store. Consent events here use its DNS_MARKETING purpose and holderId/affirmative/consentedAt/source fields. Marketing requests remain NOT_REQUESTED unless an independently approved marketing notice version is supplied by trusted server configuration. The runtime intentionally does not enable that parameter or show a checkbox yet. Outstanding integration is trusted asynchronous dispatch, idempotency, suppression/unsubscribe reconciliation and authoritative confirmation; API success or a redirect must not be treated as confirmed consent.
+
+CI verification on 2026-10-27: GitHub run 40584098177 passed the real Firestore race test, 81 direct-browser privacy denial assertions (anonymous, holder, active DNS admin), and Firebase Functions entrypoint import. Production email delivery and physical-device camera/visual acceptance remain unverified. Data Entry build CI 40583469626 and Workspace operator CI 40584304651 passed; customer/scanner CI 40585124310 passed. Latest-head checks must remain green after subsequent fixes.
