@@ -34,7 +34,8 @@
     "sync:tool-registry": "tsx scripts/sync-tool-registry.ts",
     "sync:tool-registry:apply": "tsx scripts/sync-tool-registry.ts --apply",
     "test:collective-orders:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/collective-orders-rules.test.mjs\"",
-    "test:partner-registry": "npm run build:package && node tests/partner-registry.test.mjs"
+    "test:partner-registry": "npm run build:package && node tests/partner-registry.test.mjs",
+    "test:partner-activation": "npm run build:package && node tests/partner-activation.test.mjs"
   },
   "devDependencies": {
     "firebase-admin": "^14.5.0",
