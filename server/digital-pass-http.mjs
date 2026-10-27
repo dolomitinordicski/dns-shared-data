@@ -2,6 +2,7 @@
  * Dependencies are injected so no credentials or project are selected at import time. */
 import { createHmac } from 'node:crypto';
 import { requestMarketingOptIn, withdrawMarketing } from './digital-pass-marketing.mjs';
+import { enqueueDoi } from './digital-pass-brevo-outbox.mjs';
 import { loadDigitalPassActor } from './digital-pass-auth.mjs';
 import { prepareActivation, validateSale, reissueActivation } from './digital-pass-activation.mjs';
 import { resolveSeasonPassAssignment, PILOT_SEASON, PILOT_PRODUCT } from './digital-pass-inventory-resolver.mjs';
@@ -46,6 +47,7 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
         if (!marketingNoticeVersion) return res.status(503).json({ error: 'MARKETING_NOT_ENABLED' });
         result = await requestMarketingOptIn({ db, identity, affirmative: b.affirmative,
           language: b.language, noticeVersion: marketingNoticeVersion });
+        if (result.status === 'PENDING_DOI') await enqueueDoi({ db, holderUid: identity.uid });
       } else if (path === '/v1/me/marketing/withdraw') {
         result = await withdrawMarketing({ db, identity });
       } else if (path === '/v1/me/digital-passes') {
