@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveSeasonPassAssignment } from '../server/digital-pass-inventory-resolver.mjs';
-import { prepareActivation, validateSale } from '../server/digital-pass-activation.mjs';
+import { prepareActivation, validateSale, reissueActivation } from '../server/digital-pass-activation.mjs';
 import { registerDigitalPass, getDigitalPass, checkDigitalCredential, revokeDigitalCredential, limitAttempts } from '../server/digital-pass-registration.mjs';
 import { loadDigitalPassActor } from '../server/digital-pass-auth.mjs';
 
@@ -124,4 +124,17 @@ test('marketing uses the existing Brevo consent contract and requires a separate
   assert.equal(pending.holderId,identity.uid); assert.equal(pending.affirmative,true);
   assert.equal(pending.status,'PENDING_DOUBLE_OPT_IN'); assert.equal(pending.noticeVersion,'marketing-notice-v1');
   assert.equal(pending.source,'digital-pass');
+});
+
+
+test('admin reissue invalidates old code, preserves the physical sale and rejects registered cards',async()=>{
+  const state=await sale(); const admin={uid:'admin',isDnsAdmin:true};
+  const args={db:state.db,actor:admin,physicalPassId:assignment.physicalPassId,idempotencyKey:'reissue-request-0001',reason:'Expired customer activation',hmacSecret,now:2000};
+  await assert.rejects(reissueActivation({...args,actor}),/FORBIDDEN/);
+  const replacement=await reissueActivation(args);
+  const retry=await reissueActivation(args);assert.equal(retry.alreadyReissued,true);assert.equal(retry.code,undefined);
+  assert.equal(state.db.values.get('passActivationChallenges/'+assignment.physicalPassId).saleAttestedAt,1100);
+  await assert.rejects(registration(state),/INVALID_OR_EXPIRED/);
+  await registration(state,{code:replacement.code,now:2100});
+  await assert.rejects(reissueActivation({...args,idempotencyKey:'reissue-request-0002',now:2200}),/CANNOT_REISSUE/);
 });

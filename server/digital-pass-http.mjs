@@ -2,7 +2,7 @@
  * Dependencies are injected so no credentials or project are selected at import time. */
 import { createHmac } from 'node:crypto';
 import { loadDigitalPassActor } from './digital-pass-auth.mjs';
-import { prepareActivation, validateSale } from './digital-pass-activation.mjs';
+import { prepareActivation, validateSale, reissueActivation } from './digital-pass-activation.mjs';
 import { resolveSeasonPassAssignment, PILOT_SEASON, PILOT_PRODUCT } from './digital-pass-inventory-resolver.mjs';
 import { limitAttempts, registerDigitalPass, getDigitalPass, checkDigitalCredential, revokeDigitalCredential } from './digital-pass-registration.mjs';
 
@@ -52,6 +52,10 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
         if (path === '/v1/pass-activations/prepare') result = await prepareActivation({ db, actor, ...inventory, resolveAssignment, hmacSecret });
         else if (path === '/v1/pass-activations/validate') result = await validateSale({ db, actor, physicalPassId: b.physicalPassId, preparationId: b.preparationId });
         else if (path === '/v1/pass-validations/check') result = await checkDigitalCredential({ db, actor, qrPayload: b.qrPayload });
+        else if (path === '/v1/admin/pass-activations/reissue') {
+          if (Date.now() >= validUntil) throw new Error('CANNOT_REISSUE');
+          result = await reissueActivation({ db, actor, physicalPassId: b.physicalPassId, idempotencyKey: b.idempotencyKey, reason: b.reason, hmacSecret });
+        }
         else if (path === '/v1/admin/pass-credentials/revoke') result = await revokeDigitalCredential({ db, actor, credentialId: b.credentialId, reason: b.reason });
         else return res.status(404).json({ error: 'NOT_FOUND' });
       }
@@ -61,7 +65,7 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
       if (code === 'RATE_LIMITED') return res.status(429).json({ error: code });
       if (code === 'FORBIDDEN') return res.status(403).json({ error: code });
       if (code === 'UNAUTHORIZED' || error?.code?.startsWith('auth/')) return res.status(401).json({ error: 'UNAUTHORIZED' });
-      const operational = ['PASS_ALREADY_ACTIVATED', 'PREPARATION_ALREADY_EXISTS', 'SALE_ALREADY_ATTESTED', 'STALE_PREPARATION', 'INVALID_PREPARATION', 'PREPARED_BY_OTHER_OPERATOR', 'NO_PREPARATION'];
+      const operational = ['CANNOT_REISSUE', 'INVALID_REISSUE', 'PASS_ALREADY_ACTIVATED', 'PREPARATION_ALREADY_EXISTS', 'SALE_ALREADY_ATTESTED', 'STALE_PREPARATION', 'INVALID_PREPARATION', 'PREPARED_BY_OTHER_OPERATOR', 'NO_PREPARATION'];
       if (operational.includes(code)) return res.status(409).json({ error: code });
       // Avoid pass/email enumeration and never log requests, secrets or arbitrary error text.
       return res.status(400).json({ error: 'REQUEST_NOT_COMPLETED' });
