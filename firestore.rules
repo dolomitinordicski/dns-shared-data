@@ -1126,6 +1126,53 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+
+    // Partner Ecosystem v1: deny-by-default staging boundary.
+    // All mutations are trusted-backend only pending verified service layer.
+    // Establishment records may include private management metadata: NOT public.
+    function canReadPartnerEstablishment(data) {
+      return activeUser() && (
+        isAdmin()
+        || hasGrant('network', 'dolomiti-nordicski', 'partner.read')
+        || (data.keys().hasAll(['organizationId', 'reportingAreaId'])
+          && data.organizationId is string
+          && data.reportingAreaId is string
+          && (
+            hasGrant('organization', data.organizationId, 'partner.read')
+            || hasGrant('reportingArea', data.reportingAreaId, 'partner.read')
+          ))
+      );
+    }
+
+    match /partnerEstablishments/{establishmentId} {
+      allow get, list: if canReadPartnerEstablishment(resource.data);
+      allow create, update, delete: if false;
+    }
+
+    // Sensitive evidence, assessment and capacity details have NO client
+    // access until per-document authorization and collection-query tests pass.
+    match /partnerCapacityRevisions/{document} {
+      allow read, write: if false;
+    }
+    match /partnerAssessments/{document} {
+      allow read, write: if false;
+    }
+    match /partnerAccreditations/{document} {
+      allow read, write: if false;
+    }
+    match /partnerEvidence/{document} {
+      allow read, write: if false;
+    }
+    match /partnerEvents/{document} {
+      allow read, write: if false;
+    }
+    match /partnerVouchers/{document} {
+      allow read, write: if false;
+    }
+    match /partnerCommunications/{document} {
+      allow read, write: if false;
+    }
+
     // Everything else remains closed until its domain rules are implemented.
     match /{document=**} {
       allow read, write: if false;
