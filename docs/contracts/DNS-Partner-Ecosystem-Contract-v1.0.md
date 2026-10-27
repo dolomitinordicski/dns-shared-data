@@ -107,6 +107,25 @@ benefits wallet, partner communications/campaigns and preferences, conventions, 
 
 Each optional module uses versioned contracts, feature flags, permissions and schema migrations; no activation before product, privacy, data and governance approval.
 
+## 9A. Public first activation, establishment claim and user-owned credential (2026-10-27 amendment)
+
+DNS shall **not** generate or email a username/password pair to every partner. The partner initiates activation from a generic public URL (e.g. Partner Hub /activate). The URL itself conveys **zero entitlement** to an existing establishment.
+
+1. Visitor selects an existing establishment from a privacy-safe lookup, or submits a new establishment application. Public search must not expose internal partner contact details, records or enumeration-friendly responses.
+2. Visitor verifies control of a work email address with a short-lived, single-use OTP or provider verified email link; rate limits, abuse prevention, neutral responses and hashed challenge storage required.
+3. **Independent second factor / business claim:** verify a separately established phone channel or TOTP/passkey, AND authorize the claim to the establishment through pre-registered authorized contact, one-time establishment claim token, or explicit DNS/regional reviewer approval. Two emails or two codes delivered to the same inbox are NOT two independent factors. Mere possession of the public URL, a domain or a self-entered mobile number is never enough to take over an existing hotel.
+4. An authenticated, verified claimant completes first-time onboarding: legal/trading business identifiers, establishment ID, location/reportingArea, authorized representative, operational contact, authorized bed count, rooms/units, winter opening period, services, required terms and privacy notices. Mark claims self-declared until reviewed; never overwrite verified canonical records automatically.
+5. User chooses their **own login credentials** using the designated DNS identity provider (Firebase Auth where appropriate). Never collect a plaintext password in DNS application databases, analytics, emails or logs. Allow secure password reset and later optional passkeys/MFA. Email is the preferred account identifier; arbitrary usernames are optional and should not become a new identity silo.
+6. Activation is an atomic, idempotent server-side state transition: `started → email-verified → second-factor-verified → claim-pending → approved → active`, with `rejected/expired` outcomes. A newly registered identity can have pending access to *its own application only*, not to an existing partner or certified widgets before claim approval.
+7. On approval a trusted service creates the organization/establishment membership and scoped access grants in DNS Core; existing `users`, `memberships`, `accessGrants` stay authoritative. Include multi-user invitations/delegations and multi-establishment ownership later, not a password shared by all hotel staff.
+8. Record source, timestamp and verification of bed capacity; require a period-effective capacity revision. Unknown is distinct from 0; declaration does not constitute licensing verification.
+9. Handle legitimate duplicate claims, company transfers, email changes, staff turnover, hotels without official domain and loss of second factor through a documented DNS recovery/approval workflow with audit history.
+10. Compliance: explicit versioned acceptance of terms/privacy notices, separate consent for optional marketing, data minimization, storage/retention rules and regional authorization.
+
+**Security acceptance gates:** public URL alone cannot claim a property; two factors are independent; OTP cannot be replayed; expired challenge, cross-hotel claim, concurrent activation and unauthorized membership creation fail; successful claim is reviewer- or trusted-ownership-approved; password never leaves identity provider; all activation outcomes are audited without logging OTPs.
+
+**Delivery boundary:** defining this onboarding workflow does not make it live. Backend endpoints, Firebase Auth configuration, transactional notifications, Firestore Rules, recovery workflows and end-to-end emulator tests must pass review before activation.
+
 ## 10. Operational quality and migrations
 
 - Retain existing legacy portal's informational/editorial pages but reorganize: public About DNS (vision/values), publicly permitted brand materials and quality/benefits; private Dashboard, My Establishment, Tools & Services, Materials; assistance. Distinguish public from authenticated views.
