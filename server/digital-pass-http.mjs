@@ -1,12 +1,13 @@
 /** Express-compatible HTTP adapter; usable by the existing Firebase environment.
  * Dependencies are injected so no credentials or project are selected at import time. */
 import { createHmac } from 'node:crypto';
+import { requestMarketingOptIn, withdrawMarketing } from './digital-pass-marketing.mjs';
 import { loadDigitalPassActor } from './digital-pass-auth.mjs';
 import { prepareActivation, validateSale, reissueActivation } from './digital-pass-activation.mjs';
 import { resolveSeasonPassAssignment, PILOT_SEASON, PILOT_PRODUCT } from './digital-pass-inventory-resolver.mjs';
 import { limitAttempts, registerDigitalPass, getDigitalPass, checkDigitalCredential, revokeDigitalCredential } from './digital-pass-registration.mjs';
 
-export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins, inventoryRevision, validFrom, validUntil, noticeVersion }) {
+export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins, inventoryRevision, validFrom, validUntil, noticeVersion, marketingNoticeVersion = '' }) {
   if (typeof hmacSecret !== 'string' || hmacSecret.length < 32 || !inventoryRevision || !noticeVersion ||
       !Array.isArray(allowedOrigins) || !allowedOrigins.length || !Number.isFinite(validFrom) || !Number.isFinite(validUntil) || validFrom >= validUntil) throw new Error('DIGITAL_PASS_CONFIGURATION_REQUIRED');
   const resolveAssignment = async input => {
@@ -41,6 +42,12 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
         result = await registerDigitalPass({ db, identity, assignment: await resolveAssignment(inventory),
           code: b.code, givenName: b.givenName, familyName: b.familyName, language: b.language,
           marketingRequested: b.marketingRequested, noticeVersion, hmacSecret, validFrom, validUntil });
+      } else if (path === '/v1/me/marketing/opt-in') {
+        if (!marketingNoticeVersion) return res.status(503).json({ error: 'MARKETING_NOT_ENABLED' });
+        result = await requestMarketingOptIn({ db, identity, affirmative: b.affirmative,
+          language: b.language, noticeVersion: marketingNoticeVersion });
+      } else if (path === '/v1/me/marketing/withdraw') {
+        result = await withdrawMarketing({ db, identity });
       } else if (path === '/v1/me/digital-passes') {
         if (identity.email_verified !== true) throw new Error('UNAUTHORIZED');
         const registrations = await db.collection('passRegistrations').where('holderUid', '==', identity.uid).get();
