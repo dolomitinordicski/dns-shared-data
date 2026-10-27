@@ -2,8 +2,7 @@
 export const PARTNER_ACTIVATION_SCHEMA_VERSION = 1 as const;
 
 export type ActivationStatus =
-  | 'started' | 'email-verified' | 'second-factor-verified'
-  | 'claim-pending' | 'approved' | 'active' | 'rejected' | 'expired';
+  | 'started' | 'email-verified' | 'claim-pending' | 'approved' | 'active' | 'rejected' | 'expired';
 
 export type EstablishmentClaimMethod =
   | 'preverified-contact' | 'single-use-claim-token' | 'dns-review';
@@ -13,7 +12,6 @@ export interface PartnerActivationApplication {
   establishmentId?: string;
   claimantAuthUid?: string;
   emailVerifiedAt?: string;
-  secondFactorVerifiedAt?: string;
   /** Token possession must be verified by backend, not this untrusted enum. */
   claimMethod?: EstablishmentClaimMethod;
   claimApprovedBy?: string;
@@ -30,8 +28,7 @@ export interface PartnerActivationApplication {
 export type ActivationActor = 'claimant' | 'trusted-reviewer' | 'system';
 const transitions: Readonly<Record<ActivationStatus, readonly ActivationStatus[]>> = {
   started: ['email-verified','expired'],
-  'email-verified': ['second-factor-verified','expired'],
-  'second-factor-verified': ['claim-pending','expired'],
+  'email-verified': ['claim-pending','expired'],
   'claim-pending': ['approved','rejected','expired'],
   approved: ['active'],
   active: [],
@@ -43,8 +40,7 @@ export function canTransitionActivation(
 ): boolean {
   if (!transitions[record.status].includes(next)) return false;
   if (next === 'email-verified') return !!record.emailVerifiedAt && actor === 'system';
-  if (next === 'second-factor-verified') return !!record.emailVerifiedAt && !!record.secondFactorVerifiedAt && actor === 'system';
-  if (next === 'claim-pending') return !!record.claimantAuthUid && actor === 'system';
+  if (next === 'claim-pending') return !!record.emailVerifiedAt && !!record.claimantAuthUid && actor === 'system';
   if (next === 'approved') return actor === 'trusted-reviewer' && !!record.claimApprovedAt && !!record.claimApprovedBy && !!record.claimMethod;
   if (next === 'active') return actor === 'system' && !!record.establishmentId && !!record.claimantAuthUid && !!record.claimApprovedAt;
   if (next === 'rejected') return actor === 'trusted-reviewer';
@@ -60,6 +56,6 @@ export function validateActivationCapacity(application: PartnerActivationApplica
 /**
  * This contract intentionally excludes OTP values, password, password hash,
  * guest data, and free-form PII. Backend must separately enforce factor
- * independence, challenge hashing, TTL, rate limits, tenant claim proof,
+ * challenge hashing, TTL, rate limits, preapproved email-to-tenant mapping,
  * trusted approval, idempotency, and atomic membership/grant provisioning.
  */
