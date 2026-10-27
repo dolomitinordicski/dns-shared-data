@@ -126,3 +126,31 @@ export async function validateSale({
     return { status: 'SOLD_ATTESTED', alreadyValidated: false };
   });
 }
+
+/** DNS administrator recovery for an expired/unusable enabled code. The existing
+ * physical sale is preserved; registered cards can never be reissued here. */
+export async function reissueActivation({ db, actor, physicalPassId, idempotencyKey, reason, hmacSecret, now = Date.now() }) {
+  if (!actor?.uid || actor.isDnsAdmin !== true) throw new Error('FORBIDDEN');
+  if (typeof idempotencyKey !== 'string' || !/^[A-Za-z0-9-]{16,128}$/.test(idempotencyKey) ||
+      typeof reason !== 'string' || !reason.trim() || reason.length > 500) throw new Error('INVALID_REISSUE');
+  const ref = db.collection('passActivationChallenges').doc(physicalPassId);
+  const registrationRef = db.collection('passRegistrations').doc(physicalPassId);
+  const auditRef = db.collection('passAuditEvents').doc(randomUUID());
+  let code = generateActivationCode();
+  let verifier = hashActivationCode(code, physicalPassId, hmacSecret);
+  const nonce = randomUUID();
+  return db.runTransaction(async tx => {
+    const [snap, registration] = await Promise.all([tx.get(ref), tx.get(registrationRef)]);
+    if (!snap.exists) throw new Error('NO_PREPARATION');
+    const record = snap.data();
+    if (record.lastReissueKey === idempotencyKey) return { physicalPassId, alreadyReissued: true, status: record.status };
+    if (record.saleAttestedAt == null || registration.exists || record.seasonId !== '2026-27' || record.productCode !== 'sk-dns' ||
+        !['ENABLED','EXPIRED'].includes(record.status)) throw new Error('CANNOT_REISSUE');
+    while (verifier === record.codeVerifier) { code = generateActivationCode(); verifier = hashActivationCode(code, physicalPassId, hmacSecret); }
+    tx.update(ref, { codeVerifier: verifier, status: 'ENABLED', nonce, expiresAt: now + CODE_TTL_MS,
+      lastReissueKey: idempotencyKey, reissuedAt: now, reissuedBy: actor.uid });
+    tx.create(auditRef, { action: 'PASS_ACTIVATION_REISSUED', targetId: physicalPassId,
+      actorId: actor.uid, organizationId: record.organizationId, reason: reason.trim(), at: now });
+    return { physicalPassId, preparationId: nonce, code, expiresAt: now + CODE_TTL_MS, alreadyReissued: false };
+  });
+}
