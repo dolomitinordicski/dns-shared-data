@@ -6,6 +6,7 @@
 export const BREVO_DOI_ENDPOINT = 'https://api.brevo.com/v3/contacts/doubleOptinConfirmation';
 export const MARKETING_SENDER = 'welcome@dolomitinordicski.com';
 export const MARKETING_LIST_ID = 13;
+export const EXISTING_TEMPLATE_IDS = Object.freeze({ it: 2, de: 3, en: 4 });
 const LANGUAGES = new Set(['it', 'de', 'en']);
 
 export function normalizeMarketingLanguage(lang) {
@@ -27,9 +28,11 @@ export function requireMarketingConsent(record) {
  * response means DOI requested, NEVER newsletter membership confirmed.
  */
 export async function requestBrevoMarketingDoi({
-  consent, holder, apiKey, templateIds, redirectionUrl, fetchImpl = fetch,
+  consent, holder, apiKey, templateIds = EXISTING_TEMPLATE_IDS, redirectionUrl,
+  isSuppressed, fetchImpl = fetch,
 }) {
   requireMarketingConsent(consent);
+  if (typeof isSuppressed !== 'function') throw new Error('BREVO_SUPPRESSION_CHECK_REQUIRED');
   if (!holder?.emailVerifiedAt || !holder?.email ||
       holder.id !== consent.holderId) throw new Error('HOLDER_EMAIL_NOT_VERIFIED');
   if (typeof apiKey !== 'string' || !apiKey.trim()) throw new Error('BREVO_API_KEY_MISSING');
@@ -41,6 +44,7 @@ export async function requestBrevoMarketingDoi({
   if (url.protocol !== 'https:') throw new Error('BREVO_REDIRECT_HTTPS_REQUIRED');
   const email = holder.email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('INVALID_EMAIL');
+  if (await isSuppressed(email)) throw new Error('MARKETING_SUPPRESSED');
   const response = await fetchImpl(BREVO_DOI_ENDPOINT, {
     method: 'POST',
     headers: { 'api-key': apiKey, 'content-type': 'application/json', accept: 'application/json' },
@@ -59,5 +63,5 @@ export async function requestBrevoMarketingDoi({
     error.status = response.status;
     throw error;
   }
-  return { status: 'DOI_REQUESTED', email, listId: MARKETING_LIST_ID, language };
+  return { status: 'DOI_REQUESTED', listId: MARKETING_LIST_ID, language };
 }
