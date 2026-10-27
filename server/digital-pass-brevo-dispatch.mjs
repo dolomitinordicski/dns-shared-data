@@ -41,8 +41,7 @@ export async function dispatchDoiJob({ db, holderUid, apiKey, redirectUrl, resol
     // Check again after remote lookup in case holder withdrew meanwhile.
     const latest = await consentRef.get();
     if (!latest.exists || latest.data().status !== 'PENDING_DOI') {
-      await finish('SUPPRESSED');
-      return { status: 'SUPPRESSED' };
+      return finish('SUPPRESSED');
     }
     const response = await fetchImpl(DOI_ENDPOINT, {
       method: 'POST',
