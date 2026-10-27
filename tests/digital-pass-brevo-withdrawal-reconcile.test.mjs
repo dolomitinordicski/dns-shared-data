@@ -26,7 +26,7 @@ test('failed provider update leaves pending reconciliation',async()=>{
  const f=fixture();
  await assert.rejects(reconcileBrevoWithdrawal({...args(f),fetchImpl:async(_url,req)=>
   req.method==='GET'?{ok:true,status:200,json:async()=>({emailBlacklisted:false,listIds:[13],listUnsubscribed:[]})}:{ok:false,status:503}
- )}),/BREVO_UNLINK_FAILED/);
+ }),/BREVO_UNLINK_FAILED/);
  assert.equal(f.data.needsBrevoUnsubscribe,true);
 });
 test('already absent contact needs no write to Brevo',async()=>{
