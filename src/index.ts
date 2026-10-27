@@ -52,3 +52,5 @@ export * from './idm-premium-programs.js';
 export * from './tool-registry.js';
 
 export * from './region-accent.js';
+
+export * from './partner-contracts.js';
