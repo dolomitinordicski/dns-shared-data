@@ -7,12 +7,15 @@ import { claimDoiJob, finishDoiJob } from './digital-pass-brevo-outbox.mjs';
 import { getBrevoMarketingStatus } from './digital-pass-brevo-contacts.mjs';
 
 const DOI_ENDPOINT = 'https://api.brevo.com/v3/contacts/doubleOptinConfirmation';
-const TEMPLATE_IDS = Object.freeze({ it: 2, de: 3, en: 4 });
+// No default to agency-owned Pimcore template IDs 2/3/4.
+// Deploy only with separately validated Digital Pass DOI template IDs.
 const LIST_ID = 13;
 const getRef = (db, collection, id) => db.collection(collection).doc(id);
 
-export async function dispatchDoiJob({ db, holderUid, apiKey, redirectUrl, resolveVerifiedEmail, fetchImpl = fetch, now = Date.now() }) {
+export async function dispatchDoiJob({ db, holderUid, apiKey, redirectUrl, resolveVerifiedEmail, templateIds, fetchImpl = fetch, now = Date.now() }) {
   if (!db || !holderUid || !apiKey || typeof resolveVerifiedEmail !== 'function') throw new Error('DISPATCH_NOT_CONFIGURED');
+  if (!templateIds || !['it','de','en'].every(lang => Number.isSafeInteger(templateIds[lang]) && templateIds[lang] > 0 && ![2,3,4].includes(templateIds[lang])) || new Set(['it','de','en'].map(lang=>templateIds[lang])).size!==3)
+    throw new Error('DIGITAL_PASS_DOI_TEMPLATES_NOT_APPROVED');
   const redirect = new URL(redirectUrl);
   if (redirect.protocol !== 'https:') throw new Error('INVALID_DOI_REDIRECT');
   const claim = await claimDoiJob({ db, holderUid, now });
@@ -49,7 +52,7 @@ export async function dispatchDoiJob({ db, holderUid, apiKey, redirectUrl, resol
       body: JSON.stringify({
         email: email.trim().toLowerCase(),
         includeListIds: [LIST_ID],
-        templateId: TEMPLATE_IDS[initial.data().language],
+        templateId: templateIds[initial.data().language],
         redirectionUrl: redirect.toString(),
       }),
     });
