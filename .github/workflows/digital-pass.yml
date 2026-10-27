@@ -30,4 +30,5 @@ jobs:
           java-version: '21'
       - run: npm install --ignore-scripts --no-package-lock
       - run: npm install --prefix server --ignore-scripts --no-package-lock
+      - run: node --input-type=module -e "await import('./server/firebase-entry.mjs')"
       - run: npx firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core "node --test tests/digital-pass-firestore.test.mjs"

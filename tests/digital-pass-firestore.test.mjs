@@ -28,3 +28,19 @@ test('Firestore emulator serializes racing preparation, Validate and two holders
     assert.equal(credentials.size,1);
   } finally { await deleteApp(app); }
 });
+
+test('Firestore rules deny all direct browser access to private pass collections, including DNS admins', { skip: !emulator }, async()=>{
+  const { readFileSync } = await import('node:fs');
+  const { initializeTestEnvironment, assertFails } = await import('@firebase/rules-unit-testing');
+  const { doc, collection, getDoc, getDocs, setDoc } = await import('firebase/firestore');
+  const environment = await initializeTestEnvironment({projectId:'demo-dns-core',firestore:{rules:readFileSync(new URL('../firestore.rules',import.meta.url),'utf8')}});
+  try {
+    await environment.withSecurityRulesDisabled(async context=>{await setDoc(doc(context.firestore(),'users','browser-admin'),{active:true,globalRoles:['dns-admin']});});
+    const collections=['passActivationChallenges','passRegistrations','passHolders','digitalCredentials','passCredentialPayloads','passAuditEvents','passInventorySnapshots','passRateLimits','consentEvents'];
+    const clients=[environment.unauthenticatedContext(),environment.authenticatedContext('holder'),environment.authenticatedContext('browser-admin')];
+    for(const context of clients) for(const name of collections) {
+      const client=context.firestore(); await assertFails(getDoc(doc(client,name,'private')));
+      await assertFails(getDocs(collection(client,name))); await assertFails(setDoc(doc(client,name,'forged'),{status:'ACTIVE'}));
+    }
+  } finally { await environment.cleanup(); }
+});
