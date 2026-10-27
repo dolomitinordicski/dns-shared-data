@@ -122,6 +122,21 @@ DNS emails an announcement containing a **generic public activation URL** only t
 
 **Status:** contract design only. No automatic grant or OTP backend is deployed by this change. Tests and security review required before production.
 
+## 9B. Legacy form import & widget-first onboarding (2026-10-27 decision)
+
+- Import the existing DNS Self Evaluation responses as **historical self-declarations**, with original timestamps/source/evidence and no automatic accreditation. Match responses to canonical establishments using reviewed references; ambiguous duplicates go to DNS review, never automatic reassignment.
+- Existing partner with historical answers: on first login show prefilled data, allow **confirm by section, edit, not applicable**, and collect only missing minimum fields (including authorized beds and opening). Preserve original answer snapshots and source provenance.
+- Existing partner without historical answers: guided first-time profile and questionnaire. A new applicant is a separate reviewed application process.
+- **Widget-first activation:** partner creates/verifies their account and profile first, then the guided default next step is the **Certified Partner Widget Creator** (where eligible) with area, live information modules, preview, safe stable iframe code, and optional send-to-webmaster support.
+- Distinct states: `invited`, `account-activated`, `profile-confirmed`, `widget-created`, `widget-installed-verified`; preserve independent quality accreditation lifecycle. Account activated permits relevant private services; inability to install immediately **must not block access** to the Hub, profile correction or support.
+- `widget-created` means persisted configuration exists, not evidence that a site has installed it. `widget-installed-verified` requires technical or human verification and evidence timestamp, subject to freshness/verification windows.
+- DNS management dashboard: invitations, account activations, profile confirmations, widget creation, installation verified, pending verification/failures; filter by canonical reportingArea/season and keep historical transitions.
+- Public informational widget remains available to non-partners, never with certified seal. Certified widget issuance and seal rendering MUST require server-verified accreditation eligibility; do not award certification merely through onboarding.
+- Mandatory use of certified widget for future quality certification remains **working-group pending**. It is neither a currently enforced revocation criterion nor a retroactive obligation.
+- Do not introduce double-OTP, manually issued passwords, empty feature panels, guest data collection, or FAIR integration in this tranche.
+
+**Implementation gate:** versioned journey state contract, import provenance, role-scoped tenant access, server-authoritative widget and robust verification; test repeat activation, imported duplicate answers, data confirmation updates, no-widget return visit, noncertified partner and revoked seal.
+
 ## 10. Operational quality and migrations
 
 - Retain existing legacy portal's informational/editorial pages but reorganize: public About DNS (vision/values), publicly permitted brand materials and quality/benefits; private Dashboard, My Establishment, Tools & Services, Materials; assistance. Distinguish public from authenticated views.
