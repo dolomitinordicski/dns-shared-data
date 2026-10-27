@@ -54,3 +54,4 @@ export * from './tool-registry.js';
 export * from './region-accent.js';
 
 export * from './partner-contracts.js';
+export * from './partner-registry.js';
