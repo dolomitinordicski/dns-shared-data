@@ -27,15 +27,36 @@ export async function cloneDoiTemplates({apiKey,fetchImpl=fetch,apply=false}) {
  if(typeof apiKey!=='string'||!apiKey)throw Error('BREVO_API_KEY_REQUIRED');
  const headers={'api-key':apiKey,accept:'application/json'};
  const result=[];
+ // Inventory first: existing copies must be reused, never duplicated.
+ // Fetch pages rather than assuming a fixed total number of templates.
+ const catalog=[];
+ for(let offset=0;offset<10000;offset+=100){
+  const page=await jsonResponse(await fetchImpl(api+'?limit=100&offset='+offset,{headers}));
+  if(!Array.isArray(page.templates))throw Error('BREVO_TEMPLATE_CATALOG_UNAVAILABLE');
+  catalog.push(...page.templates);
+  if(page.templates.length<100)break;
+  if(offset>=9900)throw Error('BREVO_TEMPLATE_CATALOG_TOO_LARGE');
+ }
  for(const source of SOURCES) {
   const existing=await jsonResponse(await fetchImpl(api+'/'+source.id,{headers}));
   if(existing.id!==source.id||!existing.sender?.email||!existing.subject||!existing.htmlContent)
     throw Error('SOURCE_TEMPLATE_INCOMPLETE_'+source.id);
   const updatedHtml=adaptHtml(existing.htmlContent);
   if(!updatedHtml.includes(newTag))throw Error('DOI_TAG_MISSING');
+  const matches=catalog.filter(x=>x.name===source.name);
+  if(matches.length>1)throw Error('DUPLICATE_TARGET_TEMPLATES_'+source.lang);
   const output={language:source.lang,sourceId:source.id,sourceName:existing.name,
-    targetName:source.name,action:apply?'CREATE_INACTIVE':'DRY_RUN'};
-  if(apply) {
+    targetName:source.name,action:matches.length?'REUSE_EXISTING':apply?'CREATE_INACTIVE':'DRY_RUN'};
+  if(matches.length){
+   const copy=await jsonResponse(await fetchImpl(api+'/'+matches[0].id,{headers}));
+   if(copy.name!==source.name||copy.htmlContent!==updatedHtml||copy.subject!==existing.subject)
+     throw Error('EXISTING_CLONE_MISMATCH_'+copy.id);
+   output.newId=copy.id;
+   output.isActive=copy.isActive;
+   output.doiTemplate=copy.doiTemplate;
+   output.hasDoiUrl=copy.htmlContent.includes(newTag);
+   output.readyForDoi=copy.isActive===true&&copy.doiTemplate===true&&output.hasDoiUrl;
+  } else if(apply) {
    const create={
     templateName:source.name,
     sender:{email:existing.sender.email,...(existing.sender.name?{name:existing.sender.name}:{})},
@@ -54,8 +75,11 @@ export async function cloneDoiTemplates({apiKey,fetchImpl=fetch,apply=false}) {
    output.isActive=verified.isActive;
    output.doiTemplate=verified.doiTemplate;
    output.hasDoiUrl=verified.htmlContent?.includes(newTag)===true;
-   if(output.isActive!==false||output.doiTemplate!==true||!output.hasDoiUrl)
+   if(output.isActive!==false||!output.hasDoiUrl)
     throw Error('CLONE_NEEDS_REVIEW_'+created.id);
+   // Brevo may not classify a newly created inactive template as DOI.
+   // Report it rather than aborting after creating a copy.
+   output.readyForDoi=false;
   }
   result.push(output);
  }
