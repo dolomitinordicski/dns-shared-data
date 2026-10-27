@@ -20,14 +20,21 @@ The DNS Consent Registry (private, server-write only) is the authority for initi
 
 ## Proposed runtime interface
 The small server-only adapter is `server/digital-pass-brevo.mjs`. The authenticated DNS handler must implement: verification of recorded consent, verified user ownership, idempotency key, consent state updates, configurable backoff, rate limiting, suppression checks, and operational observability without leaking PII. Backend deployment is **out of scope** of this PR.
-- Params: `BREVO_API_KEY` secret, three DOI template IDs, `BREVO_DOI_REDIRECT_URL` HTTPS.
+- Params: `BREVO_API_KEY` secret, existing agency DOI template IDs (IT=2, DE=3, EN=4), `BREVO_DOI_REDIRECT_URL` HTTPS.
 - State machine: `NOT_REQUESTED -> DOI_REQUESTED -> MARKETING_CONFIRMED`; separate `WITHDRAWN` / `SUPPRESSED`; failure is retryable without duplicate subscriptions.
 - Add a secure Brevo webhook/scheduled reconciliation for opt-outs; API/list reconciliation must not overwrite local negative consent.
 - DNS validation API, Wallet and PRIOT never depend on Brevo availability.
 
 ## Pending manual Brevo console tasks
 1. Confirm verified sender `welcome@dolomitinordicski.com`, domain DNS records and deliverability.
-2. Create one or three DOI templates and configure locale-specific IDs.
+2. Reuse existing ACTIVE agency templates: IT [2026]IT-Double-Opt-In #2, DE [2026]DE-Double-Opt-In #3, EN [2026]EN-Double-Opt-In #4. Verify DOI button URLs and template sender, then configure these IDs.
 3. Obtain `BREVO_API_KEY` in Google Secret Manager (never in chat or commits).
 4. Configure correct HTTPS confirmation landing page URL.
 5. Test sandbox/controlled opt-in, existing unsubscribed user, opt-out, retry, privacy and language; only then enable integration.
+
+## Existing Brevo templates confirmed by console screenshot (27 Oct 2026)
+- Italian: `[2026]IT-Double-Opt-In` — template ID **2** — Active.
+- German: `[2026]DE-Double-Opt-In` — template ID **3** — Active.
+- English: `[2026]EN-Double-Opt-In` — template ID **4** — Active.
+- Keep agency-designed copy/design; no new DOI templates required. These are **template IDs**, not list IDs. Marketing list ID remains **13**.
+- Remaining validation: inspect each confirmation button link for `{{ params.DOIurl }}`; verify sender `welcome@dolomitinordicski.com` and domain authentication. Do not imply active template means operational API integration.
