@@ -21,7 +21,7 @@ function fixture() {
  };
  return {db,records,email};
 }
-const opts=f=>({db:f.db,holderUid:'h1',apiKey:'dummy',redirectUrl:'https://www.dolomitinordicski.com/',
+const opts=f=>({db:f.db,holderUid:'h1',apiKey:'dummy',templateIds:{it:9,de:10,en:11},redirectUrl:'https://www.dolomitinordicski.com/',
  resolveVerifiedEmail:async()=>f.email});
 test('dispatch checks contact state before sending once',async()=>{
  const f=fixture();await enqueueDoi({db:f.db,holderUid:'h1'});
@@ -30,7 +30,7 @@ test('dispatch checks contact state before sending once',async()=>{
   calls++;
   if(init.method==='GET')return {status:404};
   const body=JSON.parse(init.body);
-  assert.equal(body.templateId,3);
+  assert.equal(body.templateId,10);
   assert.deepEqual(body.includeListIds,[13]);
   return {ok:true,status:201};
  }});
@@ -64,4 +64,12 @@ test('withdrawal after contact lookup cancels send',async()=>{
   return {status:404};
  }});
  assert.equal(result.status,'WITHDRAWN');
+});
+
+test('dispatcher refuses agency-owned or unconfigured template IDs',async()=>{
+ const f=fixture();await enqueueDoi({db:f.db,holderUid:'h1'});
+ for(const templateIds of [undefined,{it:2,de:3,en:4},{it:9,de:9,en:11}]){
+  await assert.rejects(dispatchDoiJob({...opts(f),templateIds,fetchImpl:async()=>{throw Error('must not contact Brevo')}}),/DIGITAL_PASS_DOI_TEMPLATES_NOT_APPROVED/);
+ }
+ assert.equal(f.records.get('passMarketingOutbox/h1').status,'QUEUED');
 });
