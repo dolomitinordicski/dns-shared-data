@@ -107,24 +107,20 @@ benefits wallet, partner communications/campaigns and preferences, conventions, 
 
 Each optional module uses versioned contracts, feature flags, permissions and schema migrations; no activation before product, privacy, data and governance approval.
 
-## 9A. Public first activation, establishment claim and user-owned credential (2026-10-27 amendment)
+## 9A. Existing partner first activation (2026-10-27 simplified decision)
 
-DNS shall **not** generate or email a username/password pair to every partner. The partner initiates activation from a generic public URL (e.g. Partner Hub /activate). The URL itself conveys **zero entitlement** to an existing establishment.
+DNS emails an announcement containing a **generic public activation URL** only to the existing associated partner contacts already in DNS's authoritative contact list. This URL grants no privileges on its own.
 
-1. Visitor selects an existing establishment from a privacy-safe lookup, or submits a new establishment application. Public search must not expose internal partner contact details, records or enumeration-friendly responses.
-2. Visitor verifies control of a work email address with a short-lived, single-use OTP or provider verified email link; rate limits, abuse prevention, neutral responses and hashed challenge storage required.
-3. **Independent second factor / business claim:** verify a separately established phone channel or TOTP/passkey, AND authorize the claim to the establishment through pre-registered authorized contact, one-time establishment claim token, or explicit DNS/regional reviewer approval. Two emails or two codes delivered to the same inbox are NOT two independent factors. Mere possession of the public URL, a domain or a self-entered mobile number is never enough to take over an existing hotel.
-4. An authenticated, verified claimant completes first-time onboarding: legal/trading business identifiers, establishment ID, location/reportingArea, authorized representative, operational contact, authorized bed count, rooms/units, winter opening period, services, required terms and privacy notices. Mark claims self-declared until reviewed; never overwrite verified canonical records automatically.
-5. User chooses their **own login credentials** using the designated DNS identity provider (Firebase Auth where appropriate). Never collect a plaintext password in DNS application databases, analytics, emails or logs. Allow secure password reset and later optional passkeys/MFA. Email is the preferred account identifier; arbitrary usernames are optional and should not become a new identity silo.
-6. Activation is an atomic, idempotent server-side state transition: `started → email-verified → second-factor-verified → claim-pending → approved → active`, with `rejected/expired` outcomes. A newly registered identity can have pending access to *its own application only*, not to an existing partner or certified widgets before claim approval.
-7. On approval a trusted service creates the organization/establishment membership and scoped access grants in DNS Core; existing `users`, `memberships`, `accessGrants` stay authoritative. Include multi-user invitations/delegations and multi-establishment ownership later, not a password shared by all hotel staff.
-8. Record source, timestamp and verification of bed capacity; require a period-effective capacity revision. Unknown is distinct from 0; declaration does not constitute licensing verification.
-9. Handle legitimate duplicate claims, company transfers, email changes, staff turnover, hotels without official domain and loss of second factor through a documented DNS recovery/approval workflow with audit history.
-10. Compliance: explicit versioned acceptance of terms/privacy notices, separate consent for optional marketing, data minimization, storage/retention rules and regional authorization.
+1. The partner enters **the same registered email address** into the activation page.
+2. Backend checks the normalized email against an allowlist of **preapproved, authorized, current partner contacts**, not against unverified emails harvested from a questionnaire or arbitrary website. Use neutral responses to avoid leaking membership; rate-limit attempts.
+3. Send a single short-lived, one-time email OTP to that mailbox. After OTP confirmation, bind the verified Firebase Auth user to the matched establishment through a trusted, atomic backend operation. No second OTP by default.
+4. If no authorized contact matches, the email maps to multiple establishments, the contact is no longer active, or ownership/authorization is disputed, **do not auto-link**; route to DNS manual review. A shared role mailbox may be used when accepted by DNS, with an auditable account owner/delegation policy.
+5. Partner completes their profile (business identifiers, rooms, authorised beds, opening periods, services, privacy notice acceptance); self-declared values never silently overwrite verified values. They create their own password through the identity provider. DNS must never receive or store plaintext credentials.
+6. Account activation is independent of formal quality accreditation. Allow self-service onboarding, later staff invitations and password recovery; do not automatically enable certified badges or unrestricted partner writes.
+7. OTP token TTL, single-use handling, backend-only claim mapping, one account per verified identity, atomic/idempotent provisioning, logging without OTP codes, and abuse protection remain mandatory.
+8. Optional, **future only**: public applicant onboarding for nonmembers uses a distinct application/review flow; no existing-establishment self-claim without proof.
 
-**Security acceptance gates:** public URL alone cannot claim a property; two factors are independent; OTP cannot be replayed; expired challenge, cross-hotel claim, concurrent activation and unauthorized membership creation fail; successful claim is reviewer- or trusted-ownership-approved; password never leaves identity provider; all activation outcomes are audited without logging OTPs.
-
-**Delivery boundary:** defining this onboarding workflow does not make it live. Backend endpoints, Firebase Auth configuration, transactional notifications, Firestore Rules, recovery workflows and end-to-end emulator tests must pass review before activation.
+**Status:** contract design only. No automatic grant or OTP backend is deployed by this change. Tests and security review required before production.
 
 ## 10. Operational quality and migrations
 
