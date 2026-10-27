@@ -54,11 +54,11 @@ export function createPartnerProvisioningService({ auth, db, clock = () => new D
         if (!establishment.exists || establishment.data().organizationId !== contact.organizationId) {
           return { activated: false, reason: 'contact-review-required' };
         }
-        if (membership.exists && (membership.data().userId !== uid
+        if (membership.exists && (membership.data().active !== true || membership.data().userId !== uid
           || membership.data().organizationId !== contact.organizationId)) {
           return { activated: false, reason: 'account-review-required' };
         }
-        if (grant.exists && (grant.data().userId !== uid
+        if (grant.exists && (grant.data().active !== true || grant.data().userId !== uid
           || grant.data().scopeId !== contact.organizationId)) {
           return { activated: false, reason: 'account-review-required' };
         }
