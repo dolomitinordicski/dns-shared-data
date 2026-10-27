@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { normalizePartnerEmail, eligibleActivationContact, canActivateContact } from '../scripts/partner-activation-policy.mjs';
+assert.equal(normalizePartnerEmail(' Info@Hotel.IT '),'info@hotel.it');
+assert.equal(eligibleActivationContact([]),null);
+assert.equal(eligibleActivationContact([{active:true},{active:true}]),null);
+assert.equal(eligibleActivationContact([{active:false}]),null);
+assert.deepEqual(eligibleActivationContact([{active:true,establishmentId:'a'}]),{active:true,establishmentId:'a'});
+assert.equal(canActivateContact({authorizedEmail:'info@hotel.it',authenticatedEmail:'INFO@HOTEL.IT',emailVerified:true,active:true}),true);
+assert.equal(canActivateContact({authorizedEmail:'info@hotel.it',authenticatedEmail:'other@hotel.it',emailVerified:true,active:true}),false);
+assert.equal(canActivateContact({authorizedEmail:'info@hotel.it',authenticatedEmail:'info@hotel.it',emailVerified:false,active:true}),false);
+assert.equal(canActivateContact({authorizedEmail:'info@hotel.it',authenticatedEmail:'info@hotel.it',emailVerified:true,active:false}),false);
+console.log('Partner activation policy tests passed');
