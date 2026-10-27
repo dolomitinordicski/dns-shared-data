@@ -64,6 +64,8 @@ test('one concurrent holder wins; replay by same holder is idempotent',async()=>
   const results=await Promise.allSettled([registration(state),registration(state,{identity:{...identity,uid:'other'}})]);
   assert.equal(results.filter(r=>r.status==='fulfilled').length,1);
   assert.equal((await registration(state)).alreadyRegistered,true);
+  assert.equal((await validateSale({db:state.db,actor,...state.prepared,now:1500})).alreadyValidated,true);
+  assert.equal(state.db.values.get('passActivationChallenges/'+assignment.physicalPassId).saleStatus,'SOLD_ATTESTED');
   assert.equal([...state.db.values.keys()].filter(k=>k.startsWith('digitalCredentials/')).length,1);
 });
 test('holder retrieval, restricted scan, expiry and immediate digital-only revocation',async()=>{

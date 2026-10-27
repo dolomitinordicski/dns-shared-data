@@ -110,13 +110,14 @@ export async function validateSale({
     const record = snap.data();
     assertOperator(actor, record, 'passSale.attest');
     if (!preparationId || record.nonce !== preparationId) throw new Error('STALE_PREPARATION');
-    if (record.status === 'ENABLED' && record.operatorUid === actor.uid)
+    if (record.saleAttestedAt != null && record.operatorUid === actor.uid)
       return { status: 'SOLD_ATTESTED', alreadyValidated: true };
     if (record.status !== 'PREPARED' || record.expiresAt <= now)
       throw new Error('INVALID_PREPARATION');
     if (record.operatorUid !== actor.uid) throw new Error('PREPARED_BY_OTHER_OPERATOR');
     tx.update(ref, {
       status: 'ENABLED',
+      saleStatus: 'SOLD_ATTESTED',
       saleAttestedAt: now,
       expiresAt: now + CODE_TTL_MS,
     });
