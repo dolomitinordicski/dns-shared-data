@@ -22,8 +22,7 @@ export async function dispatchDoiJob({ db, holderUid, apiKey, redirectUrl, resol
     const initial = await consentRef.get();
     if (!initial.exists || initial.data().status !== 'PENDING_DOI' || initial.data().affirmative !== true ||
         !['it', 'de', 'en'].includes(initial.data().language)) {
-      await finish('SUPPRESSED');
-      return { status: 'SUPPRESSED' };
+      return finish('SUPPRESSED');
     }
     // Resolve email only through server-side Firebase Auth, never the outbox or client.
     const email = await resolveVerifiedEmail(holderUid);
