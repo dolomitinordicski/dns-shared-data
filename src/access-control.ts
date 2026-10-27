@@ -41,7 +41,22 @@ export type DNSPermission =
   | 'flyer.write'
   | 'flyer.publish'
   | 'flyer.templates.manage'
-  | 'flyer.assets.manage';
+  | 'flyer.assets.manage'
+  | 'partner.read'
+  | 'partner.manage'
+  | 'partner.access.manage'
+  | 'partner.capacity.read'
+  | 'partner.capacity.manage'
+  | 'accreditation.read'
+  | 'accreditation.review'
+  | 'accreditation.approve'
+  | 'criteria.manage'
+  | 'partner.communication.send'
+  | 'partner.widget.configure'
+  | 'partner.widget.certify'
+  | 'partner.metrics.read'
+  | 'partner.voucher.read'
+  | 'partner.voucher.issue';
 
 export interface DNSUserProfile {
   /** Firebase Authentication UID. */
@@ -155,6 +170,21 @@ export const DNS_ADMIN_PERMISSIONS = [
   'flyer.publish',
   'flyer.templates.manage',
   'flyer.assets.manage',
+  'partner.read',
+  'partner.manage',
+  'partner.access.manage',
+  'partner.capacity.read',
+  'partner.capacity.manage',
+  'accreditation.read',
+  'accreditation.review',
+  'accreditation.approve',
+  'criteria.manage',
+  'partner.communication.send',
+  'partner.widget.configure',
+  'partner.widget.certify',
+  'partner.metrics.read',
+  'partner.voucher.read',
+  'partner.voucher.issue',
 ] as const satisfies readonly DNSPermission[];
 
 export const FIRESTORE_ACCESS_COLLECTIONS = {
