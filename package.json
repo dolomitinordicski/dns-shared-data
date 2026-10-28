@@ -14,6 +14,7 @@
     "test:loipen": "tsx --test tests/loipen-html-adapter.test.ts",
     "test:widget:merge": "tsx --test tests/widget-trails-snapshot-merge.test.ts",
     "test:widget:carousel": "tsx --test tests/widget-carousel-aggregation.test.ts",
+    "inspect:loipen:network": "tsx scripts/inspect-loipen-network.ts",
     "prepare": "npm run build:package",
     "seed:firebase": "tsx scripts/seed-firestore.ts",
     "seed:firebase:apply": "tsx scripts/seed-firestore.ts --apply",
