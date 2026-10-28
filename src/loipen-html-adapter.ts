@@ -21,13 +21,15 @@ export type DNSLoipenCounters = {
 };
 
 function readBadge(html: string, label: 'open trails' | 'open km'): [number, number] {
-  // Only parse counters from the server-side liveinfos badge, not trail rows or page descriptions.
-  const badges = [...html.matchAll(/<div\s+class="liveinfos__badges-item">([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/g)]
-    .map(match => match[1]);
-  const matching = badges.filter(markup => new RegExp('\\b' + label.replace(' ', '\\s+') + '\\b', 'i').test(markup));
-  if (matching.length !== 1) throw new Error('Expected exactly one Loipen ' + label + ' badge');
-  const numbers = matching[0].match(/<strong>\s*(\d+)\s*\/\s*(\d+)\s*<\/strong>/);
-  if (!numbers) throw new Error('Missing numeric Loipen ' + label + ' counter');
+  // Isolate the counter panel, then match an exact badge label after its strong count.
+  const panelStart = html.indexOf('<div class="liveinfos__badges">');
+  const panelEnd = html.indexOf('<div class="trails__legend-container">', panelStart);
+  if (panelStart < 0 || panelEnd < 0) throw new Error('Missing Loipen counter panel');
+  const panel = html.slice(panelStart, panelEnd);
+  const matches = [...panel.matchAll(/<strong>\s*(\d+)\s*\/\s*(\d+)\s*<\/strong>\s*<br\s*\/?>\s*(open trails|open km)\b/gi)]
+    .filter(match => match[3].toLowerCase() === label);
+  if (matches.length !== 1) throw new Error('Expected exactly one Loipen ' + label + ' badge');
+  const numbers = matches[0];
   const open = Number(numbers[1]), total = Number(numbers[2]);
   if (!Number.isSafeInteger(open) || !Number.isSafeInteger(total) || open > total || total < 0) {
     throw new Error('Invalid Loipen ' + label + ' counter');
