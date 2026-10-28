@@ -10,7 +10,7 @@ export function findDNSOpeningStart(rows: readonly DNSDailyOpeningRecord[]): str
   const seen = new Set<string>();
   let baseline: number | null = null;
   for (const row of sorted) {
-    if (seen.has(row.date) || !/^\\d{4}-\\d{2}-\\d{2}$/.test(row.date) ||
+    if (seen.has(row.date) || !/^\d{4}-\d{2}-\d{2}$/.test(row.date) ||
         !Number.isFinite(row.openKm) || row.openKm < 0 ||
         row.verification !== 'website-counter-captured') {
       throw new Error('Invalid daily Loipen historical series');
