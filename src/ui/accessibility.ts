@@ -119,6 +119,21 @@ html[data-dns-theme="dark"] {
 }
 html[data-dns-theme="dark"] body { background: #101C24; color: #EAF1F2; }
 html[data-dns-theme="dark"] :is(input, textarea, select) { color-scheme: dark; }
+/* Shared Foundation surfaces: never override corporate header, footer or area accents. */
+html[data-dns-theme="dark"] :is(.dns-upload, .dns-drawer, .dns-popover, .dns-dropdown, .dns-menu, .dns-access-state, [data-dns-workspace-toolbar], [data-dns-workspace-inspector], [data-dns-workspace-mobile-panel]) {
+  background: var(--color-dns-surface, #1B2B35);
+  color: var(--color-dns-deep, #EAF1F2);
+}
+html[data-dns-theme="dark"] :is(.dns-upload-title, .dns-access-state-title, .dns-a11y-panel-title) {
+  color: var(--color-dns-deep, #EAF1F2);
+}
+html[data-dns-theme="dark"] :is(.dns-card, .dns-field, .dns-a11y-panel) {
+  color: var(--color-dns-deep, #EAF1F2);
+}
+html[data-dns-theme="dark"] .dns-a11y-scale button[aria-pressed="true"] {
+  color: #08343F;
+}
+
 html.dns-a11y-text-scale { font-size: calc(100% * var(--dns-a11y-text-scale)); }
 html.dns-a11y-high-contrast {
   --color-dns-deep: #000000;
