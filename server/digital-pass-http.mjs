@@ -1,6 +1,7 @@
 /** Express-compatible HTTP adapter; usable by the existing Firebase environment.
  * Dependencies are injected so no credentials or project are selected at import time. */
 import { createHmac } from 'node:crypto';
+import { getGoogleWalletLink } from './digital-pass-google-wallet.mjs';
 import { verifyPublicPass, renderPublicPassHtml } from './digital-pass-public-verify.mjs';
 import { requestMarketingOptIn, withdrawMarketing } from './digital-pass-marketing.mjs';
 import { enqueueDoi } from './digital-pass-brevo-outbox.mjs';
@@ -9,7 +10,7 @@ import { prepareActivation, validateSale, reissueActivation } from './digital-pa
 import { resolveSeasonPassAssignment, PILOT_SEASON, PILOT_PRODUCT } from './digital-pass-inventory-resolver.mjs';
 import { limitAttempts, registerDigitalPass, getDigitalPass, checkDigitalCredential, revokeDigitalCredential } from './digital-pass-registration.mjs';
 
-export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins, inventoryRevision, validFrom, validUntil, noticeVersion, marketingNoticeVersion = '' }) {
+export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins, inventoryRevision, validFrom, validUntil, noticeVersion, marketingNoticeVersion = '', walletIssuerId = '', walletSigningJson = '', verificationBase = '', walletOrigins = [] }) {
   if (typeof hmacSecret !== 'string' || hmacSecret.length < 32 || !inventoryRevision || !noticeVersion ||
       !Array.isArray(allowedOrigins) || !allowedOrigins.length || !Number.isFinite(validFrom) || !Number.isFinite(validUntil) || validFrom >= validUntil) throw new Error('DIGITAL_PASS_CONFIGURATION_REQUIRED');
   const resolveAssignment = async input => {
@@ -56,6 +57,9 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
         result = await registerDigitalPass({ db, identity, assignment: await resolveAssignment(inventory),
           code: b.code, givenName: b.givenName, familyName: b.familyName, language: b.language,
           marketingRequested: b.marketingRequested, noticeVersion, hmacSecret, validFrom, validUntil });
+      } else if (path === '/v1/me/wallet/google') {
+        result = await getGoogleWalletLink({ db, identity, physicalPassId: b.physicalPassId,
+          walletIssuerId, walletSigningJson, verificationBase, walletOrigins });
       } else if (path === '/v1/me/marketing/opt-in') {
         if (!marketingNoticeVersion) return res.status(503).json({ error: 'MARKETING_NOT_ENABLED' });
         result = await requestMarketingOptIn({ db, identity, affirmative: b.affirmative,
@@ -84,6 +88,7 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
       return res.status(200).json(result);
     } catch (error) {
       const code = error?.message;
+      if (code === 'GOOGLE_WALLET_NOT_CONFIGURED') return res.status(503).json({ error: code });
       if (code === 'RATE_LIMITED') return res.status(429).json({ error: code });
       if (code === 'FORBIDDEN') return res.status(403).json({ error: code });
       if (code === 'UNAUTHORIZED' || error?.code?.startsWith('auth/')) return res.status(401).json({ error: 'UNAUTHORIZED' });
