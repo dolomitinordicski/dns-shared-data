@@ -18,16 +18,27 @@ jobs:
       - run: npm install --no-package-lock
       - name: Read DNS regional site counters
         run: npm run inspect:loipen:network -- loipen-network.json
+      - name: Determine archival start date
+        id: archive-date
+        run: |
+          today=$(TZ=Europe/Rome date +%F)
+          if [[ "$today" < "2026-10-29" ]]; then
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            echo "Pre-start inspection only ($today); Firestore archive begins 2026-10-29"
+          else
+            echo "eligible=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Validate daily archive (no writes)
+        if: steps.archive-date.outputs.eligible == 'true'
         run: npm run archive:loipen:daily -- loipen-network.json
       - name: Authenticate dedicated publisher
-        if: vars.DNS_LOIPEN_ARCHIVE_ENABLED == 'true'
+        if: steps.archive-date.outputs.eligible == 'true' && vars.DNS_LOIPEN_ARCHIVE_ENABLED == 'true'
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.DNS_GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.DNS_LOIPEN_ARCHIVE_SERVICE_ACCOUNT }}
       - name: Archive today's DNS regional snapshots
-        if: vars.DNS_LOIPEN_ARCHIVE_ENABLED == 'true'
+        if: steps.archive-date.outputs.eligible == 'true' && vars.DNS_LOIPEN_ARCHIVE_ENABLED == 'true'
         env:
           GOOGLE_CLOUD_PROJECT: dns-core
         run: npm run archive:loipen:daily -- loipen-network.json --apply
