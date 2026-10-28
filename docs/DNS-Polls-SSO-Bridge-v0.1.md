@@ -72,17 +72,25 @@ an unrestricted deployment credential.
    - `DNS_POLLS_REGION` = reviewed EU Cloud Functions region
 3. Confirm Actions secret `FIREBASE_SERVICE_ACCOUNT_DNS_CORE` is present
    and its deployment identity is permitted to use that runtime service account.
-4. Run the GitHub Actions workflow **Deploy DNS Polls SSO bridge (manual)**
-   from `main`, typing `dns-core/pollsBridgeApi`. It runs security tests
+4. First run the **DNS Polls IAM preflight (read only)** GitHub Actions
+   workflow from `main`, typing `dns-polls/check-iam`. This only inspects
+   existing cloud resources and direct project IAM grants; it never creates
+   accounts, changes permissions, deploys functions or touches attendee data.
+   It fails if required bindings are missing. The result is **not** proof
+   of effective access: inherited roles, deny policies and impersonation
+   must still be examined by a cloud administrator.
+5. Only after the preflight and manual security review, run the GitHub Actions
+   workflow **Deploy DNS Polls SSO bridge (manual)** from `main`,
+   typing `dns-core/pollsBridgeApi`. It runs security tests
    and deploys **only** `functions:digital-pass:pollsBridgeApi` into `dns-core`.
    It must not deploy Firebase rules, the Digital Pass function or Hosting.
-5. Verify API URL from a successful function deployment using a **real**
+6. Verify API URL from a successful function deployment using a **real**
    authorized DNS Core token; test admin and network-granted user,
    expired grant, revoked token, unauthenticated request, wrong origin and
    a closed event. No attendee list or export API should exist.
-6. Set Polls repository variable `VITE_DNS_POLLS_BRIDGE_URL` to the
+7. Set Polls repository variable `VITE_DNS_POLLS_BRIDGE_URL` to the
    verified HTTPS function URL and redeploy Polls Pages.
-7. Browser acceptance: log into Workspace, open Polls Events, ensure no
+8. Browser acceptance: log into Workspace, open Polls Events, ensure no
    second login, verify context and scope, refresh/direct URL, logout.
    Public event-registration flag remains **off**.
 
