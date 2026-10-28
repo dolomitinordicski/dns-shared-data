@@ -1,0 +1,41 @@
+name: DNS Loipen daily history
+on:
+  schedule:
+    - cron: '15 5 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Read DNS regional site counters
+        run: npm run inspect:loipen:network -- loipen-network.json
+      - name: Validate daily archive (no writes)
+        run: npm run archive:loipen:daily -- loipen-network.json
+      - name: Authenticate dedicated publisher
+        if: vars.DNS_LOIPEN_ARCHIVE_ENABLED == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.DNS_GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.DNS_LOIPEN_ARCHIVE_SERVICE_ACCOUNT }}
+      - name: Archive today's DNS regional snapshots
+        if: vars.DNS_LOIPEN_ARCHIVE_ENABLED == 'true'
+        env:
+          GOOGLE_CLOUD_PROJECT: dns-core
+        run: npm run archive:loipen:daily -- loipen-network.json --apply
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dns-loipen-daily-report
+          path: loipen-network.json
+          if-no-files-found: warn
+          retention-days: 30
