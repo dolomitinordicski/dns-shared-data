@@ -1,5 +1,6 @@
 import { DNS_LOIPEN_REGION_IDS, type DNSLoipenCounters } from './loipen-html-adapter.js';
 
+/** Official DNS network total is the sum of eight regional counters. */
 export function aggregateDNSCarouselCounters(items: readonly DNSLoipenCounters[]) {
   const expected = new Set(Object.values(DNS_LOIPEN_REGION_IDS));
   if (items.length !== expected.size) throw new Error('All eight DNS areas required');
