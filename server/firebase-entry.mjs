@@ -12,7 +12,9 @@ const end = defineString('DNS_PASS_VALID_UNTIL', { default: '2027-05-01T00:00:00
 const notice = defineString('DNS_PASS_PRIVACY_NOTICE_VERSION');
 // Region must be reviewed together with DNS Core data residency before deployment.
 const region = defineString('DNS_PASS_REGION', { default: 'europe-west8' });
-export const digitalPassApi = onRequest({ region, secrets: [key], maxInstances: 10, invoker: 'public' }, async (req, res) => {
+export const digitalPassApi = onRequest({ region, secrets: [key], maxInstances: 10, minInstances: 0,
+  serviceAccount: 'dns-digital-pass-runtime@dns-core.iam.gserviceaccount.com',
+  invoker: 'public' }, async (req, res) => {
   try {
     const app = getApps()[0] ?? initializeApp();
     const handler = createDigitalPassHandler({ db: getFirestore(app), auth: getAuth(app), hmacSecret: key.value(),
