@@ -18,7 +18,7 @@
     "seed:firebase": "tsx scripts/seed-firestore.ts",
     "seed:firebase:apply": "tsx scripts/seed-firestore.ts --apply",
     "typecheck": "tsc --noEmit",
-    "test:accessibility": "node --experimental-strip-types --test tests/accessibility-theme.test.ts",
+    "test:accessibility": "tsx --test tests/accessibility-theme.test.ts",
     "deploy:firebase:rules": "npx firebase-tools@latest deploy --only firestore:rules --project dns-core",
     "seed:design-system": "tsx scripts/seed-design-system.ts",
     "seed:design-system:apply": "tsx scripts/seed-design-system.ts --apply",
