@@ -208,6 +208,10 @@
     "./tool-registry": {
       "types": "./dist/tool-registry.d.ts",
       "import": "./dist/tool-registry.js"
+    },
+    "./partner-quality-criteria": {
+      "types": "./dist/partner-quality-criteria.d.ts",
+      "import": "./dist/partner-quality-criteria.js"
     }
   }
 }
