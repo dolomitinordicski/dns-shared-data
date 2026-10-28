@@ -12,6 +12,8 @@ const revision = defineString('DNS_PASS_INVENTORY_REVISION');
 const start = defineString('DNS_PASS_VALID_FROM', { default: '2026-11-15T00:00:00+01:00' });
 const end = defineString('DNS_PASS_VALID_UNTIL', { default: '2027-05-01T00:00:00+02:00' });
 const notice = defineString('DNS_PASS_PRIVACY_NOTICE_VERSION');
+// Fail closed for the initial controlled deploy: never enable public registration by default.
+const registrationEnabled = defineString('DNS_PASS_REGISTRATION_ENABLED', { default: 'false' });
 // Region must be reviewed together with DNS Core data residency before deployment.
 const region = defineString('DNS_PASS_REGION', { default: 'europe-west8' });
 export const digitalPassApi = onRequest({ region, serviceAccount: DIGITAL_PASS_RUNTIME_SA, secrets: [key], maxInstances: 10, invoker: 'public' }, async (req, res) => {
@@ -19,6 +21,7 @@ export const digitalPassApi = onRequest({ region, serviceAccount: DIGITAL_PASS_R
     const app = getApps()[0] ?? initializeApp();
     const handler = createDigitalPassHandler({ db: getFirestore(app), auth: getAuth(app), hmacSecret: key.value(),
       allowedOrigins: origins.value().split(',').map(v => v.trim()).filter(Boolean), inventoryRevision: revision.value(),
+      registrationEnabled: registrationEnabled.value() === 'true',
       validFrom: Date.parse(start.value()), validUntil: Date.parse(end.value()), noticeVersion: notice.value() });
     return await handler(req, res);
   } catch {
