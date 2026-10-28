@@ -38,6 +38,9 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
       res.set('Access-Control-Allow-Methods', 'POST, OPTIONS'); return res.status(204).end();
     }
     if (req.method !== 'POST') return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
+    // Disable new registrations at the HTTP boundary, before any auth or database calls.
+    if (req.path === '/v1/pass-registrations/complete' && registrationEnabled !== true)
+      return res.status(503).json({ error: 'REGISTRATION_DISABLED' });
     try {
       if (!req.is('application/json') || !req.body || Buffer.byteLength(JSON.stringify(req.body)) > 8192) return res.status(400).json({ error: 'INVALID_REQUEST' });
       const match = /^Bearer (\S+)$/.exec(req.get('Authorization') || '');
@@ -51,7 +54,6 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
       const path = req.path;
       let result;
       if (path === '/v1/pass-registrations/complete') {
-        if (registrationEnabled !== true) return res.status(503).json({ error: 'REGISTRATION_DISABLED' });
         result = await registerDigitalPass({ db, identity, assignment: await resolveAssignment(inventory),
           code: b.code, givenName: b.givenName, familyName: b.familyName, language: b.language,
           marketingRequested: b.marketingRequested, noticeVersion, hmacSecret, validFrom, validUntil });
