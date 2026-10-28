@@ -284,6 +284,14 @@ service cloud.firestore {
       allow list, write: if false;
     }
 
+    // Public widget snapshot: exact-document reads only.
+    match /widgetPublicSnapshots/{documentId} {
+      allow get: if resource.data.publicationStatus == 'published'
+                 && resource.data.documentId == documentId
+                 && resource.data.snapshot.schemaVersion == 1;
+      allow list, write: if false;
+    }
+
     // Private authorization metadata.
     match /users/{userId} {
       allow read: if signedIn() && request.auth.uid == userId;
