@@ -39,6 +39,34 @@ export const DNS_ACCESSIBILITY_DEFAULTS: DNSAccessibilitySettings = {
 
 const STYLE_ID = 'dns-accessibility-runtime-style';
 
+const DEFAULT_STORAGE_KEY = 'dns-accessibility-v1';
+
+/**
+ * Call from an inline head bootstrap script before application CSS and first paint.
+ * Restores the same theme decision as the shared Accessibility runtime.
+ * Does not write a preference: an OS-derived theme is not a manual choice.
+ */
+export function applyDNSAccessibilityThemeEarly(
+  storageKey: string = DEFAULT_STORAGE_KEY,
+  root?: HTMLElement,
+): 'light' | 'dark' {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return 'light';
+  const element = root ?? document.documentElement;
+  let theme: 'light' | 'dark' = window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (raw) {
+      const saved = JSON.parse(raw) as { theme?: unknown };
+      if (saved?.theme === 'light' || saved?.theme === 'dark') theme = saved.theme;
+    }
+  } catch {
+    // Unavailable or malformed storage must never prevent page rendering.
+  }
+  element.dataset.dnsTheme = theme;
+  return theme;
+}
+
+
 function getAccessibilityCopy(language: DNSAccessibilityLanguage) {
   return {
     open: translateDNSFoundation('accessibility.open', language),
@@ -362,7 +390,7 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
   initDNSContentPatterns();
   initDNSUIPrimitives();
 
-  const storageKey = options.storageKey ?? 'dns-accessibility-v1';
+  const storageKey = options.storageKey ?? DEFAULT_STORAGE_KEY;
   let language: DNSAccessibilityLanguage = options.language === 'it' ? 'it' : 'de';
   let settings = normalizeSettings({
     ...readStoredSettings(storageKey),
