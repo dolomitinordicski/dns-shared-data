@@ -1,0 +1,45 @@
+name: Brevo DOI Template 9 — Manual Diagnostic
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_email:
+        description: 'Consenting internal test mailbox (never printed)'
+        required: true
+        type: string
+      redirect_url:
+        description: 'Exact HTTPS DOI redirect URL'
+        required: true
+        type: string
+      confirmation:
+        description: 'Type SEND_ONE_TEST to authorize one real DOI request'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  brevo-doi-diagnostic:
+    if: ${{ inputs.confirmation == 'SEND_ONE_TEST' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate secret is configured
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+        run: |
+          if [ -z "$BREVO_API_KEY" ]; then
+            echo "::error::Missing repository Actions secret BREVO_API_KEY"
+            exit 1
+          fi
+      - name: Send exactly one DOI test and capture safe diagnostic
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          DOI_TEST_EMAIL: ${{ inputs.test_email }}
+          DOI_REDIRECT_URL: ${{ inputs.redirect_url }}
+        run: node scripts/diagnose-brevo-doi-9.mjs
