@@ -1,0 +1,54 @@
+name: Deploy DNS Polls SSO bridge (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_target:
+        description: 'Type dns-core/pollsBridgeApi to deploy ONLY the SSO function'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: dns-polls-bridge-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main' && inputs.confirm_target == 'dns-core/pollsBridgeApi'
+    runs-on: ubuntu-latest
+    environment: dns-polls-bridge-production
+    env:
+      DNS_POLLS_BRIDGE_SERVICE_ACCOUNT: ${{ vars.DNS_POLLS_BRIDGE_SERVICE_ACCOUNT }}
+      DNS_POLLS_ALLOWED_ORIGINS: ${{ vars.DNS_POLLS_ALLOWED_ORIGINS }}
+      DNS_POLLS_REGION: ${{ vars.DNS_POLLS_REGION }}
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check deployment prerequisites (fail closed)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$FIREBASE_SERVICE_ACCOUNT_JSON" || { echo "::error::Missing DNS Core deploy credential"; exit 1; }
+          [[ "$DNS_POLLS_BRIDGE_SERVICE_ACCOUNT" =~ ^[a-z][a-z0-9-]*@dns-core\.iam\.gserviceaccount\.com$ ]] || { echo "::error::DNS Core runtime service account not configured"; exit 1; }
+          test "$DNS_POLLS_ALLOWED_ORIGINS" = 'https://dolomitinordicski.github.io' || { echo "::error::Unexpected CORS origins"; exit 1; }
+          [[ "$DNS_POLLS_REGION" =~ ^europe-[a-z]+[0-9]+$ ]] || { echo "::error::Region must be reviewed and explicitly configured"; exit 1; }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked toolchain
+        run: |
+          npm install --ignore-scripts --no-package-lock
+          npm install --prefix server --ignore-scripts --no-package-lock
+      - name: Run security tests and confirm export
+        run: |
+          node --test tests/polls-access.test.mjs tests/polls-bridge.test.mjs
+          node --input-type=module -e "const m = await import('./server/firebase-entry.mjs'); if (!m.pollsBridgeApi) process.exit(1)"
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}
+      - name: Deploy only pollsBridgeApi in dns-core
+        run: npx firebase deploy --only functions:digital-pass:pollsBridgeApi --project dns-core --non-interactive
