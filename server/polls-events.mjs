@@ -28,8 +28,16 @@ export function validateNewEvent(input) {
 
 export async function listManagedEvents(pollsDb) {
   const snapshot = await pollsDb.collection('events').limit(100).get();
-  return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }))
-    .sort((a, b) => String(b.startsAt).localeCompare(String(a.startsAt)));
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    // Explicit projection: never forward unrecognized fields from Firestore.
+    return {
+      id: doc.id, title: data.title, description: data.description,
+      location: data.location, startsAt: data.startsAt, status: data.status,
+      questions: data.questions, createdAt: data.createdAt,
+      schemaVersion: data.schemaVersion,
+    };
+  }).sort((a, b) => String(b.startsAt).localeCompare(String(a.startsAt)));
 }
 
 export async function createManagedEvent(pollsDb, data, now = new Date()) {
