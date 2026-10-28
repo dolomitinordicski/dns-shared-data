@@ -84,6 +84,10 @@ an unrestricted deployment credential.
    typing `dns-core/pollsBridgeApi`. It runs security tests
    and deploys **only** `functions:digital-pass:pollsBridgeApi` into `dns-core`.
    It must not deploy Firebase rules, the Digital Pass function or Hosting.
+   The same workflow then reads the deployed function configuration and checks
+   the expected runtime service-account email, an anonymous 401 response and a
+   403 response for an unapproved origin. A failed smoke test marks the release
+   as failed; it does **not** automatically roll back a deployed function.
 6. Verify API URL from a successful function deployment using a **real**
    authorized DNS Core token; test admin and network-granted user,
    expired grant, revoked token, unauthenticated request, wrong origin and
