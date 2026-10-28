@@ -1,6 +1,7 @@
 /** Express-compatible HTTP adapter; usable by the existing Firebase environment.
  * Dependencies are injected so no credentials or project are selected at import time. */
 import { createHmac } from 'node:crypto';
+import { verifyPublicPass, renderPublicPassHtml } from './digital-pass-public-verify.mjs';
 import { requestMarketingOptIn, withdrawMarketing } from './digital-pass-marketing.mjs';
 import { enqueueDoi } from './digital-pass-brevo-outbox.mjs';
 import { loadDigitalPassActor } from './digital-pass-auth.mjs';
@@ -19,6 +20,18 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
   return async (req, res) => {
     res.set('Cache-Control', 'no-store');
     res.set('Vary', 'Origin');
+    res.set('Referrer-Policy', 'no-referrer');
+    res.set('X-Content-Type-Options', 'nosniff');
+    if (req.method === 'GET' && /^\/v\/[A-Za-z0-9_-]{43}$/.test(req.path || '')) {
+      try {
+        const token = req.path.slice(3);
+        const status = await verifyPublicPass({ db, token });
+        res.set('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
+        return res.status(200).type('html').send(renderPublicPassHtml(status));
+      } catch {
+        return res.status(503).type('text/plain').send('Verification temporarily unavailable / Verifica non disponibile');
+      }
+    }
     const origin = req.get('Origin');
     if (origin && !allowedOrigins.includes(origin)) return res.status(403).json({ error: 'FORBIDDEN' });
     if (origin) res.set('Access-Control-Allow-Origin', origin);
