@@ -67,7 +67,7 @@ for (const { areaId, d } of records) {
     } else {
       const area = REPORTING_AREAS.find(a => a.id === areaId);
       snapshot = { schemaVersion: 1, revision, publishedAt, seasonId: seasonId as DNSPublicWidgetSnapshot['seasonId'],
-        areaId: areaId === 'all' ? null : areaId,
+        areaId: area?.id ?? null,
         areaName: area?.localizedName ?? { de: 'Dolomiti NordicSki', it: 'Dolomiti NordicSki', en: 'Dolomiti NordicSki' },
         logo: null,
         pricing: { status: 'unavailable', updatedAt: null, items: [] },
