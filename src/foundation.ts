@@ -15,6 +15,7 @@ import { initDNSUIPrimitives } from './ui/primitives.js';
 import { initDNSContentPatterns } from './ui/content-patterns.js';
 import {
   initDNSAccessibilityRuntime,
+  applyDNSAccessibilityThemeEarly,
   type DNSAccessibilityRuntimeOptions,
   type DNSAccessibilitySettings,
 } from './ui/accessibility.js';
@@ -370,6 +371,15 @@ export function initDNSFoundation(
 
   const existing = runtimeByDocument.get(documentRoot);
   if (existing) return existing;
+
+  // Apply the persisted appearance before Foundation creates its visual shell.
+  // For first-paint guarantees, consumers should call this from their head bootstrap.
+  if (options.accessibility !== false) {
+    const appearanceKey = typeof options.accessibility === 'object'
+      ? options.accessibility.storageKey
+      : undefined;
+    applyDNSAccessibilityThemeEarly(appearanceKey, documentRoot.documentElement);
+  }
 
   const designSystem = options.designSystem ?? DNS_DESIGN_SYSTEM;
   const source = options.designSystem ? 'provided' as const : 'package' as const;
