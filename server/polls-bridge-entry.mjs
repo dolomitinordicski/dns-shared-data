@@ -1,5 +1,5 @@
-/** Explicitly staged Firebase Functions entry. Not exported by firebase-entry.mjs
- * until the separate dns-polls IAM service identity has been reviewed. */
+/** Function definition prepared for an explicitly gated, single-function deployment.
+ * The Firebase export alone does not publish the function or grant IAM. */
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';

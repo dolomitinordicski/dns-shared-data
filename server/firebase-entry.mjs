@@ -23,3 +23,6 @@ export const digitalPassApi = onRequest({ region, secrets: [key], maxInstances: 
     res.set('Cache-Control', 'no-store'); return res.status(503).json({ error: 'SERVICE_UNAVAILABLE' });
   }
 });
+
+// DNS Polls SSO: deploy ONLY via the manually gated, function-specific workflow.
+export { pollsBridgeApi } from './polls-bridge-entry.mjs';
