@@ -2,11 +2,12 @@ import { translateDNSFoundation } from '../localization.js';
 import { initDNSContentPatterns } from './content-patterns.js';
 import { initDNSUIPrimitives } from './primitives.js';
 
-export const DNS_ACCESSIBILITY_RUNTIME_VERSION = '1.2.0' as const;
+export const DNS_ACCESSIBILITY_RUNTIME_VERSION = '1.3.0' as const;
 
 export type DNSAccessibilityLanguage = 'de' | 'it';
 
 export interface DNSAccessibilitySettings {
+  theme: 'light' | 'dark';
   textScale: 100 | 115 | 130;
   highContrast: boolean;
   relaxedSpacing: boolean;
@@ -25,6 +26,7 @@ export interface DNSAccessibilityRuntimeOptions {
 }
 
 export const DNS_ACCESSIBILITY_DEFAULTS: DNSAccessibilitySettings = {
+  theme: 'light',
   textScale: 100,
   highContrast: false,
   relaxedSpacing: false,
@@ -42,6 +44,9 @@ function getAccessibilityCopy(language: DNSAccessibilityLanguage) {
     open: translateDNSFoundation('accessibility.open', language),
     title: translateDNSFoundation('accessibility.title', language),
     kicker: translateDNSFoundation('accessibility.kicker', language),
+    theme: language === 'it' ? 'Aspetto' : 'Darstellung',
+    light: language === 'it' ? 'Chiaro' : 'Hell',
+    dark: language === 'it' ? 'Scuro' : 'Dunkel',
     textSize: translateDNSFoundation('accessibility.textSize', language),
     standard: translateDNSFoundation('accessibility.standard', language),
     medium: translateDNSFoundation('accessibility.medium', language),
@@ -65,13 +70,14 @@ function normalizeSettings(input: Partial<DNSAccessibilitySettings> = {}): DNSAc
     ...DNS_ACCESSIBILITY_DEFAULTS,
     ...input,
     textScale: scale,
+    theme: input.theme === 'dark' ? 'dark' : 'light',
   };
 }
 
 function readStoredSettings(storageKey: string): DNSAccessibilitySettings {
   try {
     const raw = window.localStorage.getItem(storageKey);
-    if (!raw) return DNS_ACCESSIBILITY_DEFAULTS;
+    if (!raw) return { ...DNS_ACCESSIBILITY_DEFAULTS, theme: window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light' };
     return normalizeSettings(JSON.parse(raw) as Partial<DNSAccessibilitySettings>);
   } catch {
     return DNS_ACCESSIBILITY_DEFAULTS;
@@ -96,6 +102,23 @@ function ensureStyles() {
   --dns-a11y-focus-width: var(--dns-focus-width, 2px);
   --dns-a11y-focus-offset: var(--dns-focus-offset, 2px);
 }
+html[data-dns-theme="dark"] {
+  color-scheme: dark;
+  --color-dns-bg: #101C24;
+  --color-dns-background: #101C24;
+  --color-dns-surface: #1B2B35;
+  --color-dns-dark-text: #EAF1F2;
+  --color-dns-deep: #EAF1F2;
+  --color-dns-mid: #B1CDD0;
+  --color-dns-muted: #A3BCC1;
+  --color-dns-border: rgba(185,213,216,.28);
+  --color-dns-subtle-border: rgba(185,213,216,.16);
+  --dns-table-row-alt: rgba(170,208,209,.07);
+  --dns-table-grid-strong: rgba(185,213,216,.3);
+  background: #101C24;
+}
+html[data-dns-theme="dark"] body { background: #101C24; color: #EAF1F2; }
+html[data-dns-theme="dark"] :is(input, textarea, select) { color-scheme: dark; }
 html.dns-a11y-text-scale { font-size: calc(100% * var(--dns-a11y-text-scale)); }
 html.dns-a11y-high-contrast {
   --color-dns-deep: #000000;
@@ -277,6 +300,7 @@ html.dns-a11y-large-reading-text :is(.dns-readable-copy, .dns-insight-body, .dns
 
 function applySettings(settings: DNSAccessibilitySettings) {
   const root = document.documentElement;
+  root.dataset.dnsTheme = settings.theme;
   root.style.setProperty('--dns-a11y-text-scale', String(settings.textScale / 100));
   root.classList.toggle('dns-a11y-text-scale', settings.textScale !== 100);
   root.classList.toggle('dns-a11y-high-contrast', settings.highContrast);
@@ -345,6 +369,13 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
       </div>
       <div class="dns-a11y-body">
         <section class="dns-a11y-section">
+          <div class="dns-a11y-label">${c.theme}</div>
+          <div class="dns-a11y-scale" style="grid-template-columns:repeat(2,1fr)">
+            <button type="button" data-theme="light" aria-pressed="${settings.theme === 'light'}">☀ ${c.light}</button>
+            <button type="button" data-theme="dark" aria-pressed="${settings.theme === 'dark'}">☾ ${c.dark}</button>
+          </div>
+        </section>
+        <section class="dns-a11y-section">
           <div class="dns-a11y-label">${c.textSize}</div>
           <div class="dns-a11y-scale">
             <button type="button" data-scale="100" aria-pressed="${settings.textScale === 100}">${c.standard}</button>
@@ -378,6 +409,13 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
       settings = { ...DNS_ACCESSIBILITY_DEFAULTS };
       sync();
       updatePanel();
+    });
+    panel.querySelectorAll<HTMLButtonElement>('[data-theme]').forEach((button) => {
+      button.addEventListener('click', () => {
+        settings = { ...settings, theme: button.dataset.theme === 'dark' ? 'dark' : 'light' };
+        sync();
+        updatePanel();
+      });
     });
     panel.querySelectorAll<HTMLButtonElement>('[data-scale]').forEach((button) => {
       button.addEventListener('click', () => {
