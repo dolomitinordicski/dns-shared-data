@@ -42,6 +42,13 @@ jobs:
         env:
           GOOGLE_CLOUD_PROJECT: dns-core
         run: npm run archive:loipen:daily -- loipen-network.json --apply
+      - name: Publish approved daily Loipen totals to public widgets
+        if: steps.archive-date.outputs.eligible == 'true' && vars.DNS_LOIPEN_ARCHIVE_ENABLED == 'true' && vars.DNS_LOIPEN_WIDGET_PUBLISH_ENABLED == 'true'
+        env:
+          GOOGLE_CLOUD_PROJECT: dns-core
+        run: |
+          npm run publish:loipen:widget
+          npm run publish:loipen:widget -- --apply
       - uses: actions/upload-artifact@v4
         if: always()
         with:
