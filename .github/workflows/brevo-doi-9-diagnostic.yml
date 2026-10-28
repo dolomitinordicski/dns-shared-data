@@ -11,6 +11,10 @@ on:
         description: 'Exact HTTPS DOI redirect URL'
         required: true
         type: string
+      gcp_secret_name:
+        description: 'Existing Secret Manager secret ID containing Brevo API key (dns-core)'
+        required: true
+        type: string
       confirmation:
         description: 'Type SEND_ONE_TEST to authorize one real DOI request'
         required: true
@@ -18,28 +22,51 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   brevo-doi-diagnostic:
     if: ${{ inputs.confirmation == 'SEND_ONE_TEST' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate secret is configured
+      - name: Authenticate using existing DNS Core workflow credential
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+          project_id: dns-core
+      - name: Install Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Send one DOI diagnostic using existing Google Cloud secret
         env:
-          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
-        run: |
-          if [ -z "$BREVO_API_KEY" ]; then
-            echo "::error::Missing repository Actions secret BREVO_API_KEY"
-            exit 1
-          fi
-      - name: Send exactly one DOI test and capture safe diagnostic
-        env:
-          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
           DOI_TEST_EMAIL: ${{ inputs.test_email }}
           DOI_REDIRECT_URL: ${{ inputs.redirect_url }}
-        run: node scripts/diagnose-brevo-doi-9.mjs
+          GCP_SECRET_NAME: ${{ inputs.gcp_secret_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! "$GCP_SECRET_NAME" =~ ^[A-Za-z0-9_-]+$ ]]; then
+            echo "::error::Invalid Secret Manager secret ID"
+            exit 1
+          fi
+          if [[ ! "$DOI_TEST_EMAIL" =~ ^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$ ]]; then
+            echo "::error::Invalid test email"
+            exit 1
+          fi
+          if [[ ! "$DOI_REDIRECT_URL" == https://* ]]; then
+            echo "::error::Redirect must use HTTPS"
+            exit 1
+          fi
+          # The secret never enters workflow inputs, files or logs.
+          BREVO_API_KEY="$(gcloud secrets versions access latest --secret="$GCP_SECRET_NAME" --project=dns-core)"
+          if [[ -z "$BREVO_API_KEY" ]]; then
+            echo "::error::Google Cloud secret is empty"
+            exit 1
+          fi
+          echo "::add-mask::$BREVO_API_KEY"
+          export BREVO_API_KEY
+          node scripts/diagnose-brevo-doi-9.mjs
