@@ -7,7 +7,7 @@ import { prepareActivation, validateSale, reissueActivation } from './digital-pa
 import { resolveSeasonPassAssignment, PILOT_SEASON, PILOT_PRODUCT } from './digital-pass-inventory-resolver.mjs';
 import { limitAttempts, registerDigitalPass, getDigitalPass, checkDigitalCredential, revokeDigitalCredential } from './digital-pass-registration.mjs';
 
-export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins, inventoryRevision, validFrom, validUntil, noticeVersion }) {
+export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins, inventoryRevision, validFrom, validUntil, noticeVersion, registrationEnabled = false }) {
   if (typeof hmacSecret !== 'string' || hmacSecret.length < 32 || !inventoryRevision || !noticeVersion ||
       !Array.isArray(allowedOrigins) || !allowedOrigins.length || !Number.isFinite(validFrom) || !Number.isFinite(validUntil) || validFrom >= validUntil) throw new Error('DIGITAL_PASS_CONFIGURATION_REQUIRED');
   const resolveAssignment = async input => {
@@ -51,6 +51,7 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
       const path = req.path;
       let result;
       if (path === '/v1/pass-registrations/complete') {
+        if (registrationEnabled !== true) return res.status(503).json({ error: 'REGISTRATION_DISABLED' });
         result = await registerDigitalPass({ db, identity, assignment: await resolveAssignment(inventory),
           code: b.code, givenName: b.givenName, familyName: b.familyName, language: b.language,
           marketingRequested: b.marketingRequested, noticeVersion, hmacSecret, validFrom, validUntil });
