@@ -18,6 +18,19 @@ jobs:
       - run: npm install --no-package-lock
       - name: Read DNS regional site counters
         run: npm run inspect:loipen:network -- loipen-network.json
+      - name: Validate current widget data (no writes)
+        run: npm run publish:loipen:current -- loipen-network.json
+      - name: Authenticate current widget publisher
+        if: vars.DNS_LOIPEN_WIDGET_PUBLISH_ENABLED == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.DNS_GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.DNS_LOIPEN_ARCHIVE_SERVICE_ACCOUNT }}
+      - name: Publish current Loipen to public widgets
+        if: vars.DNS_LOIPEN_WIDGET_PUBLISH_ENABLED == 'true'
+        env:
+          GOOGLE_CLOUD_PROJECT: dns-core
+        run: npm run publish:loipen:current -- loipen-network.json --apply
       - name: Determine archival start date
         id: archive-date
         run: |
@@ -42,13 +55,6 @@ jobs:
         env:
           GOOGLE_CLOUD_PROJECT: dns-core
         run: npm run archive:loipen:daily -- loipen-network.json --apply
-      - name: Publish approved daily Loipen totals to public widgets
-        if: steps.archive-date.outputs.eligible == 'true' && vars.DNS_LOIPEN_ARCHIVE_ENABLED == 'true' && vars.DNS_LOIPEN_WIDGET_PUBLISH_ENABLED == 'true'
-        env:
-          GOOGLE_CLOUD_PROJECT: dns-core
-        run: |
-          npm run publish:loipen:widget
-          npm run publish:loipen:widget -- --apply
       - uses: actions/upload-artifact@v4
         if: always()
         with:
