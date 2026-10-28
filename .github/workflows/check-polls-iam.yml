@@ -40,5 +40,18 @@ jobs:
           gcloud iam service-accounts describe "$BRIDGE_ACCOUNT" --project=dns-core --format='value(email)' >/dev/null
           gcloud firestore databases describe --project=dns-core --database='(default)' --format='value(name)' >/dev/null
           gcloud firestore databases describe --project=dns-polls --database='(default)' --format='value(name)' >/dev/null
-          echo 'Core and Polls resources are reachable by the deploy principal.'
-          echo 'This does not prove that the runtime identity has scoped access.'
+          gcloud projects get-iam-policy dns-core --format=json > "$RUNNER_TEMP/dns-core-policy.json"
+          gcloud projects get-iam-policy dns-polls --format=json > "$RUNNER_TEMP/dns-polls-policy.json"
+          MEMBER="serviceAccount:$BRIDGE_ACCOUNT"
+          jq -e --arg member "$MEMBER" \
+            '[.bindings[] | select(.role == "roles/firebaseauth.viewer" and ((.members // []) | index($member) != null))] | length > 0' \
+            "$RUNNER_TEMP/dns-core-policy.json" >/dev/null
+          jq -e --arg member "$MEMBER" \
+            '[.bindings[] | select(.role == "roles/datastore.viewer" and ((.members // []) | index($member) != null) and ((.condition.expression // "" | gsub(" "; "")) == "resource.name==\\"projects/dns-core/databases/(default)\\""))] | length > 0' \
+            "$RUNNER_TEMP/dns-core-policy.json" >/dev/null
+          jq -e --arg member "$MEMBER" \
+            '[.bindings[] | select(.role == "roles/datastore.user" and ((.members // []) | index($member) != null) and ((.condition.expression // "" | gsub(" "; "")) == "resource.name==\\"projects/dns-polls/databases/(default)\\""))] | length > 0' \
+            "$RUNNER_TEMP/dns-polls-policy.json" >/dev/null
+          echo 'Direct IAM role bindings verified for DNS Core and dns-polls.'
+          echo 'Review inherited roles, denies, runtime impersonation and effective privileges separately.'
+          echo 'Database-level datastore.user still grants broad collection access.'
