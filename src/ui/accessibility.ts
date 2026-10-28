@@ -361,12 +361,30 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
   const mountTarget = options.mountTarget ?? document.body;
   mountTarget.appendChild(trigger);
 
-  const sync = () => {
+  const sync = (persist = true) => {
     applySettings(settings);
-    writeStoredSettings(storageKey, settings);
+    if (persist) writeStoredSettings(storageKey, settings);
     trigger.title = getAccessibilityCopy(language).open;
     trigger.setAttribute('aria-label', getAccessibilityCopy(language).open);
   };
+
+  // Before the first explicit choice, follow the OS theme without persisting it.
+  // Later OS changes remain active until the user selects a fixed preference.
+  let hasStoredThemeChoice = false;
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    hasStoredThemeChoice = Boolean(raw && ['light', 'dark'].includes((JSON.parse(raw) as Partial<DNSAccessibilitySettings>).theme ?? ''));
+  } catch {
+    hasStoredThemeChoice = false;
+  }
+  const themeQuery = window.matchMedia?.('(prefers-color-scheme: dark)');
+  const handleSystemTheme = (event: MediaQueryListEvent) => {
+    if (hasStoredThemeChoice || options.settings?.theme) return;
+    settings = { ...settings, theme: event.matches ? 'dark' : 'light' };
+    sync(false);
+    updatePanel();
+  };
+  themeQuery?.addEventListener?.('change', handleSystemTheme);
 
   const updatePanel = () => {
     if (!overlay) return;
@@ -428,6 +446,7 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
     panel.querySelectorAll<HTMLButtonElement>('[data-theme]').forEach((button) => {
       button.addEventListener('click', () => {
         settings = { ...settings, theme: button.dataset.theme === 'dark' ? 'dark' : 'light' };
+        hasStoredThemeChoice = true;
         sync();
         updatePanel();
       });
@@ -520,12 +539,13 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
 
   trigger.addEventListener('click', togglePanel);
   window.addEventListener('keydown', handleKeyDown);
-  sync();
+  sync(hasStoredThemeChoice || Boolean(options.settings?.theme));
 
   return {
     getSettings: () => ({ ...settings }),
     setSettings(next: Partial<DNSAccessibilitySettings>) {
       settings = normalizeSettings({ ...settings, ...next });
+      if (next.theme !== undefined) hasStoredThemeChoice = true;
       sync();
       updatePanel();
     },
@@ -539,6 +559,7 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
       closePanel();
       trigger.removeEventListener('click', togglePanel);
       window.removeEventListener('keydown', handleKeyDown);
+      themeQuery?.removeEventListener?.('change', handleSystemTheme);
       trigger.remove();
     },
   };
