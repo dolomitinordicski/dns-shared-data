@@ -4,6 +4,8 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { onRequest } from 'firebase-functions/v2/https';
 import { defineSecret, defineString } from 'firebase-functions/params';
 import { createDigitalPassHandler } from './digital-pass-http.mjs';
+// Dedicated runtime identity; never inherit the default Functions/Compute service account.
+const DIGITAL_PASS_RUNTIME_SA = 'dns-digital-pass-runtime@dns-core.iam.gserviceaccount.com';
 const key = defineSecret('DNS_PASS_HMAC_KEY');
 const origins = defineString('DNS_PASS_ALLOWED_ORIGINS');
 const revision = defineString('DNS_PASS_INVENTORY_REVISION');
@@ -12,7 +14,7 @@ const end = defineString('DNS_PASS_VALID_UNTIL', { default: '2027-05-01T00:00:00
 const notice = defineString('DNS_PASS_PRIVACY_NOTICE_VERSION');
 // Region must be reviewed together with DNS Core data residency before deployment.
 const region = defineString('DNS_PASS_REGION', { default: 'europe-west8' });
-export const digitalPassApi = onRequest({ region, secrets: [key], maxInstances: 10, invoker: 'public' }, async (req, res) => {
+export const digitalPassApi = onRequest({ region, serviceAccount: DIGITAL_PASS_RUNTIME_SA, secrets: [key], maxInstances: 10, invoker: 'public' }, async (req, res) => {
   try {
     const app = getApps()[0] ?? initializeApp();
     const handler = createDigitalPassHandler({ db: getFirestore(app), auth: getAuth(app), hmacSecret: key.value(),
