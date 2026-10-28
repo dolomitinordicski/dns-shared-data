@@ -1,10 +1,19 @@
 name: Digital Pass domain checks
 on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'server/digital-pass-*.mjs'
+      - 'server/firebase-entry.mjs'
+      - 'tests/digital-pass-*.test.mjs'
+      - '.github/workflows/digital-pass.yml'
   pull_request:
     paths:
       - 'server/digital-pass-*.mjs'
       - 'tests/digital-pass-*.test.mjs'
       - 'src/access-control.ts'
+      - 'server/firebase-entry.mjs'
       - '.github/workflows/digital-pass.yml'
 permissions:
   contents: read
