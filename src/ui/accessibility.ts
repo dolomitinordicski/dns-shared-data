@@ -144,8 +144,27 @@ html.dns-a11y-high-contrast {
   --color-dns-subtle-border: rgba(0,0,0,.30);
 }
 html.dns-a11y-high-contrast body { background: #fff; }
+html[data-dns-theme="dark"].dns-a11y-high-contrast {
+  --color-dns-deep: #FFFFFF;
+  --color-dns-mid: #FFFFFF;
+  --color-dns-muted: #FFFFFF;
+  --color-dns-dark-text: #FFFFFF;
+  --color-dns-border: rgba(255,255,255,.85);
+  --color-dns-subtle-border: rgba(255,255,255,.65);
+  --color-dns-surface: #000000;
+  --color-dns-bg: #000000;
+  --color-dns-background: #000000;
+}
+html[data-dns-theme="dark"].dns-a11y-high-contrast body { background: #000; color: #fff; }
 html.dns-a11y-high-contrast :is(.dns-card, input, select, textarea, button) {
   border-color: rgba(13,77,94,.48) !important;
+}
+html[data-dns-theme="dark"].dns-a11y-high-contrast :is(.dns-card, input, select, textarea, button) {
+  border-color: rgba(255,255,255,.85) !important;
+}
+html[data-dns-theme="dark"].dns-a11y-high-contrast .dns-a11y-scale button[aria-pressed="true"] {
+  background: #AAD0D1;
+  color: #08343F;
 }
 html.dns-a11y-relaxed-spacing :is(p, li, td, th, label) {
   line-height: 1.65 !important;
