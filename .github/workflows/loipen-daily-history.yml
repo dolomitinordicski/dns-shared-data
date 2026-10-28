@@ -15,8 +15,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci
+      - run: npm install --no-package-lock
       - name: Read DNS regional site counters
         run: npm run inspect:loipen:network -- loipen-network.json
       - name: Validate daily archive (no writes)

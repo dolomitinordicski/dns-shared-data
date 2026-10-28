@@ -12,8 +12,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci
+      - run: npm install --no-package-lock
       - run: npm run inspect:loipen:network -- loipen-network.json
       - uses: actions/upload-artifact@v4
         if: always()
