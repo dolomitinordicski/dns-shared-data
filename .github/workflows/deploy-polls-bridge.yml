@@ -52,3 +52,25 @@ jobs:
           credentials_json: ${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}
       - name: Deploy only pollsBridgeApi in dns-core
         run: npx firebase deploy --only functions:digital-pass:pollsBridgeApi --project dns-core --non-interactive
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Verify deployed identity and fail-closed API responses
+        shell: bash
+        run: |
+          set -euo pipefail
+          URI="$(gcloud functions describe pollsBridgeApi --gen2 --region="$DNS_POLLS_REGION" --project=dns-core --format='value(serviceConfig.uri)')"
+          RUNTIME_ACCOUNT="$(gcloud functions describe pollsBridgeApi --gen2 --region="$DNS_POLLS_REGION" --project=dns-core --format='value(serviceConfig.serviceAccountEmail)')"
+          test "$RUNTIME_ACCOUNT" = "$DNS_POLLS_BRIDGE_SERVICE_ACCOUNT" || {
+            echo "::error::Function runtime identity is not the approved DNS Polls bridge account"
+            exit 1
+          }
+          [[ "$URI" == https://* ]] || { echo "::error::Missing HTTPS function URL"; exit 1; }
+          ALLOWED_CODE="$(curl -sS --max-time 30 --retry 2 --retry-all-errors -o /dev/null -w '%{http_code}' -X POST "$URI" \
+            -H 'Content-Type: application/json' -H 'Origin: https://dolomitinordicski.github.io' \
+            --data '{"action":"events.list"}')"
+          test "$ALLOWED_CODE" = 401 || { echo "::error::Anonymous API request was not rejected with 401"; exit 1; }
+          WRONG_ORIGIN_CODE="$(curl -sS --max-time 30 --retry 2 --retry-all-errors -o /dev/null -w '%{http_code}' -X POST "$URI" \
+            -H 'Content-Type: application/json' -H 'Origin: https://unapproved.example' \
+            --data '{"action":"events.list"}')"
+          test "$WRONG_ORIGIN_CODE" = 403 || { echo "::error::Unapproved origin was not rejected with 403"; exit 1; }
+          echo 'DNS Polls SSO bridge passed anonymous and origin-rejection smoke checks.'
+          echo 'Real DNS Core token, permissions, revocation and browser tests remain required before frontend opt-in.'
