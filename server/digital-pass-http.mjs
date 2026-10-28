@@ -57,6 +57,8 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
         result = await registerDigitalPass({ db, identity, assignment: await resolveAssignment(inventory),
           code: b.code, givenName: b.givenName, familyName: b.familyName, language: b.language,
           marketingRequested: b.marketingRequested, noticeVersion, hmacSecret, validFrom, validUntil });
+      } else if (path === '/v1/me/wallet/capabilities') {
+        result = { apple: false, google: Boolean(walletIssuerId && walletSigningJson && verificationBase) };
       } else if (path === '/v1/me/wallet/google') {
         result = await getGoogleWalletLink({ db, identity, physicalPassId: b.physicalPassId,
           walletIssuerId, walletSigningJson, verificationBase, walletOrigins });
