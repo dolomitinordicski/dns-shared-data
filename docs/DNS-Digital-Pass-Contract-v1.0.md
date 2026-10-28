@@ -120,3 +120,22 @@ Preserve `physicalPassId`, `registrationId`, `credentialId`, idempotent domain e
 6. Pilot test with DNS seasonal numbers only, measure errors and voluntary uptake; review before area expansion.
 
 **Contract gate:** design approval does not authorize rollout or claims that Digital Pass is live.
+
+## 11. Approved product direction — 2026-10-28 (implementation status, not go-live)
+
+This section records the agreed simplification and **supersedes the authenticated-only scan policy in section 6 and the corresponding proposed validation API in section 7**. It does not claim that unfinished integrations are operational.
+
+- **One underlying DNS Saisonkarte 2026/27**. The physical pass remains valid; digital activation is entirely optional.
+- The holder may use a **mobile Web App** (optionally added to the home screen) and, when officially configured, **Apple Wallet** and/or **Google Wallet**. These are presentation channels for the same server-side credential, not separate sales.
+- **Ordinary controllers use their existing phone camera**, with no scanner app, login or Workspace required. The pass QR encodes an opaque high-entropy HTTPS URL of the form `/v/{token}`; the DNS backend checks current registration, credential, season and expiry. Public response contains **status only**, not holder name, email, printed number, or activation code. An animated verification view refreshes its status; movement alone is *not* anti-cloning proof.
+- Controllers' optional authenticated validation endpoint may remain available for administrative use, but is not required for ordinary piste checks.
+- **Wallet issuance must fail closed.** Never display Apple/Google Wallet options as active before issuer identity, production certificates/keys, backend signing, and end-to-end testing are complete. Apple requires an Apple-issued Pass Type ID signing certificate and real signed `.pkpass`; Google requires a registered Wallet issuer, approved Generic Class, signed save JWT, and production publishing access.
+- Web App, wallet presentations, and camera verification use one authoritative DNS Core Firestore record. Revocation is checked online; copied QR images are not inherently prevented. No new native iOS/Android application is planned for this pilot.
+- QR verification tokens must not appear in analytics or application logs; HTTPS, no-store, restrictive referrer policy, abuse controls, and privacy review are release gates. The physical card remains fallback without connectivity.
+- The **PRIOT/GPS** extension is later work and does not depend on Apple/Google Wallet; Wallet cannot activate DNS GPS tracking.
+
+**As-built status at this contract update**:
+- DNS Data Entry PR #72 merged; Workspace PRs #7 and #8 merged (frontend deployment successful). Web App/QR implementation is not proof of live end-to-end validation.
+- Server code remains on an unmerged dependency chain (#164, #166, #169, #171). The public verification route and wallet presentation adapters are written; Google signed-save link is implemented behind unavailable issuer configuration; Apple metadata preparation exists but production `.pkpass` signing/issuance is not complete.
+- Firestore live inventory and Firebase backend deployment are **not done**; real backup verification, issuer credential setup, security/privacy checks, device acceptance, and marketing DOI (if enabled) remain separate release gates.
+- The final contract and deployment approval must be reconciled with passing CI and a completed E2E acceptance run. **No go-live authorized by this update.**
