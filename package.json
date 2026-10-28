@@ -16,6 +16,7 @@
     "test:widget:carousel": "tsx --test tests/widget-carousel-aggregation.test.ts",
     "inspect:loipen:network": "tsx scripts/inspect-loipen-network.ts",
     "archive:loipen:daily": "tsx scripts/archive-loipen-daily.ts",
+    "publish:loipen:widget": "tsx scripts/publish-loipen-widget-from-history.ts",
     "test:loipen:history": "tsx --test tests/loipen-opening-history.test.ts",
     "prepare": "npm run build:package",
     "seed:firebase": "tsx scripts/seed-firestore.ts",
