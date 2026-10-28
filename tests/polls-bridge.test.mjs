@@ -101,3 +101,17 @@ test('event validation prevents malformed questions, oversized fields and PII sp
     { ...event, createdAt: 'forged' },
   ]) assert.equal((await env.request({ action: 'events.create', event: bad })).statusCode, 400);
 });
+
+test('event projection strips unknown private fields from Firestore', async () => {
+  const env = environment({ admin: true });
+  env.events.push({
+    ...event, id: 'safe-event', status: 'closed', schemaVersion: 1,
+    createdAt: '2026-10-28T12:00:00Z',
+    internalSecret: 'never-expose', privateContacts: [{ email: 'private@example.invalid' }],
+  });
+  const response = await env.request();
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.payload.events[0].id, 'safe-event');
+  assert.equal('internalSecret' in response.payload.events[0], false);
+  assert.equal('privateContacts' in response.payload.events[0], false);
+});
