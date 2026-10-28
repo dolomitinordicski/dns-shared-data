@@ -53,7 +53,7 @@ jobs:
             echo "::error::Invalid Secret Manager secret ID"
             exit 1
           fi
-          if [[ ! "$DOI_TEST_EMAIL" =~ ^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$ ]]; then
+          if [[ ! "$DOI_TEST_EMAIL" =~ ^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$ ]]; then
             echo "::error::Invalid test email"
             exit 1
           fi
