@@ -45,7 +45,13 @@ export type DNSPermission =
   | 'flyer.write'
   | 'flyer.publish'
   | 'flyer.templates.manage'
-  | 'flyer.assets.manage';
+  | 'flyer.assets.manage'
+  | 'polls.read'
+  | 'polls.manage'
+  | 'events.read'
+  | 'events.manage'
+  | 'registrations.read'
+  | 'registrations.export';
 
 export interface DNSUserProfile {
   /** Firebase Authentication UID. */
@@ -163,6 +169,12 @@ export const DNS_ADMIN_PERMISSIONS = [
   'flyer.publish',
   'flyer.templates.manage',
   'flyer.assets.manage',
+  'polls.read',
+  'polls.manage',
+  'events.read',
+  'events.manage',
+  'registrations.read',
+  'registrations.export',
 ] as const satisfies readonly DNSPermission[];
 
 export const FIRESTORE_ACCESS_COLLECTIONS = {
