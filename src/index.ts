@@ -55,3 +55,4 @@ export * from './region-accent.js';
 export * from './partner-quality-criteria.js';
 
 export * from './public-widget.js';
+export * from './public-widget-publisher.js';
