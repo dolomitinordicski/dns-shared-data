@@ -46,11 +46,11 @@ jobs:
           jq -e --arg member "$MEMBER" \
             '[.bindings[] | select(.role == "roles/firebaseauth.viewer" and ((.members // []) | index($member) != null))] | length > 0' \
             "$RUNNER_TEMP/dns-core-policy.json" >/dev/null
-          jq -e --arg member "$MEMBER" \
-            '[.bindings[] | select(.role == "roles/datastore.viewer" and ((.members // []) | index($member) != null) and ((.condition.expression // "" | gsub(" "; "")) == "resource.name==\\"projects/dns-core/databases/(default)\\""))] | length > 0' \
+          jq -e --arg member "$MEMBER" --arg expected 'resource.name=="projects/dns-core/databases/(default)"' \
+            '[.bindings[] | select(.role == "roles/datastore.viewer" and ((.members // []) | index($member) != null) and ((.condition.expression // "" | gsub(" "; "")) == $expected))] | length > 0' \
             "$RUNNER_TEMP/dns-core-policy.json" >/dev/null
-          jq -e --arg member "$MEMBER" \
-            '[.bindings[] | select(.role == "roles/datastore.user" and ((.members // []) | index($member) != null) and ((.condition.expression // "" | gsub(" "; "")) == "resource.name==\\"projects/dns-polls/databases/(default)\\""))] | length > 0' \
+          jq -e --arg member "$MEMBER" --arg expected 'resource.name=="projects/dns-polls/databases/(default)"' \
+            '[.bindings[] | select(.role == "roles/datastore.user" and ((.members // []) | index($member) != null) and ((.condition.expression // "" | gsub(" "; "")) == $expected))] | length > 0' \
             "$RUNNER_TEMP/dns-polls-policy.json" >/dev/null
           echo 'Direct IAM role bindings verified for DNS Core and dns-polls.'
           echo 'Review inherited roles, denies, runtime impersonation and effective privileges separately.'
