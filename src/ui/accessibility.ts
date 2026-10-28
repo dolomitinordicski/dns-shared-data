@@ -479,19 +479,42 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
   }
 
   const handleKeyDown = (event: KeyboardEvent) => {
+    // Escape must work even when a checkbox or other input owns focus.
+    if (event.key === 'Escape' && overlay) {
+      event.preventDefault();
+      closePanel();
+      return;
+    }
+    if (event.key === 'Tab' && overlay) {
+      const panel = overlay.querySelector<HTMLElement>('.dns-a11y-panel');
+      const focusables = Array.from(panel?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+      ) ?? []).filter((el) => el.getClientRects().length > 0);
+      if (focusables.length === 0) {
+        event.preventDefault();
+        panel?.focus();
+        return;
+      }
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (!panel?.contains(document.activeElement) || (event.shiftKey && document.activeElement === first)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+      return;
+    }
     const target = event.target;
     if (
       target instanceof HTMLInputElement ||
       target instanceof HTMLTextAreaElement ||
       target instanceof HTMLSelectElement
     ) return;
-
     if (event.altKey && event.key.toLowerCase() === 'a') {
       event.preventDefault();
       togglePanel();
-    } else if (event.key === 'Escape' && overlay) {
-      event.preventDefault();
-      closePanel();
     }
   };
 
