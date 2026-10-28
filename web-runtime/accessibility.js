@@ -1,6 +1,6 @@
 // Browser runtime mirror of src/ui/accessibility.ts.
 // Source of truth remains the TypeScript module in src/ui/accessibility.ts.
-export const DNS_ACCESSIBILITY_RUNTIME_VERSION = '1.2.0';
+export const DNS_ACCESSIBILITY_RUNTIME_VERSION = '1.3.0';
 
 export const DNS_ACCESSIBILITY_DEFAULTS = {
   textScale: 100,
