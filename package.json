@@ -17,6 +17,7 @@
     "inspect:loipen:network": "tsx scripts/inspect-loipen-network.ts",
     "archive:loipen:daily": "tsx scripts/archive-loipen-daily.ts",
     "publish:loipen:widget": "tsx scripts/publish-loipen-widget-from-history.ts",
+    "publish:loipen:current": "tsx scripts/publish-loipen-widget-current.ts",
     "test:loipen:history": "tsx --test tests/loipen-opening-history.test.ts",
     "prepare": "npm run build:package",
     "seed:firebase": "tsx scripts/seed-firestore.ts",
