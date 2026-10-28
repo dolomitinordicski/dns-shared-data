@@ -6,6 +6,8 @@ on:
       - 'server/polls-events.mjs'
       - 'server/polls-bridge-http.mjs'
       - 'server/polls-bridge-entry.mjs'
+      - 'server/firebase-entry.mjs'
+      - '.github/workflows/deploy-polls-bridge.yml'
       - 'tests/polls-access.test.mjs'
       - 'tests/polls-bridge.test.mjs'
       - '.github/workflows/polls-access.yml'
@@ -16,6 +18,8 @@ on:
       - 'server/polls-events.mjs'
       - 'server/polls-bridge-http.mjs'
       - 'server/polls-bridge-entry.mjs'
+      - 'server/firebase-entry.mjs'
+      - '.github/workflows/deploy-polls-bridge.yml'
       - 'tests/polls-access.test.mjs'
       - 'tests/polls-bridge.test.mjs'
       - '.github/workflows/polls-access.yml'
@@ -30,3 +34,5 @@ jobs:
         with:
           node-version: '22'
       - run: node --test tests/polls-access.test.mjs tests/polls-bridge.test.mjs
+      - run: npm install --prefix server --ignore-scripts --no-package-lock
+      - run: node --input-type=module -e "const m = await import('./server/firebase-entry.mjs'); if (!m.pollsBridgeApi) process.exit(1)"
