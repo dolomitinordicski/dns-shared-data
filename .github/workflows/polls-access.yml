@@ -5,6 +5,7 @@ on:
       - 'server/polls-access.mjs'
       - 'server/polls-events.mjs'
       - 'server/polls-bridge-http.mjs'
+      - 'server/polls-bridge-entry.mjs'
       - 'tests/polls-access.test.mjs'
       - 'tests/polls-bridge.test.mjs'
       - '.github/workflows/polls-access.yml'
@@ -12,7 +13,11 @@ on:
     branches: [main]
     paths:
       - 'server/polls-access.mjs'
+      - 'server/polls-events.mjs'
+      - 'server/polls-bridge-http.mjs'
+      - 'server/polls-bridge-entry.mjs'
       - 'tests/polls-access.test.mjs'
+      - 'tests/polls-bridge.test.mjs'
       - '.github/workflows/polls-access.yml'
 permissions:
   contents: read
