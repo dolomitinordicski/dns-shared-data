@@ -21,7 +21,7 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
     res.set('Referrer-Policy', 'no-referrer');
     res.set('X-Content-Type-Options', 'nosniff');
     // Camera QR opens a public, read-only live status page. No holder data or login.
-    if (req.method === 'GET' && /^\\/v\\/[A-Za-z0-9_-]{43}$/.test(req.path || '')) {
+    if (req.method === 'GET' && typeof req.path === 'string' && req.path.startsWith('/v/') && /^[A-Za-z0-9_-]{43}$/.test(req.path.slice(3))) {
       try {
         const status = await verifyPublicPass({ db, token: req.path.slice(3) });
         res.set('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
