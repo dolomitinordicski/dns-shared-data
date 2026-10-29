@@ -42,6 +42,16 @@ try {
   const areaQuery = query(collection(area, 'systemReleases'), where('published', '==', true), where('audience', '==', 'area'), where('type', 'in', ['feature', 'urgent']));
   const areaRows = await assertSucceeds(getDocs(areaQuery));
   if (areaRows.size !== 2) throw new Error('Area query leaked records');
+  for (const audience of ['dns', 'area']) {
+    const adminQuery = query(collection(admin, 'systemReleases'),
+      where('published', '==', true),
+      where('audience', '==', audience),
+      where('type', 'in', ['technical', 'feature', 'urgent']));
+    const rows = await assertSucceeds(getDocs(adminQuery));
+    if (rows.size !== (audience === 'dns' ? 2 : 3)) {
+      throw new Error('Admin query returned unexpected records for ' + audience);
+    }
+  }
   await assertFails(getDocs(collection(area, 'systemReleases')));
   console.log('systemReleases Firestore rules passed');
 } finally {
