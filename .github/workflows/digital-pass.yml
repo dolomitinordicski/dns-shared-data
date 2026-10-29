@@ -7,11 +7,13 @@ on:
       - 'server/digital-pass-*.mjs'
       - 'server/firebase-entry.mjs'
       - 'tests/digital-pass-*.test.mjs'
+      - 'tests/helpers/digital-pass-*.mjs'
       - '.github/workflows/digital-pass.yml'
   pull_request:
     paths:
       - 'server/digital-pass-*.mjs'
       - 'tests/digital-pass-*.test.mjs'
+      - 'tests/helpers/digital-pass-*.mjs'
       - 'src/access-control.ts'
       - 'server/firebase-entry.mjs'
       - '.github/workflows/digital-pass.yml'
