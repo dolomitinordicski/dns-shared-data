@@ -23,3 +23,5 @@ jobs:
           java-version: '17'
       - run: npm install --no-package-lock
       - run: npm run test:system-releases:rules
+      - name: Validate release publication dry run
+        run: npx tsx scripts/publish-system-release.ts --file=releases/pending/workspace-news-example.json
