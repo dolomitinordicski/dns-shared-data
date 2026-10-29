@@ -21,6 +21,7 @@ const release = {
 if (!apply) {
   console.log(JSON.stringify({ mode: 'DRY_RUN', id: input.id, ...release }, null, 2));
 } else {
+  if (input.id.endsWith('-example') || input.version.includes('example')) throw new Error('Example releases cannot be published');
   if (process.env.GITHUB_EVENT_NAME !== 'workflow_dispatch' || process.env.GITHUB_REF !== 'refs/heads/main') {
     throw new Error('Publishing requires manually dispatched workflow on main');
   }
