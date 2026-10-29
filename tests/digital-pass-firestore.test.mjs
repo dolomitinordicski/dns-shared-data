@@ -5,6 +5,7 @@ import { registerDigitalPass, getDigitalPass, checkDigitalCredential, revokeDigi
 import { verifyPublicPass } from '../server/digital-pass-public-verify.mjs';
 
 const emulator = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
+if (emulator && !/^(127\.0\.0\.1|localhost|\[::1\]):\d+$/.test(process.env.FIRESTORE_EMULATOR_HOST)) throw Error('LOCAL_TEST_EMULATOR_REQUIRED');
 test('Firestore emulator serializes racing preparation, Validate and two holders', { skip: !emulator }, async()=>{
   const { initializeApp, deleteApp } = await import('firebase-admin/app');
   const { getFirestore } = await import('firebase-admin/firestore');
@@ -37,7 +38,7 @@ test('Firestore rules deny all direct browser access to private pass collections
   const environment = await initializeTestEnvironment({projectId:'demo-dns-core',firestore:{rules:readFileSync(new URL('../firestore.rules',import.meta.url),'utf8')}});
   try {
     await environment.withSecurityRulesDisabled(async context=>{await setDoc(doc(context.firestore(),'users','browser-admin'),{active:true,globalRoles:['dns-admin']});});
-    const collections=['passActivationChallenges','passRegistrations','passHolders','digitalCredentials','passCredentialPayloads','passAuditEvents','passInventorySnapshots','passRateLimits','consentEvents'];
+    const collections=['passActivationChallenges','passRegistrations','passHolders','digitalCredentials','passCredentialPayloads','passAuditEvents','passInventorySnapshots','passRateLimits','consentEvents','passMarketingConsents','passMarketingOutbox','consentEvidence'];
     const clients=[environment.unauthenticatedContext(),environment.authenticatedContext('holder'),environment.authenticatedContext('browser-admin')];
     for(const context of clients) for(const name of collections) {
       const client=context.firestore(); await assertFails(getDoc(doc(client,name,'private')));
@@ -84,4 +85,38 @@ test('Firestore emulator end-to-end: ownership, one-time code and public QR revo
     assert.equal((await verifyPublicPass({db,token,now:now+6})),'REVOKED');
     assert.equal((await checkDigitalCredential({db,actor:seller,qrPayload:pass.qrPayload,now:now+6})).status,'REVOKED');
   } finally { await deleteApp(app); }
+});
+
+
+test('Firestore marketing is atomic, optional and withdrawal survives an in-flight DOI without pass mutation', {skip:!emulator}, async()=>{
+ const {initializeApp,deleteApp}=await import('firebase-admin/app');
+ const {getFirestore}=await import('firebase-admin/firestore');
+ const {requestMarketingOptIn,withdrawMarketing}=await import('../server/digital-pass-marketing.mjs');
+ const {dispatchDoiJob}=await import('../server/digital-pass-brevo-dispatch.mjs');
+ const app=initializeApp({projectId:'demo-dns-core'},'marketing-isolation');const db=getFirestore(app);
+ const holderUid='synthetic-marketing-'+Date.now(),physicalPassId='synthetic-'+holderUid;
+ const identity={uid:holderUid,email:'synthetic@example.test',email_verified:true};
+ try {
+  await db.collection('passRegistrations').doc(physicalPassId).set({holderUid,status:'ACTIVE'});
+  const args={db,identity,affirmative:true,language:'it',noticeVersion:'synthetic-notice'};
+  await assert.rejects(requestMarketingOptIn({...args,affirmative:false}),/MARKETING_CONSENT_REQUIRED/);
+  assert.equal((await db.collection('passMarketingOutbox').doc(holderUid).get()).exists,false);
+  await Promise.all([requestMarketingOptIn(args),requestMarketingOptIn(args)]);
+  const consent=(await db.collection('passMarketingConsents').doc(holderUid).get()).data();
+  const job=(await db.collection('passMarketingOutbox').doc(holderUid).get()).data();
+  assert.equal(consent.consentRevision,job.consentRevision);assert.equal(job.dispatchCount,0);
+  let release,entered;
+  const response=new Promise(r=>{release=r}),started=new Promise(r=>{entered=r});
+  const opts={db,holderUid,apiKey:'mock-only',templateIds:{it:9},redirectUrl:'https://example.test/',resolveVerifiedEmail:async()=>identity.email};
+  const sending=dispatchDoiJob({...opts,fetchImpl:async(_url,init)=>{
+   if(init.method==='GET')return {status:404};
+   assert.deepEqual(Object.keys(JSON.parse(init.body)).sort(),['email','includeListIds','redirectionUrl','templateId']);
+   entered();return response;
+  }});
+  await started;await withdrawMarketing({db,identity});release({status:201,ok:true});
+  assert.equal((await sending).status,'WITHDRAWN');
+  await assert.rejects(dispatchDoiJob({...opts,fetchImpl:async()=>{throw Error('NO_RETRY')}}),/DOI_JOB_NOT_CLAIMABLE/);
+  assert.equal((await db.collection('passRegistrations').doc(physicalPassId).get()).data().status,'ACTIVE');
+  assert.equal((await db.collection('passMarketingConsents').doc(holderUid).get()).data().needsBrevoUnsubscribe,true);
+ } finally {await deleteApp(app)}
 });

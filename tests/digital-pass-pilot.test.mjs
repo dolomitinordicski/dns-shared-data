@@ -115,14 +115,14 @@ test('HTTP refuses anonymous access, disallowed origin, and browser-forged autho
   assert.equal(response.code,403); assert.equal(db.values.has('passActivationChallenges/'+assignment.physicalPassId),false);
 });
 
-test('marketing uses the existing Brevo consent contract and requires a separate approved notice',async()=>{
+test('pass registration cannot enroll marketing even when client supplies marketing flags',async()=>{
   const first=await sale(); await registration(first,{marketingRequested:true});
   const declined=[...first.db.values.values()].find(v=>v.purpose==='DNS_MARKETING');
   assert.equal(declined.affirmative,false); assert.equal(declined.status,'NOT_REQUESTED');
   const second=await sale(); await registration(second,{marketingRequested:true,marketingNoticeVersion:'marketing-notice-v1'});
   const pending=[...second.db.values.values()].find(v=>v.purpose==='DNS_MARKETING');
-  assert.equal(pending.holderId,identity.uid); assert.equal(pending.affirmative,true);
-  assert.equal(pending.status,'PENDING_DOUBLE_OPT_IN'); assert.equal(pending.noticeVersion,'marketing-notice-v1');
+  assert.equal(pending.holderId,identity.uid); assert.equal(pending.affirmative,false);
+  assert.equal(pending.status,'NOT_REQUESTED'); assert.equal(pending.noticeVersion,'test-notice-v1');
   assert.equal(pending.source,'digital-pass');
 });
 

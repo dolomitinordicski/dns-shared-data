@@ -11,6 +11,8 @@ const origins = defineString('DNS_PASS_ALLOWED_ORIGINS');
 const revision = defineString('DNS_PASS_INVENTORY_REVISION');
 const start = defineString('DNS_PASS_VALID_FROM', { default: '2026-11-15T00:00:00+01:00' });
 const end = defineString('DNS_PASS_VALID_UNTIL', { default: '2027-05-01T00:00:00+02:00' });
+const googleWalletIssuer = defineString('DNS_GOOGLE_WALLET_ISSUER_ID', { default: '' });
+const verificationBase = defineString('DNS_PASS_VERIFICATION_BASE', { default: '' });
 const notice = defineString('DNS_PASS_PRIVACY_NOTICE_VERSION');
 // Fail closed for the initial controlled deploy: never enable public registration by default.
 const registrationEnabled = defineString('DNS_PASS_REGISTRATION_ENABLED', { default: 'false' });
@@ -22,7 +24,9 @@ export const digitalPassApi = onRequest({ region, serviceAccount: DIGITAL_PASS_R
     const handler = createDigitalPassHandler({ db: getFirestore(app), auth: getAuth(app), hmacSecret: key.value(),
       allowedOrigins: origins.value().split(',').map(v => v.trim()).filter(Boolean), inventoryRevision: revision.value(),
       registrationEnabled: registrationEnabled.value() === 'true',
-      validFrom: Date.parse(start.value()), validUntil: Date.parse(end.value()), noticeVersion: notice.value() });
+      validFrom: Date.parse(start.value()), validUntil: Date.parse(end.value()), noticeVersion: notice.value(),
+      walletIssuerId: googleWalletIssuer.value(), walletSigningJson: '', verificationBase: verificationBase.value(),
+      walletOrigins: origins.value().split(',').map(v => v.trim()).filter(Boolean) });
     return await handler(req, res);
   } catch {
     res.set('Cache-Control', 'no-store'); return res.status(503).json({ error: 'SERVICE_UNAVAILABLE' });

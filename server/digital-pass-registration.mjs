@@ -20,7 +20,7 @@ export async function limitAttempts({ db, key, now = Date.now(), max = 10, windo
  * The caller passes a freshly verified, revocation-checked token, never JSON claims.
  * No pending registration reserves a card before successful email verification. */
 export async function registerDigitalPass({ db, identity, assignment, code, givenName, familyName,
-  language = 'de', marketingRequested = false, marketingNoticeVersion, noticeVersion, hmacSecret, now = Date.now(), validFrom, validUntil }) {
+  language = 'de', noticeVersion, hmacSecret, now = Date.now(), validFrom, validUntil }) {
   if (!identity?.uid || identity.email_verified !== true || typeof identity.email !== 'string') throw new Error('EMAIL_VERIFICATION_REQUIRED');
   if (!['de', 'it', 'en'].includes(language) || ![givenName, familyName].every(v => typeof v === 'string' && v.trim().length > 0 && v.length <= 100) ||
     typeof noticeVersion !== 'string' || !noticeVersion || noticeVersion.length > 100) throw new Error('INVALID_REGISTRATION');
@@ -57,10 +57,10 @@ export async function registerDigitalPass({ db, identity, assignment, code, give
     tx.create(ref(db, 'passCredentialPayloads', credentialId), { holderUid: identity.uid, token });
     tx.update(challengeRef, { status: 'CONSUMED', consumedAt: now });
     // Compatible with the existing Brevo adapter (#168); service verification is never marketing consent.
-    const affirmative = marketingRequested === true && typeof marketingNoticeVersion === 'string' && marketingNoticeVersion.length > 0;
+    const affirmative = false; // Marketing opt-in is recorded only by requestMarketingOptIn.
     tx.create(ref(db, 'consentEvents', randomUUID()), { holderId: identity.uid, purpose: 'DNS_MARKETING',
       affirmative, status: affirmative ? 'PENDING_DOUBLE_OPT_IN' : 'NOT_REQUESTED',
-      noticeVersion: affirmative ? marketingNoticeVersion : noticeVersion, consentedAt: now, source: 'digital-pass', at: now });
+      noticeVersion, consentedAt: now, source: 'digital-pass', at: now });
     tx.create(ref(db, 'passAuditEvents', randomUUID()), { action: 'DIGITAL_PASS_ISSUED', targetId: credentialId,
       actorId: identity.uid, actorType: 'holder', organizationId: assignment.organizationId, at: now });
     return { registrationId: id, alreadyRegistered: false };

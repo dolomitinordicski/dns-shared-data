@@ -1,0 +1,529 @@
+{
+  "schema": "dns.digital-pass-printed-numbering-review.v1",
+  "seasonId": "2026-27",
+  "source": "DNS Data Entry > Bestellungen > Wochen- und Saisonkarten > Ticket-Nummerierung",
+  "startNumber": 1,
+  "nextNumber": 24416,
+  "totalQuantity": 24415,
+  "eligibleDnsSeasonalQuantity": 4460,
+  "approved": false,
+  "notes": "Printed-range reference transcribed from user-supplied Data Entry table; organization IDs must be resolved against canonical DNS Core before importing.",
+  "rows": [
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "Antholzertal (für TV)",
+      "from": 1,
+      "to": 350
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "Antholzertal (für Biathlon)",
+      "from": 351,
+      "to": 850
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "Gsies-Welsberg-Taisten",
+      "from": 851,
+      "to": 1650
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "3ZD - Toblach",
+      "from": 1651,
+      "to": 3250
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "3ZD - Niederdorf",
+      "from": 3251,
+      "to": 3370
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "3ZD - Innichen",
+      "from": 3371,
+      "to": 3570
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "3ZD - Sexten",
+      "from": 3571,
+      "to": 4270
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "3ZD - Prags",
+      "from": 4271,
+      "to": 4470
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "Osttirol",
+      "from": 4471,
+      "to": 5970
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "Comelico",
+      "from": 5971,
+      "to": 6020
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "Cortina",
+      "from": 6021,
+      "to": 6120
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "TV Sand in Taufers",
+      "from": 6121,
+      "to": 6320
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "TV Ahrntal",
+      "from": 6321,
+      "to": 6470
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "Gröden",
+      "from": 6471,
+      "to": 6550
+    },
+    {
+      "itemCode": "wk-local",
+      "organizationLabel": "Seiser Alm",
+      "from": 6551,
+      "to": 8050
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "Antholzertal (für TV)",
+      "from": 8051,
+      "to": 8500
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "Antholzertal (für Biathlon)",
+      "from": 8501,
+      "to": 8850
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "Gsies-Welsberg-Taisten",
+      "from": 8851,
+      "to": 9850
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "3ZD - Toblach",
+      "from": 9851,
+      "to": 12050
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "3ZD - Niederdorf",
+      "from": 12051,
+      "to": 12450
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "3ZD - Innichen",
+      "from": 12451,
+      "to": 12650
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "3ZD - Sexten",
+      "from": 12651,
+      "to": 12850
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "3ZD - Prags",
+      "from": 12851,
+      "to": 13250
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "Osttirol",
+      "from": 13251,
+      "to": 14250
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "Comelico",
+      "from": 14251,
+      "to": 14300
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "Cortina",
+      "from": 14301,
+      "to": 14340
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "TV Sand in Taufers",
+      "from": 14341,
+      "to": 14440
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "TV Ahrntal",
+      "from": 14441,
+      "to": 14490
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "Gröden",
+      "from": 14491,
+      "to": 14510
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "Seiser Alm",
+      "from": 14511,
+      "to": 14560
+    },
+    {
+      "itemCode": "wk-dns",
+      "organizationLabel": "Dolomiti Nordicski",
+      "from": 14561,
+      "to": 14810
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "Antholzertal (für TV)",
+      "from": 14811,
+      "to": 15160
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "Antholzertal (für Biathlon)",
+      "from": 15161,
+      "to": 15220
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "Gsies-Welsberg-Taisten",
+      "from": 15221,
+      "to": 15820
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "3ZD - Toblach",
+      "from": 15821,
+      "to": 16170
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "3ZD - Niederdorf",
+      "from": 16171,
+      "to": 16270
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "3ZD - Innichen",
+      "from": 16271,
+      "to": 16370
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "3ZD - Sexten",
+      "from": 16371,
+      "to": 16570
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "3ZD - Prags",
+      "from": 16571,
+      "to": 16620
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "Osttirol",
+      "from": 16621,
+      "to": 18620
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "Comelico",
+      "from": 18621,
+      "to": 18770
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "Cortina",
+      "from": 18771,
+      "to": 19070
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "TV Sand in Taufers",
+      "from": 19071,
+      "to": 19170
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "TV Ahrntal",
+      "from": 19171,
+      "to": 19320
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "Gröden",
+      "from": 19321,
+      "to": 19420
+    },
+    {
+      "itemCode": "sk-local",
+      "organizationLabel": "Seiser Alm",
+      "from": 19421,
+      "to": 19620
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "Antholzertal (für TV)",
+      "from": 19621,
+      "to": 20220
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "Antholzertal (für Biathlon)",
+      "from": 20221,
+      "to": 20300
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "Gsies-Welsberg-Taisten",
+      "from": 20301,
+      "to": 21100
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "3ZD - Toblach",
+      "from": 21101,
+      "to": 21600
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "3ZD - Niederdorf",
+      "from": 21601,
+      "to": 21800
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "3ZD - Innichen",
+      "from": 21801,
+      "to": 21920
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "3ZD - Sexten",
+      "from": 21921,
+      "to": 22120
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "3ZD - Prags",
+      "from": 22121,
+      "to": 22200
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "Osttirol",
+      "from": 22201,
+      "to": 23200
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "Comelico",
+      "from": 23201,
+      "to": 23350
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "Cortina",
+      "from": 23351,
+      "to": 23500
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "TV Sand in Taufers",
+      "from": 23501,
+      "to": 23700
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "TV Ahrntal",
+      "from": 23701,
+      "to": 23800
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "Gröden",
+      "from": 23801,
+      "to": 23860
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "Seiser Alm",
+      "from": 23861,
+      "to": 23880
+    },
+    {
+      "itemCode": "sk-dns",
+      "organizationLabel": "Dolomiti Nordicski",
+      "from": 23881,
+      "to": 24080
+    },
+    {
+      "itemCode": "free",
+      "organizationLabel": "Antholzertal (für TV)",
+      "from": 24081,
+      "to": 24100
+    },
+    {
+      "itemCode": "free",
+      "organizationLabel": "Antholzertal (für Biathlon)",
+      "from": 24101,
+      "to": 24110
+    },
+    {
+      "itemCode": "free",
+      "organizationLabel": "Osttirol",
+      "from": 24111,
+      "to": 24115
+    },
+    {
+      "itemCode": "free",
+      "organizationLabel": "Comelico",
+      "from": 24116,
+      "to": 24120
+    },
+    {
+      "itemCode": "free",
+      "organizationLabel": "Cortina",
+      "from": 24121,
+      "to": 24140
+    },
+    {
+      "itemCode": "free",
+      "organizationLabel": "TV Ahrntal",
+      "from": 24141,
+      "to": 24150
+    },
+    {
+      "itemCode": "free",
+      "organizationLabel": "Gröden",
+      "from": 24151,
+      "to": 24175
+    },
+    {
+      "itemCode": "free",
+      "organizationLabel": "Seiser Alm",
+      "from": 24176,
+      "to": 24205
+    },
+    {
+      "itemCode": "instructor",
+      "organizationLabel": "Antholzertal (für TV)",
+      "from": 24206,
+      "to": 24220
+    },
+    {
+      "itemCode": "instructor",
+      "organizationLabel": "Antholzertal (für Biathlon)",
+      "from": 24221,
+      "to": 24240
+    },
+    {
+      "itemCode": "instructor",
+      "organizationLabel": "Gsies-Welsberg-Taisten",
+      "from": 24241,
+      "to": 24245
+    },
+    {
+      "itemCode": "instructor",
+      "organizationLabel": "3ZD - Toblach",
+      "from": 24246,
+      "to": 24275
+    },
+    {
+      "itemCode": "instructor",
+      "organizationLabel": "3ZD - Niederdorf",
+      "from": 24276,
+      "to": 24280
+    },
+    {
+      "itemCode": "instructor",
+      "organizationLabel": "3ZD - Innichen",
+      "from": 24281,
+      "to": 24285
+    },
+    {
+      "itemCode": "instructor",
+      "organizationLabel": "3ZD - Sexten",
+      "from": 24286,
+      "to": 24290
+    },
+    {
+      "itemCode": "instructor",
+      "organizationLabel": "Comelico",
+      "from": 24291,
+      "to": 24310
+    },
+    {
+      "itemCode": "instructor",
+      "organizationLabel": "Cortina",
+      "from": 24311,
+      "to": 24330
+    },
+    {
+      "itemCode": "instructor",
+      "organizationLabel": "TV Sand in Taufers",
+      "from": 24331,
+      "to": 24335
+    },
+    {
+      "itemCode": "instructor",
+      "organizationLabel": "Seiser Alm",
+      "from": 24336,
+      "to": 24355
+    },
+    {
+      "itemCode": "press",
+      "organizationLabel": "Osttirol",
+      "from": 24356,
+      "to": 24360
+    },
+    {
+      "itemCode": "press",
+      "organizationLabel": "Cortina",
+      "from": 24361,
+      "to": 24370
+    },
+    {
+      "itemCode": "press",
+      "organizationLabel": "Gröden",
+      "from": 24371,
+      "to": 24375
+    },
+    {
+      "itemCode": "press",
+      "organizationLabel": "Seiser Alm",
+      "from": 24376,
+      "to": 24395
+    },
+    {
+      "itemCode": "press",
+      "organizationLabel": "Dolomiti Nordicski",
+      "from": 24396,
+      "to": 24415
+    }
+  ]
+}
