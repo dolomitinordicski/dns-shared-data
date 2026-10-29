@@ -1,0 +1,53 @@
+name: Publish DNS System Release
+on:
+  workflow_dispatch:
+    inputs:
+      release_file:
+        description: 'Reviewed JSON file in releases/pending/'
+        required: true
+        type: string
+      publish:
+        description: 'Publish to Firestore (false = validation only)'
+        required: true
+        default: false
+        type: boolean
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-package-lock
+      - name: Validate release draft
+        env:
+          RELEASE_FILE: ${{ inputs.release_file }}
+        shell: bash
+        run: |
+          case "$RELEASE_FILE" in
+            releases/pending/*.json) ;;
+            *) echo "::error::Release must be in releases/pending/"; exit 1 ;;
+          esac
+          if [[ "$RELEASE_FILE" == *..* ]]; then exit 1; fi
+          npx tsx scripts/publish-system-release.ts "--file=$RELEASE_FILE"
+  publish:
+    if: ${{ inputs.publish && github.ref == 'refs/heads/main' }}
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: dns-release-approval
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-package-lock
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+      - name: Publish approved entry
+        env:
+          RELEASE_FILE: ${{ inputs.release_file }}
+        run: npx tsx scripts/publish-system-release.ts "--file=$RELEASE_FILE" --apply
