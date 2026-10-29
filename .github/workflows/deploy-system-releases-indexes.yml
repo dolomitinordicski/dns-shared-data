@@ -34,5 +34,7 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-package-lock
-      - name: Deploy Firestore indexes only
-        run: npx firebase-tools@latest deploy --only firestore:indexes --project dns-core --non-interactive
+      - name: Safety stop — existing production indexes must be inventoried first
+        run: |
+          echo '::error::Index deployment blocked until existing dns-core indexes are inventoried and merged into the configuration. Deploying only systemReleases may remove other composite indexes.'
+          exit 1
