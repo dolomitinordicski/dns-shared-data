@@ -201,6 +201,14 @@ export const DNS_TOOL_REGISTRY: readonly DNSToolRegistryEntry[] = [
       de: 'Zentraler Partnerzugang und Verwaltung der DNS Partnerbetriebe.',
       it: 'Accesso centrale e gestione delle strutture partner DNS.',
     },
+  {
+    id: 'partner-hub',
+    label: 'DNS Partner Hub',
+    shortLabel: 'Partner Hub',
+    description: {
+      de: 'Zentraler Partnerzugang und Verwaltung der DNS Partnerbetriebe.',
+      it: 'Accesso centrale e gestione delle strutture partner DNS.',
+    },
     url: 'https://dolomitinordicski.github.io/dns-partner-hub/',
     repo: 'dolomitinordicski/dns-partner-hub',
     lifecycle: 'development',
