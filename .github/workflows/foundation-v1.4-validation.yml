@@ -1,0 +1,29 @@
+name: Foundation 1.4 development validation
+
+on:
+  push:
+    branches:
+      - planning/foundation-v1.4-gap-analysis
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Package build
+        run: npm run build:package
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Accessibility regression tests
+        run: npm run test:accessibility
