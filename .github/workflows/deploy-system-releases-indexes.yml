@@ -1,0 +1,38 @@
+name: Deploy DNS System Releases indexes
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type DEPLOY_INDEXES to deploy indexes to dns-core'
+        required: true
+        type: string
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-package-lock
+      - name: Validate indexes JSON
+        run: node -e "const f=require('./firestore.system-releases.indexes.json'); if(!f.indexes?.some(i=>i.collectionGroup==='systemReleases')) process.exit(1)"
+  deploy:
+    if: ${{ github.ref == 'refs/heads/main' && inputs.confirm == 'DEPLOY_INDEXES' }}
+    needs: validate
+    environment: dns-release-approval
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-package-lock
+      - name: Deploy Firestore indexes only
+        run: npx firebase-tools@latest deploy --only firestore:indexes --project dns-core --non-interactive
