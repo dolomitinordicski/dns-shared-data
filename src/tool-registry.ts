@@ -194,6 +194,23 @@ export const DNS_TOOL_REGISTRY: readonly DNSToolRegistryEntry[] = [
     visible: true,
   },
   {
+    id: 'partner-hub',
+    label: 'DNS Partner Hub',
+    shortLabel: 'Partner Hub',
+    description: {
+      de: 'Zentraler Partnerzugang und Verwaltung der DNS Partnerbetriebe.',
+      it: 'Accesso centrale e gestione delle strutture partner DNS.',
+    },
+    url: 'https://dolomitinordicski.github.io/dns-partner-hub/',
+    repo: 'dolomitinordicski/dns-partner-hub',
+    lifecycle: 'development',
+    group: 'portal',
+    backend: { kind: 'dns-core', label: 'Firebase · dns-core' },
+    dependencies: ['dns-core', 'shared-data'],
+    order: 30,
+    visible: true,
+  },
+  {
     id: 'polls',
     label: 'DNS Polls',
     shortLabel: 'Polls',
@@ -227,14 +244,6 @@ export const DNS_TOOL_REGISTRY: readonly DNSToolRegistryEntry[] = [
     order: 20,
     visible: true,
   },
-  {
-    id: 'qr',
-    label: 'DNS QR Code Generator',
-    shortLabel: 'QR Generator',
-    description: {
-      de: 'DNS Utility zur Erzeugung von QR Codes.',
-      it: 'Utility DNS per la generazione di QR code.',
-    },
     url: 'https://dolomitinordicski.github.io/qrcodegen/',
     repo: 'dolomitinordicski/qrcodegen',
     lifecycle: 'maintenance',
@@ -244,14 +253,6 @@ export const DNS_TOOL_REGISTRY: readonly DNSToolRegistryEntry[] = [
     order: 21,
     visible: true,
   },
-  {
-    id: 'strategy',
-    label: 'DNS Strategy',
-    shortLabel: 'Strategy',
-    description: {
-      de: 'Strategischer Arbeits- und Referenzbereich für die DNS Entwicklung.',
-      it: 'Area strategica di lavoro e riferimento per lo sviluppo DNS.',
-    },
     url: 'https://dolomitinordicski.github.io/strategy/',
     repo: 'dolomitinordicski/strategy',
     lifecycle: 'development',
@@ -261,14 +262,6 @@ export const DNS_TOOL_REGISTRY: readonly DNSToolRegistryEntry[] = [
     order: 22,
     visible: true,
   },
-  {
-    id: 'ar360',
-    label: 'DNS 360 AR Tool',
-    shortLabel: '360 AR',
-    description: {
-      de: 'Bestehendes Werkzeug für 360°- und AR-Inhalte.',
-      it: 'Strumento esistente per contenuti 360° e AR.',
-    },
     url: 'https://dolomitinordicski.github.io/360ARtool/',
     repo: 'dolomitinordicski/360ARtool',
     lifecycle: 'maintenance',
@@ -278,14 +271,6 @@ export const DNS_TOOL_REGISTRY: readonly DNSToolRegistryEntry[] = [
     order: 23,
     visible: true,
   },
-  {
-    id: 'portal-v2',
-    label: 'DNS Partner Portal Hub v2',
-    shortLabel: 'Partner Portal v2',
-    description: {
-      de: 'Neuer zentraler Zugang für DNS Partner; derzeit in Entwicklung.',
-      it: 'Nuovo accesso centrale per i partner DNS; attualmente in sviluppo.',
-    },
     url: 'https://dolomitinordicski.github.io/DNS-Partner-Portal-Hub-v2/',
     repo: 'dolomitinordicski/DNS-Partner-Portal-Hub-v2',
     lifecycle: 'development',
@@ -295,14 +280,6 @@ export const DNS_TOOL_REGISTRY: readonly DNSToolRegistryEntry[] = [
     order: 30,
     visible: true,
   },
-  {
-    id: 'smartslopes',
-    label: 'Smart Slopes',
-    shortLabel: 'Smart Slopes',
-    description: {
-      de: 'Bestehender DNS Projekt- und Demonstratorbereich.',
-      it: 'Area di progetto e dimostratore DNS esistente.',
-    },
     url: 'https://dolomitinordicski.github.io/smartslopes/',
     repo: 'dolomitinordicski/smartslopes',
     lifecycle: 'maintenance',
@@ -312,14 +289,6 @@ export const DNS_TOOL_REGISTRY: readonly DNSToolRegistryEntry[] = [
     order: 40,
     visible: true,
   },
-  {
-    id: 'partnerportal',
-    label: 'Partner Portal',
-    shortLabel: 'Partner Portal legacy',
-    description: {
-      de: 'Frühere Version des DNS Partner Portals.',
-      it: 'Versione precedente del Partner Portal DNS.',
-    },
     url: 'https://dolomitinordicski.github.io/partnerportal/',
     repo: 'dolomitinordicski/partnerportal',
     lifecycle: 'legacy',
