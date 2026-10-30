@@ -1134,6 +1134,21 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Release notes: only active DNS users; technical reports are DNS-admin only.
+    // Writes are restricted to trusted backend automation (Admin SDK).
+    match /systemReleases/{releaseId} {
+      allow get, list: if activeUser()
+        && resource.data.published == true
+        && (
+          isAdmin()
+          || (
+            resource.data.audience == 'area'
+            && resource.data.type in ['feature', 'urgent']
+          )
+        );
+      allow create, update, delete: if false;
+    }
+
     // Everything else remains closed until its domain rules are implemented.
     match /{document=**} {
       allow read, write: if false;

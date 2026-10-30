@@ -44,7 +44,9 @@
     "seed:idm-premium-programs:apply": "tsx scripts/seed-idm-premium-programs.ts --apply",
     "sync:tool-registry": "tsx scripts/sync-tool-registry.ts",
     "sync:tool-registry:apply": "tsx scripts/sync-tool-registry.ts --apply",
-    "test:collective-orders:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/collective-orders-rules.test.mjs\""
+    "test:collective-orders:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/collective-orders-rules.test.mjs\"",
+    "test:system-releases:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/system-releases-rules.test.mjs\"",
+    "release:system:validate": "tsx scripts/publish-system-release.ts"
   },
   "devDependencies": {
     "firebase-admin": "^14.5.0",
