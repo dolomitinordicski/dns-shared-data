@@ -267,3 +267,41 @@ export const DNS_IDENTITY_ORGANIZATION_DECISIONS = {
   valGardena: { organizationId: 'val-gardena', localContactId: 'st-christina' },
   antholz: { organizationId: 'antholzertal', canonicalName: 'Tourismusgenossenschaft Antholzertal' },
 } as const;
+
+/** Resolve an existing canonical organization for an admin selection.
+ * Informational contacts (ticket operators, IATs) never become organization identities.
+ */
+import { ORGANIZATIONS } from './canonical-data.js';
+
+export function listDNSIdentityOrganizations() {
+  return ORGANIZATIONS.filter(org => org.active).map(org => ({
+    id: org.id,
+    name: org.canonicalName,
+    reportingAreaIds: org.reportingAreaIds,
+    contacts: DNS_PUBLIC_ORGANIZATION_CONTACTS.filter(
+      contact => contact.organizationId === org.id &&
+      contact.associationStatus !== 'flyer-operator-only'
+    ),
+  }));
+}
+
+export function getDNSIdentityOrganization(organizationId: string) {
+  return listDNSIdentityOrganizations().find(org => org.id === organizationId);
+}
+
+export function validateDNSPublicOrganizationContacts(): string[] {
+  const errors: string[] = [];
+  const ids = new Set<string>();
+  const organizations = new Set<string>(ORGANIZATIONS.map(org => org.id));
+  for (const contact of DNS_PUBLIC_ORGANIZATION_CONTACTS) {
+    if (ids.has(contact.id)) errors.push(`Duplicate contact ID: ${contact.id}`);
+    ids.add(contact.id);
+    if (contact.organizationId && !organizations.has(contact.organizationId)) {
+      errors.push(`Unknown canonical organization for ${contact.id}: ${contact.organizationId}`);
+    }
+  }
+  if (DNS_IDENTITY_ORGANIZATION_DECISIONS.cortina.organizationId !== 'servizi-ampezzo') {
+    errors.push('Cortina must resolve to SEAM');
+  }
+  return errors;
+}
