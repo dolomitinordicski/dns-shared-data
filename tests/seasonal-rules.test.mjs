@@ -549,6 +549,57 @@ try {
   await assertFails(getDoc(doc(reader,'fakturaDeliveries','delivery-test')));
   await assertFails(setDoc(doc(seller,'fakturaDeliveries','delivery-seller'),fakturaDelivery));
 
+
+  // DNS Identity: a persisted W/R/none matrix further restricts existing grants.
+  // The emulator uses synthetic organizations; it never writes to dns-core.
+  await env.withSecurityRulesDisabled(async context => {
+    const db = context.firestore();
+    await setDoc(doc(db,'memberships','seller__org'),{userId:'seller',organizationId:'org',active:true});
+    await setDoc(doc(db,'memberships','reader__org'),{userId:'reader',organizationId:'org',active:true});
+    await setDoc(doc(db,'organizations','other-org'),{reportingAreaIds:['area2']});
+    await setDoc(doc(db,'ticketOrders','matrix-existing'),{
+      id:'matrix-existing',seasonId:'2026-27',organizationId:'org',reportingAreaId:'area',
+      category:'ticket',status:'draft',
+    });
+    await setDoc(doc(db,'ticketOrders','matrix-other'),{
+      id:'matrix-other',seasonId:'2026-27',organizationId:'other-org',reportingAreaId:'area2',
+      category:'ticket',status:'draft',
+    });
+  });
+  const matrixPolicy = level => ({
+    organizationId:'org',tools:{'data-entry':level},
+    updatedBy:'admin',updatedAt:serverTimestamp(),
+  });
+  const matrixRef=doc(admin,'organizationToolAccess','org');
+  // Non-admins cannot alter the access matrix.
+  await assertFails(setDoc(doc(seller,'organizationToolAccess','org'),matrixPolicy('write')));
+  await assertSucceeds(setDoc(matrixRef,matrixPolicy('write')));
+  await assertSucceeds(getDoc(doc(seller,'ticketOrders','matrix-existing')));
+  await assertSucceeds(setDoc(doc(seller,'ticketOrders','matrix-w-new'),{
+    id:'matrix-w-new',seasonId:'2026-27',organizationId:'org',reportingAreaId:'area',
+    category:'ticket',status:'draft',
+  }));
+  await assertFails(getDoc(doc(seller,'ticketOrders','matrix-other')));
+  // R permits reads but no writes even when an older grant contains write.
+  await assertSucceeds(setDoc(matrixRef,matrixPolicy('read')));
+  await assertSucceeds(getDoc(doc(seller,'ticketOrders','matrix-existing')));
+  await assertFails(setDoc(doc(seller,'ticketOrders','matrix-r-new'),{
+    id:'matrix-r-new',seasonId:'2026-27',organizationId:'org',reportingAreaId:'area',
+    category:'ticket',status:'draft',
+  }));
+  // None blocks even users with otherwise-valid scoped grants.
+  await assertSucceeds(setDoc(matrixRef,matrixPolicy('none')));
+  await assertFails(getDoc(doc(seller,'ticketOrders','matrix-existing')));
+  await assertFails(getDoc(doc(reader,'ticketOrders','matrix-existing')));
+  // DNS admin retains full access independent of the matrix.
+  await assertSucceeds(getDoc(doc(admin,'ticketOrders','matrix-existing')));
+  await assertSucceeds(setDoc(matrixRef,matrixPolicy('write')));
+  await assertSucceeds(getDoc(doc(reader,'ticketOrders','matrix-existing')));
+  await assertFails(setDoc(doc(reader,'ticketOrders','matrix-reader-new'),{
+    id:'matrix-reader-new',seasonId:'2026-27',organizationId:'org',reportingAreaId:'area',
+    category:'ticket',status:'draft',
+  }));
+  console.log('Identity matrix emulator passed: W/R/none, existing grants, cross-organization isolation, admin override.');
   console.log('Faktura v2 rules passed: internal collections are admin-only, public token collection is not directly readable, and audit events are append-only.');
 
   console.log('Seasonal rules passed: scoped reads/writes, sourced billing rates/extras, Flyer owner scope grants, legacy and unified revisioned billing snapshots, READY completeness guards, read-only users, immutable audit history, stale pricing and anonymous access.');
