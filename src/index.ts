@@ -2,6 +2,7 @@ export * from './canonical-data.js';
 export * from './seasonal-operational-data.js';
 export * from './design-system.js';
 export * from './access-control.js';
+export * from './area-admin-provisioning.js';
 export * from './order-setup-2026-27.js';
 export * from './pocketfolder-setup-2026-27.js';
 export * from './kp-setup-2026-27.js';
