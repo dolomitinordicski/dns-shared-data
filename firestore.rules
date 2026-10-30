@@ -498,8 +498,11 @@ service cloud.firestore {
     }
 
     function managePricing(data) {
-      return isAdmin() || hasGrant('network','dolomiti-nordicski','pricing.manage')
-        || hasGrant(data.scopeType,data.scopeId,'pricing.manage');
+      return isAdmin()
+        || ((data.scopeType != 'organization'
+              || dataEntryMatrixAllows(data.scopeId, true))
+          && (hasGrant('network','dolomiti-nordicski','pricing.manage')
+            || hasGrant(data.scopeType,data.scopeId,'pricing.manage')));
     }
 
     function validSales(data) {
