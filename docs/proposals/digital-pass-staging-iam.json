@@ -1,0 +1,44 @@
+{
+  "status": "PROPOSAL_ONLY_DO_NOT_APPLY",
+  "projectId": "<STAGING_PROJECT_ID>",
+  "existingCloudResourcesChanged": false,
+  "customAuthRole": {
+    "roleId": "dnsPassAuthUserReader",
+    "includedPermissions": [
+      "firebaseauth.users.get"
+    ],
+    "grantTo": "serviceAccount:dns-digital-pass-runtime@<STAGING_PROJECT_ID>.iam.gserviceaccount.com",
+    "bindingResource": "projects/<STAGING_PROJECT_ID>"
+  },
+  "runtimeAttachment": {
+    "role": "roles/iam.serviceAccountUser",
+    "narrowerCustomAlternative": [
+      "iam.serviceAccounts.actAs"
+    ],
+    "grantTo": "serviceAccount:dns-digital-pass-deployer@<STAGING_PROJECT_ID>.iam.gserviceaccount.com",
+    "bindingResource": "projects/<STAGING_PROJECT_ID>/serviceAccounts/dns-digital-pass-runtime@<STAGING_PROJECT_ID>.iam.gserviceaccount.com"
+  },
+  "runtimeDatabase": {
+    "role": "roles/datastore.user",
+    "grantTo": "serviceAccount:dns-digital-pass-runtime@<STAGING_PROJECT_ID>.iam.gserviceaccount.com",
+    "bindingResource": "projects/<STAGING_PROJECT_ID>",
+    "condition": {
+      "title": "DNSPassStagingDefaultDB",
+      "expression": "resource.name==\"projects/<STAGING_PROJECT_ID>/databases/(default)\""
+    }
+  },
+  "runtimeHmac": {
+    "role": "roles/secretmanager.secretAccessor",
+    "grantTo": "serviceAccount:dns-digital-pass-runtime@<STAGING_PROJECT_ID>.iam.gserviceaccount.com",
+    "bindingResource": "projects/<STAGING_PROJECT_ID>/secrets/DNS_PASS_HMAC_KEY"
+  },
+  "excluded": [
+    "dns-core bindings",
+    "production Admin SDK credentials",
+    "BREVO_API_KEY",
+    "project-wide actAs",
+    "Auth mutation/hash-config privileges",
+    "IAM mutation commands"
+  ],
+  "approvalRequired": true
+}
