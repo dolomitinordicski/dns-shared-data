@@ -5,3 +5,9 @@ node_modules/
 service-account*.json
 firebase-adminsdk*.json
 *.service-account.json
+
+# Local-only Emulator acceptance artifacts and synthetic secret override
+.secret.local
+.digital-pass-e2e/
+.firebase/
+*-debug.log
