@@ -25,3 +25,9 @@ test('reject caller without DNS admin role', async () => {
   await createIdentityAdminHandler({ enabled: true, auth, db, organizations })(request(), response);
   assert.equal(response.code, 403);
 });
+
+test('reject unsupported HTTP verbs', async () => {
+  const response = res();
+  await createIdentityAdminHandler({ enabled: true })({ ...request(), method: 'GET' }, response);
+  assert.equal(response.code, 405);
+});
