@@ -280,7 +280,7 @@ export function listDNSIdentityOrganizations() {
     reportingAreaIds: org.reportingAreaIds,
     contacts: DNS_PUBLIC_ORGANIZATION_CONTACTS.filter(
       contact => contact.organizationId === org.id &&
-      contact.associationStatus !== 'flyer-operator-only'
+      contact.organizationId !== null
     ),
   }));
 }
