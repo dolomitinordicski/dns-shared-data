@@ -1,7 +1,12 @@
 /** Public contacts transcribed from DNS official /de/kontakte page (2026-10-30).
  * Informational records ONLY: no accounts, memberships or permissions are created.
- * organizationId links are candidates for review, not a legal-entity verification.
- * Missing source values remain empty rather than guessed.
+ * Mapping decisions confirmed by DNS project management (2026-10-30):
+ * - Cortina identity organization is existing 'servizi-ampezzo' (SEAM).
+ * - Sci Club Cortina is the ticket/flyer operator, never the identity organization.
+ * - Cortina IAT is a public information point; not an identity organization.
+ * - Val Gardena is the organization; St. Christina is a local contact, not a new identity.
+ * - Antholz canonical name remains Tourismusgenossenschaft Antholzertal.
+ * Physical public contacts do not imply user authorization or account grants.
  */
 export const DNS_PUBLIC_ORGANIZATION_CONTACTS = [
   {
@@ -17,9 +22,10 @@ export const DNS_PUBLIC_ORGANIZATION_CONTACTS = [
     "email": "info@antholzertal.com",
     "website": "https://www.antholzertal.com",
     "organizationId": "antholzertal",
-    "associationStatus": "candidate-existing-id",
+    "associationStatus": "existing-canonical-organization",
     "pec": "tourismusvereinantholzertal@pec.bz.it",
-    "vatNumber": "01287710212"
+    "vatNumber": "01287710212",
+    "canonicalOrganizationName": "Tourismusgenossenschaft Antholzertal"
   },
   {
     "id": "biathlon",
@@ -65,8 +71,10 @@ export const DNS_PUBLIC_ORGANIZATION_CONTACTS = [
     "email": "sccortina1903@gmail.com",
     "website": null,
     "organizationId": null,
-    "associationStatus": "requires-review",
-    "whatsapp": "328 596 8469"
+    "associationStatus": "flyer-operator-only",
+    "whatsapp": "328 596 8469",
+    "role": "ticket-operator",
+    "flyerOperatorForOrganizationId": "servizi-ampezzo"
   },
   {
     "id": "cortina-iat",
@@ -81,7 +89,7 @@ export const DNS_PUBLIC_ORGANIZATION_CONTACTS = [
     "email": "infopoint@cortinamarketing.it",
     "website": "https://www.dolomiti.org/en/cortina",
     "organizationId": null,
-    "associationStatus": "requires-review"
+    "associationStatus": "public-information-point-not-identity"
   },
   {
     "id": "comelico",
@@ -155,8 +163,8 @@ export const DNS_PUBLIC_ORGANIZATION_CONTACTS = [
     "phone": "+39 0471 777800",
     "email": "s.cristina@valgardena.it",
     "website": "https://www.valgardena.it",
-    "organizationId": null,
-    "associationStatus": "requires-review"
+    "organizationId": "val-gardena",
+    "associationStatus": "local-contact-for-existing-organization"
   },
   {
     "id": "gsies",
@@ -253,4 +261,9 @@ export const DNS_PUBLIC_CONTACTS_SOURCE = {
   url: 'https://www.dolomitinordicski.com/de/kontakte',
   checkedDate: '2026-10-30',
   status: 'review-required',
+} as const;
+export const DNS_IDENTITY_ORGANIZATION_DECISIONS = {
+  cortina: { organizationId: 'servizi-ampezzo', displayName: 'SEAM', flyerOperatorContactId: 'cortina-tickets' },
+  valGardena: { organizationId: 'val-gardena', localContactId: 'st-christina' },
+  antholz: { organizationId: 'antholzertal', canonicalName: 'Tourismusgenossenschaft Antholzertal' },
 } as const;
