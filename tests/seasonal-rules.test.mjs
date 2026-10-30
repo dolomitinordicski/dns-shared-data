@@ -690,6 +690,21 @@ try {
   });
   await assertSucceeds(getDoc(doc(seller,'ticketOrders',pocketfolderOrder.id)));
   console.log('Backend grant validity windows enforced: expired, future and unbounded grants.');
+  // Organization-scoped pricing must respect the matrix even with an explicit pricing grant.
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(),'accessGrants','seller__organization__org'),{
+      active:true,permissions:['ticketOrders.read','ticketOrders.write','ticketSales.read','ticketSales.write','kp.read','kp.write','pricing.manage']
+    });
+  });
+  const orgPrice = {...price,id:'identity-org-price-w',scopeType:'organization',scopeId:'org',updatedBy:'seller'};
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('write')));
+  await assertSucceeds(setDoc(doc(seller,'ticketPricingConfigs',orgPrice.id),orgPrice));
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('read')));
+  await assertFails(setDoc(doc(seller,'ticketPricingConfigs','identity-org-price-r'),{...orgPrice,id:'identity-org-price-r'}));
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('none')));
+  await assertFails(setDoc(doc(seller,'ticketPricingConfigs','identity-org-price-none'),{...orgPrice,id:'identity-org-price-none'}));
+  await assertSucceeds(setDoc(doc(admin,'ticketPricingConfigs','identity-org-price-admin'),{...orgPrice,id:'identity-org-price-admin',updatedBy:'admin'}));
+  console.log('Identity organization pricing matrix W/R/none and DNS Admin passed.');
   console.log('Faktura v2 rules passed: internal collections are admin-only, public token collection is not directly readable, and audit events are append-only.');
 
   console.log('Seasonal rules passed: scoped reads/writes, sourced billing rates/extras, Flyer owner scope grants, legacy and unified revisioned billing snapshots, READY completeness guards, read-only users, immutable audit history, stale pricing and anonymous access.');
