@@ -1,3 +1,4 @@
+import { VIRTUAL_AREA, VIRTUAL_IDENTITIES, virtualPolicy, syntheticOrder } from './fixtures/virtual-dns-area.mjs';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { doc, setDoc, getDoc, getDocs, deleteDoc, collection, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
 import fs from 'node:fs';
@@ -599,6 +600,53 @@ try {
     id:'matrix-reader-new',seasonId:'2026-27',organizationId:'org',reportingAreaId:'area',
     category:'ticket',status:'draft',
   }));
+
+  // Virtual DNS test area: multiple organizations sharing a reporting area.
+  // All users, memberships, orders and policy documents live exclusively in the emulator.
+  await env.withSecurityRulesDisabled(async context => {
+    const db = context.firestore();
+    await setDoc(doc(db,'reportingAreas',VIRTUAL_AREA.reportingAreaId),{canonicalName:VIRTUAL_AREA.name});
+    for (const orgId of [VIRTUAL_AREA.organizationId,VIRTUAL_AREA.secondaryOrganizationId]) {
+      await setDoc(doc(db,'organizations',orgId),{reportingAreaIds:[VIRTUAL_AREA.reportingAreaId]});
+    }
+    for (const userId of [VIRTUAL_IDENTITIES.writer,VIRTUAL_IDENTITIES.reader,VIRTUAL_IDENTITIES.outsider]) {
+      await setDoc(doc(db,'users',userId),{active:true,globalRoles:[]});
+    }
+    await setDoc(doc(db,'users',VIRTUAL_IDENTITIES.admin),{active:true,globalRoles:['dns-admin']});
+    for(const uid of [VIRTUAL_IDENTITIES.writer,VIRTUAL_IDENTITIES.reader]){
+      await setDoc(doc(db,'memberships',uid+'__'+VIRTUAL_AREA.organizationId),{userId:uid,organizationId:VIRTUAL_AREA.organizationId,active:true});
+      await setDoc(doc(db,'accessGrants',uid+'__organization__'+VIRTUAL_AREA.organizationId),{
+        active:true,permissions:['ticketOrders.read',...(uid===VIRTUAL_IDENTITIES.writer?['ticketOrders.write']:[])],
+      });
+    }
+    await setDoc(doc(db,'memberships',VIRTUAL_IDENTITIES.outsider+'__'+VIRTUAL_AREA.secondaryOrganizationId),{
+      userId:VIRTUAL_IDENTITIES.outsider,organizationId:VIRTUAL_AREA.secondaryOrganizationId,active:true,
+    });
+    await setDoc(doc(db,'accessGrants',VIRTUAL_IDENTITIES.outsider+'__reportingArea__'+VIRTUAL_AREA.reportingAreaId),{
+      active:true,permissions:['ticketOrders.read','ticketOrders.write'],
+    });
+    await setDoc(doc(db,'ticketOrders','virtual-owned'),syntheticOrder('virtual-owned'));
+  });
+  const virtualWriter=env.authenticatedContext(VIRTUAL_IDENTITIES.writer).firestore();
+  const virtualReader=env.authenticatedContext(VIRTUAL_IDENTITIES.reader).firestore();
+  const virtualOutsider=env.authenticatedContext(VIRTUAL_IDENTITIES.outsider).firestore();
+  const virtualAdmin=env.authenticatedContext(VIRTUAL_IDENTITIES.admin).firestore();
+  const virtualPolicyRef=doc(virtualAdmin,'organizationToolAccess',VIRTUAL_AREA.organizationId);
+  await assertSucceeds(setDoc(virtualPolicyRef,virtualPolicy('write')));
+  await assertSucceeds(getDoc(doc(virtualWriter,'ticketOrders','virtual-owned')));
+  await assertSucceeds(setDoc(doc(virtualWriter,'ticketOrders','virtual-w-new'),syntheticOrder('virtual-w-new')));
+  await assertSucceeds(getDoc(doc(virtualReader,'ticketOrders','virtual-owned')));
+  await assertFails(setDoc(doc(virtualReader,'ticketOrders','virtual-r-new'),syntheticOrder('virtual-r-new')));
+  // Even a reporting-area-wide grant does not override a configured organization's membership.
+  await assertFails(getDoc(doc(virtualOutsider,'ticketOrders','virtual-owned')));
+  await assertSucceeds(setDoc(virtualPolicyRef,virtualPolicy('read')));
+  await assertSucceeds(getDoc(doc(virtualWriter,'ticketOrders','virtual-owned')));
+  await assertFails(setDoc(doc(virtualWriter,'ticketOrders','virtual-read-new'),syntheticOrder('virtual-read-new')));
+  await assertSucceeds(setDoc(virtualPolicyRef,virtualPolicy('none')));
+  await assertFails(getDoc(doc(virtualWriter,'ticketOrders','virtual-owned')));
+  await assertFails(getDoc(doc(virtualReader,'ticketOrders','virtual-owned')));
+  await assertSucceeds(getDoc(doc(virtualAdmin,'ticketOrders','virtual-owned')));
+  console.log('Virtual DNS test area passed: W/R/none, two organizations in one area, member isolation, admin.');
   console.log('Identity matrix emulator passed: W/R/none, existing grants, cross-organization isolation, admin override.');
   console.log('Faktura v2 rules passed: internal collections are admin-only, public token collection is not directly readable, and audit events are append-only.');
 
