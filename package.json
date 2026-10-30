@@ -49,7 +49,8 @@
     "release:system:validate": "tsx scripts/publish-system-release.ts",
     "test:digital-pass:e2e": "node scripts/run-digital-pass-e2e.mjs",
     "test:organizations": "tsx --test tests/organization-contacts.test.ts",
-    "test:area-admin": "tsx --test tests/area-admin-provisioning.test.ts"
+    "test:area-admin": "tsx --test tests/area-admin-provisioning.test.ts",
+    "test:identity-admin": "node --test tests/identity-admin-http.test.mjs"
   },
   "devDependencies": {
     "firebase-admin": "^14.5.0",
