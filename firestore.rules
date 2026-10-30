@@ -136,8 +136,8 @@ service cloud.firestore {
 
     function hasOrderPermission(permission, data) {
       return isAdmin()
-        || (dataEntryMatrixAllows(data.organizationId,
-              permission in ['ticketOrders.write', 'ticketSales.write', 'kp.write', 'pricing.manage'])
+        || ((!data.keys().hasAny(['organizationId']) || dataEntryMatrixAllows(data.organizationId,
+              permission in ['ticketOrders.write', 'ticketSales.write', 'kp.write', 'pricing.manage']))
           && (hasGrant('network', 'dolomiti-nordicski', permission)
             || hasGrant('organization', data.organizationId, permission)
             || hasGrant('reportingArea', dataAreaId(data), permission)));
