@@ -122,28 +122,11 @@ service cloud.firestore {
         && data.updatedAt == request.time;
     }
 
-    // A configured organization matrix must not grant additional access:
-    // legacy scoped grants and the organization's membership remain mandatory.
-    function organizationToolAllows(orgId, toolId, write) {
-      let policyPath = /databases/$(database)/documents/organizationToolAccess/$(orgId);
-      let membershipPath = /databases/$(database)/documents/memberships/$(request.auth.uid + '__' + orgId);
-      return isAdmin() || (
-        activeUser()
-        && exists(membershipPath)
-        && get(membershipPath).data.active == true
-        && (!exists(policyPath)
-          || (get(policyPath).data.tools.get(toolId, 'none') == 'write'
-            || (!write && get(policyPath).data.tools.get(toolId, 'none') == 'read')))
-      );
-    }
-
     function hasOrderPermission(permission, data) {
       return isAdmin()
-        || (organizationToolAllows(data.organizationId, 'data-entry',
-              permission in ['ticketOrders.write', 'ticketSales.write', 'kp.write', 'pricing.manage'])
-          && (hasGrant('network', 'dolomiti-nordicski', permission)
-            || hasGrant('organization', data.organizationId, permission)
-            || hasGrant('reportingArea', dataAreaId(data), permission)));
+        || hasGrant('network', 'dolomiti-nordicski', permission)
+        || hasGrant('organization', data.organizationId, permission)
+        || hasGrant('reportingArea', dataAreaId(data), permission);
     }
 
     // A missing deadline retains existing behaviour during staged rollout.
