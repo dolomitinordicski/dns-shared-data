@@ -31,3 +31,32 @@ test('reject unsupported HTTP verbs', async () => {
   await createIdentityAdminHandler({ enabled: true })({ ...request(), method: 'GET' }, response);
   assert.equal(response.code, 405);
 });
+
+test('reject membership in unrelated area', async () => {
+  const response = res();
+  const auth = {
+    verifyIdToken: async () => ({ uid: 'test-admin-123' }),
+    getUser: async () => { throw new Error('Target lookup must not occur'); },
+  };
+  const db = {
+    collection: () => ({ doc: () => ({
+      get: async () => ({ exists: true, data: () => ({
+        active: true, globalRoles: ['dns-admin'],
+      }) }),
+    }) }),
+  };
+  const bad = request();
+  bad.body.reportingAreaId = 'osttirol';
+  await createIdentityAdminHandler({ enabled: true, auth, db, organizations })(bad, response);
+  assert.equal(response.code, 400);
+  assert.equal(response.body.error, 'INVALID_ORGANIZATION_AREA');
+});
+test('reject inactive admin profile', async () => {
+  const response = res();
+  const auth = { verifyIdToken: async () => ({ uid: 'test-admin-123' }) };
+  const db = { collection: () => ({ doc: () => ({
+    get: async () => ({ exists: true, data: () => ({ active: false, globalRoles: ['dns-admin'] }) }),
+  }) }) };
+  await createIdentityAdminHandler({ enabled: true, auth, db, organizations })(request(), response);
+  assert.equal(response.code, 403);
+});
