@@ -104,13 +104,11 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
    const r=await call('/v1/me/digital-pass',token('holder-a'),{physicalPassId:registration});assert.equal(r.status,200);pass=r.body;
    const denied=await call('/v1/me/digital-pass',token('holder-b'),{physicalPassId:registration});assert.equal(denied.status,400);
    const req=createRequire(process.env.DNS_E2E_DEPS_ROOT?resolve(process.env.DNS_E2E_DEPS_ROOT,'package.json'):new URL('../tools/digital-pass-e2e/package.json',import.meta.url));
-   const QRCode=req('qrcode'),{PNG}=req('pngjs'),zxing=req('@zxing/library');
+   const QRCode=req('qrcode');
    const verificationUrl=functionBase+'/v/'+pass.qrPayload.slice('dns-pass:v1:'.length);
    const image=await QRCode.toBuffer(verificationUrl,{width:420,margin:4});await writeFile(resolve(output,'synthetic-qr.png'),image);
-   const png=PNG.sync.read(image);const luminance=new Uint8ClampedArray(png.width*png.height);
-   for(let i=0;i<luminance.length;i++)luminance[i]=(png.data[4*i]+2*png.data[4*i+1]+png.data[4*i+2])/4;
-   const bitmap=new zxing.BinaryBitmap(new zxing.HybridBinarizer(new zxing.RGBLuminanceSource(luminance,png.width,png.height)));
-   const decoded=new zxing.MultiFormatReader().decode(bitmap).getText();assert.equal(decoded,verificationUrl);
+   const {decodeRenderedQr}=await import('./helpers/digital-pass-rendered-qr.mjs');
+   const decoded=decodeRenderedQr(image);assert.equal(decoded,verificationUrl);
    const html=await fetch(decoded).then(r=>r.text());assert.match(html,/GÜLTIG · VALIDO · VALID/);assert.ok(!html.includes(pass.holderName));
    await writeFile(resolve(output,'synthetic-qr-preview.html'),'<!doctype html><meta charset="utf-8"><title>Synthetic Emulator QR</title><h1>DNS Digital Pass — solo dati sintetici</h1><p>QR generato dalla risposta HTTP dell’Emulator. Nessuna tessera reale.</p><img width="420" height="420" src="data:image/png;base64,'+image.toString('base64')+'"><p>Payload decodificato e verificato esclusivamente su localhost.</p>');
    return {recoveryHttp:200,otherHolderDenied:400,qrPng:'synthetic-qr.png',qrDecoded:true,publicVerification:'VALID',holderDataInPublicPage:false};
