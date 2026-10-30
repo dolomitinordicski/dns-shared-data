@@ -330,7 +330,7 @@ service cloud.firestore {
         && request.resource.data.tools.keys().hasOnly([
           'data-entry','analytics','flyer-studio','fair','faktura','polls','partner-hub'
         ])
-        && request.resource.data.tools.values().hasOnly(['none','read','write'])
+        && request.resource.data.tools.keys().size() <= 7
         && request.resource.data.updatedBy == request.auth.uid
         && request.resource.data.updatedAt == request.time;
     }
