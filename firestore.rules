@@ -304,6 +304,33 @@ service cloud.firestore {
       allow list, write: if false;
     }
 
+    // DNS Admin-managed organization tool access matrix.
+    // This is an administrative policy record; existing tool security rules
+    // must additionally enforce it before it can replace scoped grants.
+    function validOrganizationToolAccess(orgId) {
+      return request.resource.data.keys().hasOnly([
+          'organizationId', 'tools', 'updatedBy', 'updatedAt'
+        ])
+        && request.resource.data.organizationId == orgId
+        && exists(/databases/$(database)/documents/organizations/$(orgId))
+        && request.resource.data.tools is map
+        && request.resource.data.tools.keys().hasOnly([
+          'data-entry','analytics','flyer-studio','fair','faktura','polls','partner-hub'
+        ])
+        && request.resource.data.tools.values().hasOnly(['none','read','write'])
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /organizationToolAccess/{orgId} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin()
+        && validOrganizationToolAccess(orgId)
+        && (!exists(/databases/$(database)/documents/organizationToolAccess/$(orgId))
+            || resource.data.organizationId == request.resource.data.organizationId);
+      allow delete: if false;
+    }
+
     // Private authorization metadata.
     match /users/{userId} {
       allow read: if signedIn() && request.auth.uid == userId;
