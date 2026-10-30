@@ -1,3 +1,5 @@
+import { serverTimestamp } from 'firebase/firestore';
+
 /**
  * Virtual DNS test area, for emulators and isolated staging environments only.
  * Never merge these entities into canonical REPORTING_AREAS or production aggregates.
@@ -29,7 +31,7 @@ export function virtualPolicy(level) {
     organizationId: VIRTUAL_AREA.organizationId,
     tools: { 'data-entry': level },
     updatedBy: VIRTUAL_IDENTITIES.admin,
-    updatedAt: new Date('2026-10-30T00:00:00Z'),
+    updatedAt: serverTimestamp(),
   };
 }
 
