@@ -30,7 +30,7 @@ export const DNS_WORKSPACE_USAGE_POLICY = {
 
 /** Determines an aggregate document ID only; it does not authorize writes. */
 export function workspaceUsageDailyId(day: string, reportingAreaId: string): string {
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(day)) throw new Error('Invalid ISO date');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new Error('Invalid ISO date');
   if (!/^[a-z0-9-]+$/.test(reportingAreaId)) throw new Error('Invalid reporting area ID');
   return `${day}__${reportingAreaId}`;
 }
