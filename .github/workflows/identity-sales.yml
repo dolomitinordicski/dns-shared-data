@@ -1,0 +1,30 @@
+name: Identity sales matrix regression
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - firestore.rules
+      - tests/identity-sales-matrix-rules.test.mjs
+      - tests/fixtures/virtual-dns-area.mjs
+      - firebase.identity.json
+      - .github/workflows/identity-sales.yml
+permissions:
+  contents: read
+jobs:
+  sales-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm install --no-audit --no-fund
+      - run: npx firebase emulators:exec --config firebase.identity.json --only firestore --project demo-dns-identity "node --test tests/identity-sales-matrix-rules.test.mjs"
+      - run: npm run test:rules
+      - run: npm run test:collective-orders:rules
+      - run: npm run test:system-releases:rules
