@@ -1,5 +1,6 @@
 export * from './canonical-data.js';
 export * from './public-organization-contacts.js';
+export * from './workspace-usage.js';
 export * from './seasonal-operational-data.js';
 export * from './design-system.js';
 export * from './access-control.js';
