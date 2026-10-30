@@ -775,9 +775,11 @@ service cloud.firestore {
 
     function hasKpPermission(permission, data) {
       return isAdmin()
-        || (data.entityType == 'organization' && hasGrant('organization',data.entityId,permission))
-        || hasGrant('reportingArea',data.reportingAreaId,permission)
-        || hasGrant('network','dolomiti-nordicski',permission);
+        || ((data.entityType != 'organization'
+              || dataEntryMatrixAllows(data.entityId, permission != 'kp.read'))
+          && ((data.entityType == 'organization' && hasGrant('organization',data.entityId,permission))
+            || hasGrant('reportingArea',data.reportingAreaId,permission)
+            || hasGrant('network','dolomiti-nordicski',permission)));
     }
 
     function validKpMilestone(data) {
