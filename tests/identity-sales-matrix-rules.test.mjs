@@ -91,3 +91,21 @@ test('missing and inactive memberships deny; omitted Data Entry denies; absent p
   await env.withSecurityRulesDisabled(async c => { const { deleteDoc } = await import('firebase/firestore'); await deleteDoc(doc(c.firestore(), policy)); });
   await assertSucceeds(getDoc(doc(writer, 'ticketSales', data.id)));
 });
+test('missing/inactive profiles cannot use a valid grant or self-assign administrator privileges', async () => {
+  const missing = env.authenticatedContext('dns-test-missing-profile').firestore();
+  const inactive = env.authenticatedContext('dns-test-inactive-profile').firestore();
+  await env.withSecurityRulesDisabled(async c => {
+    const db = c.firestore();
+    await setDoc(doc(db, 'users', 'dns-test-inactive-profile'), { active: false, globalRoles: ['dns-admin'] });
+    for (const uid of ['dns-test-missing-profile', 'dns-test-inactive-profile']) {
+      await setDoc(doc(db, 'accessGrants', `${uid}__organization__${orgs[0]}`), { active: true, permissions: ['ticketSales.read', 'ticketSales.write'] });
+      await setDoc(doc(db, 'memberships', `${uid}__${orgs[0]}`), { active: true });
+    }
+  });
+  for (const [uid, db] of [['dns-test-missing-profile', missing], ['dns-test-inactive-profile', inactive]]) {
+    const data = sale(orgs[0], uid);
+    await assertFails(setDoc(doc(db, 'ticketSales', data.id), data));
+    await assertFails(setDoc(doc(db, 'users', uid), { active: true, globalRoles: ['dns-admin'] }));
+    await assertFails(getDoc(doc(db, 'ticketSales', data.id)));
+  }
+});
