@@ -667,6 +667,29 @@ try {
   await assertSucceeds(getDoc(doc(virtualAdmin,'ticketOrders','virtual-owned')));
   console.log('Virtual DNS test area passed: W/R/none, two organizations in one area, member isolation, admin.');
   console.log('Identity matrix emulator passed: W/R/none, existing grants, cross-organization isolation, admin override.');
+  // Identity grant validity must be enforced by the backend, not just Workspace.
+  // Use the existing synthetic seller/order and restore the grant after each check.
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(),'accessGrants','seller__organization__org'),{
+      active:true,permissions:['ticketOrders.read','ticketOrders.write','ticketSales.read','ticketSales.write','kp.read','kp.write'],
+      validTo:'2000-01-01T00:00:00Z',
+    });
+  });
+  await assertFails(getDoc(doc(seller,'ticketOrders',pocketfolderOrder.id)));
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(),'accessGrants','seller__organization__org'),{
+      active:true,permissions:['ticketOrders.read','ticketOrders.write','ticketSales.read','ticketSales.write','kp.read','kp.write'],
+      validFrom:'2999-01-01T00:00:00Z',
+    });
+  });
+  await assertFails(getDoc(doc(seller,'ticketOrders',pocketfolderOrder.id)));
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(),'accessGrants','seller__organization__org'),{
+      active:true,permissions:['ticketOrders.read','ticketOrders.write','ticketSales.read','ticketSales.write','kp.read','kp.write'],
+    });
+  });
+  await assertSucceeds(getDoc(doc(seller,'ticketOrders',pocketfolderOrder.id)));
+  console.log('Backend grant validity windows enforced: expired, future and unbounded grants.');
   console.log('Faktura v2 rules passed: internal collections are admin-only, public token collection is not directly readable, and audit events are append-only.');
 
   console.log('Seasonal rules passed: scoped reads/writes, sourced billing rates/extras, Flyer owner scope grants, legacy and unified revisioned billing snapshots, READY completeness guards, read-only users, immutable audit history, stale pricing and anonymous access.');

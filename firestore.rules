@@ -17,6 +17,15 @@ service cloud.firestore {
         && 'dns-admin' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.globalRoles;
     }
 
+    // Authorization dates are RFC3339 strings in the Identity data contract.
+    // Missing bounds retain existing grants; malformed supplied bounds deny access.
+    function grantWithinDates(grant) {
+      return (!grant.keys().hasAny(['validFrom'])
+          || (grant.validFrom is string && request.time >= timestamp.value(grant.validFrom)))
+        && (!grant.keys().hasAny(['validTo'])
+          || (grant.validTo is string && request.time <= timestamp.value(grant.validTo)));
+    }
+
     function hasGrant(scopeType, scopeId, permission) {
       let grantId = request.auth.uid + "__" + scopeType + "__" + scopeId;
       let grantPath = /databases/$(database)/documents/accessGrants/$(grantId);
@@ -24,6 +33,7 @@ service cloud.firestore {
         && scopeId != ''
         && exists(grantPath)
         && get(grantPath).data.active == true
+        && grantWithinDates(get(grantPath).data)
         && permission in get(grantPath).data.permissions;
     }
 
@@ -33,7 +43,8 @@ service cloud.firestore {
       return activeUser()
         && scopeId != ''
         && exists(grantPath)
-        && get(grantPath).data.active == true;
+        && get(grantPath).data.active == true
+        && grantWithinDates(get(grantPath).data);
     }
 
     function canOwnFlyerScope(data) {
