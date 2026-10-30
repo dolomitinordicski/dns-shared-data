@@ -33,6 +33,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Test Identity Admin denied operations
+        run: npm run test:identity-admin
+
       - name: Validate seed plan
         run: npm run seed:firebase
 
