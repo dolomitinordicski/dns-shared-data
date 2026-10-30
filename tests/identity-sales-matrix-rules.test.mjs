@@ -109,3 +109,16 @@ test('missing/inactive profiles cannot use a valid grant or self-assign administ
     await assertFails(getDoc(doc(db, 'ticketSales', data.id)));
   }
 });
+
+test('expired and future memberships cannot bypass an existing Data Entry policy', async () => {
+  const path = `memberships/${U.writer}__${orgs[1]}`;
+  const ref = doc(writer, 'ticketSales', sale(orgs[1]).id);
+  const change = async member => env.withSecurityRulesDisabled(async c =>
+    setDoc(doc(c.firestore(), path), { userId: U.writer, organizationId: orgs[1], active: true, ...member }));
+  await change({ validTo: '2000-01-01T00:00:00Z' });
+  await assertFails(getDoc(ref));
+  await change({ validFrom: '2999-01-01T00:00:00Z' });
+  await assertFails(getDoc(ref));
+  await change({});
+  await assertSucceeds(getDoc(ref));
+});
