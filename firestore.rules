@@ -129,6 +129,18 @@ service cloud.firestore {
         || hasGrant('reportingArea', dataAreaId(data), permission);
     }
 
+    // A missing deadline retains existing behaviour during staged rollout.
+    // Once configured, non-admin contributors cannot mutate orders after cutoff.
+    // Admins can correct an order, but historical locks remain in force.
+    function orderEntryOpen(data) {
+      let deadlinePath = /databases/$(database)/documents/orderDeadlines/$(data.seasonId);
+      return isAdmin()
+        || (!exists(deadlinePath))
+        || (get(deadlinePath).data.enabled == true
+          && get(deadlinePath).data.deadlineAt is timestamp
+          && request.time <= get(deadlinePath).data.deadlineAt);
+    }
+
     function historicalLocked(data) {
       return data.seasonId in ['2024-25', '2025-26'];
     }
@@ -334,14 +346,22 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // DNS Admin manages seasonal order deadline; users can read it.
+    match /orderDeadlines/{seasonId} {
+      allow read: if activeUser();
+      allow create, update, delete: if isAdmin();
+    }
+
     // Operational order headers.
     match /ticketOrders/{document} {
       allow read: if hasOrderPermission('ticketOrders.read', resource.data);
 
       allow create: if validOrder(request.resource.data)
+        && orderEntryOpen(request.resource.data)
         && hasOrderPermission('ticketOrders.write', request.resource.data);
 
       allow update: if validOrder(request.resource.data)
+        && orderEntryOpen(request.resource.data)
         && resource.data.organizationId == request.resource.data.organizationId
         && resource.data.seasonId == request.resource.data.seasonId
         && resource.data.category == request.resource.data.category
@@ -362,11 +382,13 @@ service cloud.firestore {
       allow read: if hasOrderPermission('ticketOrders.read', resource.data);
 
       allow create: if validOrderLine(request.resource.data)
+        && orderEntryOpen(request.resource.data)
         && (hasOrderPermission('ticketOrders.write', request.resource.data) || canVerifyOrder(request.resource.data))
         && lineMatchesOrder(request.resource.data)
         && parentOrderEditableForLine(request.resource.data);
 
       allow update: if validOrderLine(request.resource.data)
+        && orderEntryOpen(request.resource.data)
         && resource.data.organizationId == request.resource.data.organizationId
         && resource.data.seasonId == request.resource.data.seasonId
         && resource.data.ticketOrderId == request.resource.data.ticketOrderId
@@ -377,6 +399,7 @@ service cloud.firestore {
 
       // Clearing a matrix cell deletes only that organization's own line.
       allow delete: if !historicalLocked(resource.data)
+        && orderEntryOpen(resource.data)
         && (hasOrderPermission('ticketOrders.write', resource.data) || canVerifyOrder(resource.data))
         && parentOrderEditableForLine(resource.data);
     }
