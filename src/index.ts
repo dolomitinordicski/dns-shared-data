@@ -58,3 +58,5 @@ export * from './partner-quality-criteria.js';
 
 export * from './public-widget.js';
 export * from './public-widget-publisher.js';
+
+export * from './area-admin-provisioning.js';
