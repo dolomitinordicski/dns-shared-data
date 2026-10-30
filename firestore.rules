@@ -139,7 +139,11 @@ service cloud.firestore {
 
     function hasOrderPermission(permission, data) {
       return isAdmin()
-        || (organizationToolAllows(data.organizationId, 'data-entry', permission.matches('.*\\.write
+        || (organizationToolAllows(data.organizationId, 'data-entry',
+              permission in ['ticketOrders.write', 'ticketSales.write', 'kp.write', 'pricing.manage'])
+          && (hasGrant('network', 'dolomiti-nordicski', permission)
+            || hasGrant('organization', data.organizationId, permission)
+            || hasGrant('reportingArea', dataAreaId(data), permission)));
     }
 
     // A missing deadline retains existing behaviour during staged rollout.
