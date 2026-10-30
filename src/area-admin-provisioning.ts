@@ -29,7 +29,7 @@ export function prepareAreaAdminProvisioning(input: AreaAdminProvisioningInput) 
     throw new Error('Organization not eligible for Area Admin');
   if (!REPORTING_AREAS.some(a => a.id === input.reportingAreaId && a.active))
     throw new Error('Unknown reporting area');
-  if (!organization.reportingAreaIds.includes(input.reportingAreaId))
+  if (!(organization.reportingAreaIds as readonly string[]).includes(input.reportingAreaId))
     throw new Error('Organization is not related to requested reporting area');
 
   const membershipId = `${input.uid}__${input.organizationId}`;
