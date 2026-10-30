@@ -33,6 +33,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Test canonical organization contacts
+        run: npm run test:organizations
+
       - name: Validate seed plan
         run: npm run seed:firebase
 
