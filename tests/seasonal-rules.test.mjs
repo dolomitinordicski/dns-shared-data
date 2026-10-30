@@ -23,7 +23,7 @@ try {
       await setDoc(doc(db,'accessGrants',`${uid}__organization__org`),{active:true,permissions});
     await setDoc(doc(db,'accessGrants','reader__reportingArea__area'),{active:true,permissions:['kp.read']});
     await setDoc(doc(db,'accessGrants','verifier__reportingArea__area'),{active:true,permissions:['kp.read','kp.verify','ticketOrders.read','ticketOrders.verify']});
-    await setDoc(doc(db,'accessGrants','flyerOwner__reportingArea__area'),{active:true,permissions:[]});
+    await setDoc(doc(db,'accessGrants','flyerOwner__reportingArea__area'),{active:true,permissions:['flyer.read','flyer.write']});
   });
   const admin=env.authenticatedContext('admin').firestore();
   const seller=env.authenticatedContext('seller').firestore();
@@ -359,6 +359,7 @@ try {
   };
   await assertSucceeds(setDoc(doc(flyerOwner,'flyerDocuments',flyerDraft.id),flyerDraft));
   await assertSucceeds(getDoc(doc(flyerOwner,'flyerDocuments',flyerDraft.id)));
+  await assertFails(getDoc(doc(flyerRogue,'flyerDocuments',flyerDraft.id)));
   await assertFails(setDoc(doc(flyerOwner,'flyerDocuments','flyer-area2-draft'),{
     ...flyerDraft,
     id:'flyer-area2-draft',
@@ -551,5 +552,5 @@ try {
 
   console.log('Faktura v2 rules passed: internal collections are admin-only, public token collection is not directly readable, and audit events are append-only.');
 
-  console.log('Seasonal rules passed: scoped reads/writes, sourced billing rates/extras, Flyer owner scope grants, legacy and unified revisioned billing snapshots, READY completeness guards, read-only users, immutable audit history, stale pricing and anonymous access.');
+  console.log('Seasonal rules passed: scoped reads/writes, sourced billing rates/extras, Flyer explicit read/write grants, legacy and unified revisioned billing snapshots, READY completeness guards, read-only users, immutable audit history, stale pricing and anonymous access.');
 } finally { await env.cleanup(); }
