@@ -299,6 +299,16 @@ try {
   const milestone={id:'2026-27__m1',seasonId:'2026-27',date:'2026-12-23',label:'Milestone 1',order:1,updatedBy:'admin',updatedAt:serverTimestamp()};
   await assertSucceeds(setDoc(doc(admin,'kpMilestones',milestone.id),milestone));
   await assertFails(setDoc(doc(seller,'kpMilestones','2026-27__m2'),{...milestone,id:'2026-27__m2',order:2,updatedBy:'seller'}));
+  // Existing KP regression now also exercises an explicitly configured W matrix.
+  await env.withSecurityRulesDisabled(async context => {
+    const db = context.firestore();
+    for (const uid of ['seller','reader']) {
+      await setDoc(doc(db,'memberships',uid+'__org'),{userId:uid,organizationId:'org',active:true});
+    }
+  });
+  const kpPolicy = level => ({organizationId:'org',tools:{'data-entry':level},updatedBy:'admin',updatedAt:serverTimestamp()});
+  const kpPolicyRef = doc(admin,'organizationToolAccess','org');
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('write')));
   const kpEntry={id:'2026-27__org',seasonId:'2026-27',entityType:'organization',entityId:'org',reportingAreaId:'area',referenceKm:{uniqueNetworkKm:20,potentialOperationalKm:25},milestones:[{milestoneId:milestone.id,openedKm:10,naturalSnowKm:6,artificialSnowKm:4}],includeInKp:true,exclusionReason:'',provenance:{sourceSystem:'manual-data-entry',methodVersion:1,dataStatus:'draft'},notes:'',revision:1,updatedBy:'seller',updatedAt:serverTimestamp()};
   await assertSucceeds(setDoc(doc(seller,'kpEntries',kpEntry.id),kpEntry));
   await assertSucceeds(getDoc(doc(reader,'kpEntries',kpEntry.id)));
@@ -306,6 +316,15 @@ try {
   await assertFails(setDoc(doc(seller,'kpEntries','2026-27__org-wrong'),{...kpEntry,id:'2026-27__org-wrong',reportingAreaId:'unrelated'}));
   const kpPrevious=(await getDoc(doc(seller,'kpEntries',kpEntry.id))).data();
   const kpBatch=writeBatch(seller);kpBatch.set(doc(seller,'kpEntries',kpEntry.id,'revisions','1'),kpPrevious);kpBatch.set(doc(seller,'kpEntries',kpEntry.id),{...kpEntry,revision:2,milestones:[{milestoneId:milestone.id,openedKm:11,naturalSnowKm:7,artificialSnowKm:4}]});await assertSucceeds(kpBatch.commit());
+  // W applies to the existing successful KP write; R denies writes despite grants.
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('read')));
+  await assertSucceeds(getDoc(doc(seller,'kpEntries',kpEntry.id)));
+  await assertFails(setDoc(doc(seller,'kpEntries',kpEntry.id),{...kpEntry,revision:3}));
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('none')));
+  await assertFails(getDoc(doc(reader,'kpEntries',kpEntry.id)));
+  await assertFails(getDoc(doc(seller,'kpEntries',kpEntry.id)));
+  await assertSucceeds(getDoc(doc(admin,'kpEntries',kpEntry.id)));
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('write')));
   const fairValidation={id:'2026-27__area__2026-27__m1',seasonId:'2026-27',reportingAreaId:'area',milestoneId:milestone.id,potentialOperationalKm:25,openedKm:11,naturalSnowKm:7,artificialSnowKm:4,revision:1,validatedBy:'verifier',validatedAt:serverTimestamp()};
   await assertFails(setDoc(doc(seller,'kpFairValidations',fairValidation.id),{...fairValidation,validatedBy:'seller'}));
   await assertSucceeds(setDoc(doc(verifier,'kpFairValidations',fairValidation.id),fairValidation));
