@@ -6,6 +6,9 @@ on:
     paths:
       - 'server/digital-pass-*.mjs'
       - 'server/firebase-entry.mjs'
+      - 'scripts/run-digital-pass-e2e.mjs'
+      - 'firebase.e2e.json'
+      - 'tools/digital-pass-e2e/**'
       - 'tests/digital-pass-*.test.mjs'
       - 'tests/helpers/digital-pass-*.mjs'
       - '.github/workflows/digital-pass.yml'
@@ -16,6 +19,9 @@ on:
       - 'tests/helpers/digital-pass-*.mjs'
       - 'src/access-control.ts'
       - 'server/firebase-entry.mjs'
+      - 'scripts/run-digital-pass-e2e.mjs'
+      - 'firebase.e2e.json'
+      - 'tools/digital-pass-e2e/**'
       - '.github/workflows/digital-pass.yml'
 permissions:
   contents: read
@@ -43,3 +49,27 @@ jobs:
       - run: npm install --prefix server --ignore-scripts --no-package-lock
       - run: node --input-type=module -e "await import('./server/firebase-entry.mjs')"
       - run: npx firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core "node --test tests/digital-pass-firestore.test.mjs"
+
+  http-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --ignore-scripts --no-package-lock
+      - run: npm install --prefix server --ignore-scripts --no-package-lock
+      - run: npm install --prefix tools/digital-pass-e2e --ignore-scripts --no-package-lock
+      - name: Synthetic Auth + Functions + Firestore HTTP acceptance
+        run: npm run test:digital-pass:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: digital-pass-http-e2e
+          path: .digital-pass-e2e/results/
+          if-no-files-found: warn
