@@ -47,7 +47,8 @@
     "test:collective-orders:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/collective-orders-rules.test.mjs\"",
     "test:system-releases:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/system-releases-rules.test.mjs\"",
     "release:system:validate": "tsx scripts/publish-system-release.ts",
-    "test:digital-pass:e2e": "node scripts/run-digital-pass-e2e.mjs"
+    "test:digital-pass:e2e": "node scripts/run-digital-pass-e2e.mjs",
+    "test:area-admin": "tsx --test tests/area-admin-provisioning.test.ts"
   },
   "devDependencies": {
     "firebase-admin": "^14.5.0",
