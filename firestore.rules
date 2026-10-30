@@ -143,6 +143,7 @@ service cloud.firestore {
       return policy == null
         || (member != null
           && member.data.active == true
+          && grantWithinDates(member.data)
           && (policy.data.tools.get('data-entry', 'none') == 'write'
             || (!write && policy.data.tools.get('data-entry', 'none') == 'read')));
     }
