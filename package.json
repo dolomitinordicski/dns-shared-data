@@ -225,6 +225,10 @@
     "./partner-quality-criteria": {
       "types": "./dist/partner-quality-criteria.d.ts",
       "import": "./dist/partner-quality-criteria.js"
+    },
+    "./tool-icons": {
+      "types": "./dist/tool-icons.d.ts",
+      "import": "./dist/tool-icons.js"
     }
   }
 }
