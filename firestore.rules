@@ -126,9 +126,12 @@ service cloud.firestore {
     // Missing policy keeps existing grants working during staged rollout.
     function dataEntryMatrixAllows(orgId, write) {
       let policyPath = /databases/$(database)/documents/organizationToolAccess/$(orgId);
+      let memberPath = /databases/$(database)/documents/memberships/$(request.auth.uid + '__' + orgId);
       return !exists(policyPath)
-        || (get(policyPath).data.tools.get('data-entry', 'none') == 'write'
-          || (!write && get(policyPath).data.tools.get('data-entry', 'none') == 'read'));
+        || (exists(memberPath)
+          && get(memberPath).data.active == true
+          && (get(policyPath).data.tools.get('data-entry', 'none') == 'write'
+            || (!write && get(policyPath).data.tools.get('data-entry', 'none') == 'read')));
     }
 
     function hasOrderPermission(permission, data) {
