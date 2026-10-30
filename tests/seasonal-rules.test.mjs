@@ -47,6 +47,18 @@ try {
   await assertSucceeds(setDoc(doc(verifier,'ticketOrders',pocketfolderOrder.id),{...pocketfolderOrder,status:'draft'}));
   await assertSucceeds(setDoc(doc(verifier,'ticketOrderLines',line.id),{...line,quantity:12}));
 
+  // Closing the season stops all contributor mutations, but reads remain open.
+  await assertFails(setDoc(doc(seller,'orderDeadlines','2026-27'),{enabled:true}));
+  await assertSucceeds(setDoc(doc(admin,'orderDeadlines','2026-27'),{
+    enabled:true, deadlineAt: new Date('2020-01-01T00:00:00Z'),
+  }));
+  await assertSucceeds(getDoc(doc(seller,'ticketOrders',pocketfolderOrder.id)));
+  await assertFails(setDoc(doc(seller,'ticketOrders',pocketfolderOrder.id),{...pocketfolderOrder,status:'submitted'}));
+  await assertFails(setDoc(doc(seller,'ticketOrderLines',line.id),{...line,quantity:24}));
+  await assertFails(deleteDoc(doc(seller,'ticketOrderLines',line.id)));
+  await assertSucceeds(setDoc(doc(admin,'ticketOrderLines',line.id),{...line,quantity:24}));
+  await assertSucceeds(deleteDoc(doc(admin,'orderDeadlines','2026-27')));
+
   const billingRate={
     id:'2026-27__order__item',
     seasonId:'2026-27',
