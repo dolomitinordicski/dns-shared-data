@@ -917,6 +917,67 @@ service cloud.firestore {
       }
     }
 
+    function qualityCan(permission, data) {
+      return isAdmin() || (
+        dataEntryMatrixAllows(data.organizationId, permission == 'kp.write')
+        && (hasGrant('organization', data.organizationId, permission)
+          || hasGrant('reportingArea', data.reportingAreaId, permission)
+          || hasGrant('network', 'dolomiti-nordicski', permission))
+      );
+    }
+
+    function qualityValid(d) {
+      return !historicalLocked(d)
+        && d.keys().hasOnly(['id','seasonId','reportingAreaId','organizationId','trackName',
+          'totalKm','earlyDecember','earlyDecemberKm','lateDecember','lateDecemberKm',
+          'closedAt','notes','revision','provenance','updatedBy','updatedAt'])
+        && d.id is string && d.seasonId is string && d.organizationId is string
+        && d.reportingAreaId is string
+        && exists(/databases/$(database)/documents/seasons/$(d.seasonId))
+        && exists(/databases/$(database)/documents/organizations/$(d.organizationId))
+        && d.reportingAreaId in get(/databases/$(database)/documents/organizations/$(d.organizationId)).data.reportingAreaIds
+        && d.trackName is string && d.trackName.size() > 0
+        && d.totalKm is number && d.totalKm > 0
+        && d.earlyDecember in ['yes','partial','no','unreported']
+        && d.lateDecember in ['yes','partial','no','unreported']
+        && (d.earlyDecember != 'partial' && d.earlyDecemberKm == null
+          || d.earlyDecember == 'partial' && d.earlyDecemberKm is number
+          && d.earlyDecemberKm > 0 && d.earlyDecemberKm <= d.totalKm)
+        && (d.lateDecember != 'partial' && d.lateDecemberKm == null
+          || d.lateDecember == 'partial' && d.lateDecemberKm is number
+          && d.lateDecemberKm > 0 && d.lateDecemberKm <= d.totalKm)
+        && d.closedAt is string && d.notes is string
+        && d.revision is int && d.revision >= 1
+        && d.provenance.sourceSystem == 'manual-data-entry'
+        && d.provenance.methodVersion == 1 && d.provenance.dataStatus == 'draft'
+        && d.updatedBy == request.auth.uid && d.updatedAt == request.time;
+    }
+
+    match /trackQualityReports/{document} {
+      allow read: if qualityCan('kp.read', resource.data);
+      allow create: if qualityValid(request.resource.data)
+        && qualityCan('kp.write', request.resource.data)
+        && request.resource.data.id == document
+        && request.resource.data.revision == 1;
+      allow update: if qualityValid(request.resource.data)
+        && qualityCan('kp.write', resource.data)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.seasonId == resource.data.seasonId
+        && request.resource.data.organizationId == resource.data.organizationId
+        && request.resource.data.reportingAreaId == resource.data.reportingAreaId
+        && resource.data.provenance.dataStatus == 'draft'
+        && request.resource.data.revision == resource.data.revision + 1
+        && archived('trackQualityReports', document);
+      allow delete: if false;
+      match /revisions/{revision} {
+        allow read: if qualityCan('kp.read', get(/databases/$(database)/documents/trackQualityReports/$(document)).data);
+        allow create: if qualityCan('kp.write', get(/databases/$(database)/documents/trackQualityReports/$(document)).data)
+          && request.resource.data == get(/databases/$(database)/documents/trackQualityReports/$(document)).data
+          && getAfter(/databases/$(database)/documents/trackQualityReports/$(document)).data.revision == request.resource.data.revision + 1;
+        allow update, delete: if false;
+      }
+    }
+
     match /kpEntries/{document} {
       allow read: if hasKpPermission('kp.read',resource.data);
       allow create: if validKpEntry(request.resource.data)

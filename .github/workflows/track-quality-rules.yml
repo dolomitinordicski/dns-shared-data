@@ -1,0 +1,30 @@
+name: Track Quality Firestore Rules
+on:
+  pull_request:
+    paths:
+      - 'firestore.rules'
+      - 'tests/track-quality-rules.test.mjs'
+      - 'tests/fixtures/virtual-dns-area.mjs'
+      - 'firebase.track-quality-emulator.json'
+      - '.github/workflows/track-quality-rules.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  track-quality-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --no-audit --no-fund
+      - name: Run synthetic isolated Firestore rule tests
+        env:
+          GCLOUD_PROJECT: demo-dns-identity
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8188
+        run: npx firebase-tools emulators:exec --config firebase.track-quality-emulator.json --only firestore --project demo-dns-identity "node --test tests/track-quality-rules.test.mjs"
