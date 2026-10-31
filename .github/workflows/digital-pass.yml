@@ -9,6 +9,8 @@ on:
       - 'scripts/run-digital-pass-e2e.mjs'
       - 'firebase.e2e.json'
       - 'tools/digital-pass-e2e/**'
+      - 'tests/qr/**'
+      - 'tests/fixtures/digital-pass-qr-*.json'
       - 'tests/digital-pass-*.test.mjs'
       - 'tests/helpers/digital-pass-*.mjs'
       - '.github/workflows/digital-pass.yml'
@@ -22,6 +24,8 @@ on:
       - 'scripts/run-digital-pass-e2e.mjs'
       - 'firebase.e2e.json'
       - 'tools/digital-pass-e2e/**'
+      - 'tests/qr/**'
+      - 'tests/fixtures/digital-pass-qr-*.json'
       - '.github/workflows/digital-pass.yml'
 permissions:
   contents: read
@@ -47,10 +51,27 @@ jobs:
           java-version: '21'
       - run: npm install --ignore-scripts --no-package-lock
       - run: npm install --prefix server --ignore-scripts --no-package-lock
+      - run: npm run build:package
+      - run: npm run typecheck
       - run: node --input-type=module -e "await import('./server/firebase-entry.mjs')"
       - run: npx firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core "node --test tests/digital-pass-firestore.test.mjs"
 
+  qr-renderer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --prefix tools/digital-pass-e2e --ignore-scripts --no-package-lock
+      - run: node --test tests/qr/digital-pass-rendered-qr.test.mjs
+
   http-e2e:
+    strategy:
+      fail-fast: false
+      matrix:
+        repetition: [1, 2, 3]
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -70,6 +91,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: digital-pass-http-e2e
+          name: digital-pass-http-e2e-${{ matrix.repetition }}
           path: .digital-pass-e2e/results/
           if-no-files-found: warn
