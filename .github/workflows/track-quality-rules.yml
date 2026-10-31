@@ -22,7 +22,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Run synthetic isolated Firestore rule tests
         env:
           GCLOUD_PROJECT: demo-dns-identity
