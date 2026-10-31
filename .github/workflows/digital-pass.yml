@@ -9,7 +9,11 @@ on:
       - 'scripts/run-digital-pass-e2e.mjs'
       - 'firebase.e2e.json'
       - 'tools/digital-pass-e2e/**'
+      - 'tools/digital-pass-staging/**'
+      - 'server/firebase-staging-entry.mjs'
+      - 'scripts/prepare-digital-pass-staging.mjs'
       - 'tests/qr/**'
+      - 'tests/staging/**'
       - 'tests/fixtures/digital-pass-qr-*.json'
       - 'tests/digital-pass-*.test.mjs'
       - 'tests/helpers/digital-pass-*.mjs'
@@ -24,7 +28,11 @@ on:
       - 'scripts/run-digital-pass-e2e.mjs'
       - 'firebase.e2e.json'
       - 'tools/digital-pass-e2e/**'
+      - 'tools/digital-pass-staging/**'
+      - 'server/firebase-staging-entry.mjs'
+      - 'scripts/prepare-digital-pass-staging.mjs'
       - 'tests/qr/**'
+      - 'tests/staging/**'
       - 'tests/fixtures/digital-pass-qr-*.json'
       - '.github/workflows/digital-pass.yml'
 permissions:
@@ -92,5 +100,33 @@ jobs:
         if: always()
         with:
           name: digital-pass-http-e2e-${{ matrix.repetition }}
+          path: .digital-pass-e2e/results/
+          if-no-files-found: warn
+
+  staging-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --ignore-scripts --no-package-lock
+      - run: npm install --prefix tools/digital-pass-e2e --ignore-scripts --no-package-lock
+      - run: node scripts/prepare-digital-pass-staging.mjs demo-dns-pass-staging-c1 --emulator
+      - run: npm ci --prefix .digital-pass-staging/server --ignore-scripts
+      - run: node --test tests/staging/digital-pass-export.test.mjs
+      - name: Isolated staging export with demo project and synthetic inventory only
+        run: npm run test:digital-pass:e2e
+        env:
+          DNS_PASS_E2E_STAGING: 'true'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: digital-pass-staging-emulator
           path: .digital-pass-e2e/results/
           if-no-files-found: warn
