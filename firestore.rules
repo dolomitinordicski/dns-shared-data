@@ -917,22 +917,26 @@ service cloud.firestore {
       }
     }
 
-    // Seasonal declarations are separate from automatic daily Loipen history.
+    function trackQualityAllowed(permission, data) {
+      return isAdmin()
+        || (dataEntryMatrixAllows(data.organizationId, permission == 'kp.write')
+          && (hasGrant('organization', data.organizationId, permission)
+            || hasGrant('reportingArea', data.reportingAreaId, permission)
+            || hasGrant('network', 'dolomiti-nordicski', permission)));
+    }
+
     function validTrackQuality(data) {
-      return data.keys().hasOnly([
-          'id','seasonId','reportingAreaId','organizationId','trackName','totalKm',
-          'earlyDecember','earlyDecemberKm','lateDecember','lateDecemberKm',
-          'closedAt','notes','revision','provenance','updatedAt','updatedBy'
-        ])
-        && !historicalLocked(data)
-        && data.id is string
-        && data.seasonId is string
+      return !historicalLocked(data)
+        && data.keys().hasOnly(['id','seasonId','reportingAreaId','organizationId',
+          'trackName','totalKm','earlyDecember','earlyDecemberKm',
+          'lateDecember','lateDecemberKm','closedAt','notes',
+          'revision','provenance','updatedBy','updatedAt'])
+        && data.id is string && data.seasonId is string
+        && data.organizationId is string && data.reportingAreaId is string
         && exists(/databases/$(database)/documents/seasons/$(data.seasonId))
-        && data.organizationId is string
         && exists(/databases/$(database)/documents/organizations/$(data.organizationId))
-        && data.reportingAreaId is string
         && data.reportingAreaId in get(/databases/$(database)/documents/organizations/$(data.organizationId)).data.reportingAreaIds
-        && data.id.matches('^' + data.seasonId + '__' + data.reportingAreaId + '__' + data.organizationId + '__[a-zA-Z0-9-]+
+        && data.id.matches('^' + data.seasonId + '__' + data.reportingAreaId + '__' + data.organizationId + '__[0-9a-f-]+
       allow read: if hasKpPermission('kp.read',resource.data);
       allow create: if validKpEntry(request.resource.data)
         && hasKpPermission('kp.write',request.resource.data)
@@ -1261,52 +1265,34 @@ service cloud.firestore {
         && data.totalKm is number && data.totalKm > 0 && data.totalKm <= 1000
         && data.earlyDecember in ['yes','partial','no','unreported']
         && data.lateDecember in ['yes','partial','no','unreported']
-        && ((data.earlyDecember == 'partial'
-          && data.earlyDecemberKm is number && data.earlyDecemberKm > 0 && data.earlyDecemberKm <= data.totalKm)
-          || (data.earlyDecember != 'partial' && data.earlyDecemberKm == null))
-        && ((data.lateDecember == 'partial'
-          && data.lateDecemberKm is number && data.lateDecemberKm > 0 && data.lateDecemberKm <= data.totalKm)
-          || (data.lateDecember != 'partial' && data.lateDecemberKm == null))
-        && data.closedAt is string && data.closedAt.size() <= 10
-        && data.notes is string && data.notes.size() <= 3000
+        && (data.earlyDecember == 'partial' ? (data.earlyDecemberKm is number && data.earlyDecemberKm > 0 && data.earlyDecemberKm <= data.totalKm) : data.earlyDecemberKm == null)
+        && (data.lateDecember == 'partial' ? (data.lateDecemberKm is number && data.lateDecemberKm > 0 && data.lateDecemberKm <= data.totalKm) : data.lateDecemberKm == null)
+        && data.closedAt is string && data.notes is string
+        && data.revision is int && data.revision >= 1
         && data.provenance.sourceSystem == 'manual-data-entry'
-        && data.provenance.methodVersion == 1
         && data.provenance.dataStatus == 'draft'
-        && data.updatedBy == request.auth.uid
-        && data.updatedAt == request.time
-        && data.revision is int && data.revision >= 1;
-    }
-
-    function trackQualityPermission(permission, data) {
-      return hasKpPermission(permission, {
-        'entityType': 'organization',
-        'entityId': data.organizationId,
-        'reportingAreaId': data.reportingAreaId
-      });
+        && data.provenance.methodVersion == 1
+        && data.updatedBy == request.auth.uid && data.updatedAt == request.time;
     }
 
     match /trackQualityReports/{document} {
-      allow read: if trackQualityPermission('kp.read', resource.data);
+      allow read: if trackQualityAllowed('kp.read', resource.data);
       allow create: if validTrackQuality(request.resource.data)
-        && trackQualityPermission('kp.write', request.resource.data)
-        && request.resource.data.id == document
-        && request.resource.data.revision == 1;
+        && trackQualityAllowed('kp.write', request.resource.data)
+        && request.resource.data.id == document && request.resource.data.revision == 1;
       allow update: if validTrackQuality(request.resource.data)
-        && trackQualityPermission('kp.write', resource.data)
+        && trackQualityAllowed('kp.write', resource.data)
         && request.resource.data.id == resource.data.id
         && request.resource.data.seasonId == resource.data.seasonId
         && request.resource.data.reportingAreaId == resource.data.reportingAreaId
         && request.resource.data.organizationId == resource.data.organizationId
         && resource.data.provenance.dataStatus == 'draft'
         && request.resource.data.revision == resource.data.revision + 1
-        && archived('trackQualityReports',document);
+        && archived('trackQualityReports', document);
       allow delete: if false;
-
       match /revisions/{revision} {
-        allow read: if trackQualityPermission('kp.read',
-          get(/databases/$(database)/documents/trackQualityReports/$(document)).data);
-        allow create: if trackQualityPermission('kp.write',
-            get(/databases/$(database)/documents/trackQualityReports/$(document)).data)
+        allow read: if trackQualityAllowed('kp.read', get(/databases/$(database)/documents/trackQualityReports/$(document)).data);
+        allow create: if trackQualityAllowed('kp.write', get(/databases/$(database)/documents/trackQualityReports/$(document)).data)
           && request.resource.data == get(/databases/$(database)/documents/trackQualityReports/$(document)).data
           && getAfter(/databases/$(database)/documents/trackQualityReports/$(document)).data.revision == request.resource.data.revision + 1;
         allow update, delete: if false;
