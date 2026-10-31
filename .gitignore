@@ -11,3 +11,6 @@ firebase-adminsdk*.json
 .digital-pass-e2e/
 .firebase/
 *-debug.log
+
+# Materialized staging proposal, never a production source
+.digital-pass-staging/

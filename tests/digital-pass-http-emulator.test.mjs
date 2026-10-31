@@ -4,7 +4,9 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {createRequire} from 'node:module';
 const mode=process.env.DNS_PASS_E2E_MODE;
-const project='demo-dns-core';
+const staging=process.env.DNS_PASS_E2E_STAGING==='true';
+const project=staging?'demo-dns-pass-staging-c1':'demo-dns-core';
+const inventoryRevision=staging?'synthetic-staging-v1':'synthetic-http-e2e';
 const origin='http://127.0.0.1:5179';
 const functionBase='http://127.0.0.1:5101/'+project+'/europe-west8/digitalPassApi';
 const records=[];
@@ -70,7 +72,7 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
     await db.collection('accessGrants').doc(uid+'-grant').set({userId:uid,scopeType:'organization',scopeId:org,permissions,active:true});
    }
    await db.collection('users').doc('test-admin').set({active:true,globalRoles:['dns-admin']});
-   await db.collection('passInventorySnapshots').doc('synthetic-http-e2e').set({approved:true,revision:'synthetic-http-e2e',seasonId:'2026-27',rows:[
+   await db.collection('passInventorySnapshots').doc(inventoryRevision).set({...staging?{schema:'dns.digital-pass-inventory.v1',synthetic:true}:{},approved:true,revision:inventoryRevision,seasonId:'2026-27',rows:[
     {itemCode:'sk-dns',organizationId:'synthetic-org-a',from:1,to:20},
     {itemCode:'sk-dns',organizationId:'synthetic-org-b',from:21,to:30},
    ]});
