@@ -1102,17 +1102,14 @@ service cloud.firestore {
 
     // DNS Flyer Studio working documents.
     match /flyerDocuments/{document} {
-      allow read: if activeUser() && (
-        (resource.data.ownerUserId == request.auth.uid
-          && canOwnFlyerScope(resource.data))
-        || hasFlyerPermission('flyer.read', resource.data)
-      );
+      allow read: if activeUser()
+        && hasFlyerPermission('flyer.read', resource.data);
 
       allow create: if activeUser()
         && validFlyerDocument(request.resource.data)
         && request.resource.data.id == document
         && request.resource.data.ownerUserId == request.auth.uid
-        && canOwnFlyerScope(request.resource.data);
+        && hasFlyerPermission('flyer.write', request.resource.data);
 
       allow update: if activeUser()
         && validFlyerDocument(request.resource.data)
@@ -1121,16 +1118,10 @@ service cloud.firestore {
         && request.resource.data.scopeId == resource.data.scopeId
         && request.resource.data.seasonId == resource.data.seasonId
         && request.resource.data.ownerUserId == resource.data.ownerUserId
-        && (
-          (resource.data.ownerUserId == request.auth.uid
-            && canOwnFlyerScope(resource.data))
-          || hasFlyerPermission('flyer.write', resource.data)
-        );
+        && hasFlyerPermission('flyer.write', resource.data);
 
-      allow delete: if isAdmin()
-        || (activeUser()
-          && resource.data.ownerUserId == request.auth.uid
-          && canOwnFlyerScope(resource.data));
+      allow delete: if activeUser()
+        && hasFlyerPermission('flyer.write', resource.data);
     }
 
     // Immutable publication snapshots. Published records are append-only.
