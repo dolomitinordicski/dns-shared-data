@@ -4,6 +4,7 @@ on:
     paths:
       - 'firestore.rules'
       - 'tests/track-quality-rules.test.mjs'
+      - 'tests/data-entry-area-grants.test.mjs'
       - 'tests/fixtures/virtual-dns-area.mjs'
       - 'firebase.track-quality-emulator.json'
       - '.github/workflows/track-quality-rules.yml'
@@ -27,4 +28,4 @@ jobs:
         env:
           GCLOUD_PROJECT: demo-dns-identity
           FIRESTORE_EMULATOR_HOST: 127.0.0.1:8188
-        run: npx firebase-tools emulators:exec --config firebase.track-quality-emulator.json --only firestore --project demo-dns-identity "node --test tests/track-quality-rules.test.mjs"
+        run: npx firebase-tools emulators:exec --config firebase.track-quality-emulator.json --only firestore --project demo-dns-identity "node --test --test-concurrency=1 tests/track-quality-rules.test.mjs tests/data-entry-area-grants.test.mjs"
