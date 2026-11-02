@@ -377,7 +377,7 @@ try {
   await assertSucceeds(setDoc(doc(flyerOwner,'flyerDocuments',flyerDraft.id),flyerDraft));
   await assertSucceeds(getDoc(doc(flyerOwner,'flyerDocuments',flyerDraft.id)));
   // Matches Flyer Studio's actual saved-document list query, not only document lookup.
-  await assertSucceeds(getDocs(query(collection(flyerOwner,'flyerDocuments'),where('ownerUserId','==','flyerOwner'))));
+  await assertSucceeds(getDocs(query(collection(flyerOwner,'flyerDocuments'),where('ownerUserId','==','flyerOwner'),where('scopeType','==','reportingArea'),where('scopeId','==','area'))));
   await assertFails(getDoc(doc(flyerRogue,'flyerDocuments',flyerDraft.id)));
   await assertSucceeds(getDoc(doc(flyerReader,'flyerDocuments',flyerDraft.id)));
   await assertFails(setDoc(doc(flyerReader,'flyerDocuments',flyerDraft.id),{...flyerDraft,title:'Read-only overwrite'}));
