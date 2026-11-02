@@ -34,6 +34,11 @@ before(async () => {
   });
 });
 after(async () => {if(env) await env.cleanup();});
+test('transaction can read its absent document before first create',async()=>{
+  const db=env.authenticatedContext(U.writer).firestore();
+  const id=entry(orgs[0],U.writer).id.replace('12345678-1234-1234-1234-123456789abc','new-synthetic');
+  await assertSucceeds(getDoc(doc(db,'trackQualityReports',id)));
+});
 test('W allows scoped create, read and archived update',async()=>{
   const db=env.authenticatedContext(U.writer).firestore(), val=entry(orgs[0],U.writer);
   const ref=doc(db,'trackQualityReports',val.id);
