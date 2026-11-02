@@ -17,6 +17,7 @@ try {
     await setDoc(doc(db,'users','flyerDisabled'),{active:false,globalRoles:[]});
     await setDoc(doc(db,'users','flyerNoGrant'),{active:true,globalRoles:[]});
     await setDoc(doc(db,'users','flyerOrg'),{active:true,globalRoles:[]});
+    await setDoc(doc(db,'users','flyerWriter'),{active:true,globalRoles:[]});
     await setDoc(doc(db,'seasons','2026-27'),{status:'active'});
     await setDoc(doc(db,'seasons','2024-25'),{status:'historical'});
     await setDoc(doc(db,'reportingAreas','area'),{canonicalName:'Area'});
@@ -33,6 +34,7 @@ try {
     await setDoc(doc(db,'accessGrants','flyerOtherArea__reportingArea__area2'),{active:true,permissions:['flyer.read','flyer.write']});
     await setDoc(doc(db,'accessGrants','flyerDisabled__reportingArea__area'),{active:true,permissions:['flyer.read','flyer.write']});
     await setDoc(doc(db,'accessGrants','flyerOrg__organization__org'),{active:true,permissions:['flyer.read','flyer.write']});
+    await setDoc(doc(db,'accessGrants','flyerWriter__reportingArea__area'),{active:true,permissions:['flyer.write']});
   });
   const admin=env.authenticatedContext('admin').firestore();
   const seller=env.authenticatedContext('seller').firestore();
@@ -45,6 +47,7 @@ try {
   const flyerDisabled=env.authenticatedContext('flyerDisabled').firestore();
   const flyerNoGrant=env.authenticatedContext('flyerNoGrant').firestore();
   const flyerOrg=env.authenticatedContext('flyerOrg').firestore();
+  const flyerWriter=env.authenticatedContext('flyerWriter').firestore();
   await assertSucceeds(getDoc(doc(seller,'deliveryLocations','delivery-org')));
   await assertSucceeds(getDoc(doc(reader,'deliveryLocations','delivery-org')));
   await assertSucceeds(getDoc(doc(reader,'pocketfolderSourceRows','2026-27__source-row-06')));
@@ -386,6 +389,7 @@ try {
   await assertFails(setDoc(doc(flyerOwner,'flyerDocuments',flyerDraft.id),{...flyerDraft,scopeId:'area2'}));
   await assertSucceeds(setDoc(doc(flyerOrg,'flyerDocuments','flyer-org'),{...flyerDraft,id:'flyer-org',scopeType:'organization',scopeId:'org',ownerUserId:'flyerOrg',updatedBy:'flyerOrg'}));
   await assertFails(getDoc(doc(flyerOtherArea,'flyerDocuments','flyer-org')));
+  await assertFails(getDoc(doc(flyerWriter,'flyerDocuments',flyerDraft.id)));
   await assertFails(setDoc(doc(flyerOwner,'flyerDocuments','flyer-area2-draft'),{
     ...flyerDraft,
     id:'flyer-area2-draft',
