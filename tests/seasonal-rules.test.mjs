@@ -12,6 +12,9 @@ try {
     await setDoc(doc(db,'users','verifier'),{active:true,globalRoles:[]});
     await setDoc(doc(db,'users','flyerOwner'),{active:true,globalRoles:[]});
     await setDoc(doc(db,'users','flyerRogue'),{active:true,globalRoles:[]});
+    await setDoc(doc(db,'users','flyerReader'),{active:true,globalRoles:[]});
+    await setDoc(doc(db,'users','flyerOtherArea'),{active:true,globalRoles:[]});
+    await setDoc(doc(db,'users','flyerDisabled'),{active:false,globalRoles:[]});
     await setDoc(doc(db,'seasons','2026-27'),{status:'active'});
     await setDoc(doc(db,'seasons','2024-25'),{status:'historical'});
     await setDoc(doc(db,'reportingAreas','area'),{canonicalName:'Area'});
@@ -24,6 +27,9 @@ try {
     await setDoc(doc(db,'accessGrants','reader__reportingArea__area'),{active:true,permissions:['kp.read']});
     await setDoc(doc(db,'accessGrants','verifier__reportingArea__area'),{active:true,permissions:['kp.read','kp.verify','ticketOrders.read','ticketOrders.verify']});
     await setDoc(doc(db,'accessGrants','flyerOwner__reportingArea__area'),{active:true,permissions:['flyer.read','flyer.write']});
+    await setDoc(doc(db,'accessGrants','flyerReader__reportingArea__area'),{active:true,permissions:['flyer.read']});
+    await setDoc(doc(db,'accessGrants','flyerOtherArea__reportingArea__area2'),{active:true,permissions:['flyer.read','flyer.write']});
+    await setDoc(doc(db,'accessGrants','flyerDisabled__reportingArea__area'),{active:true,permissions:['flyer.read','flyer.write']});
   });
   const admin=env.authenticatedContext('admin').firestore();
   const seller=env.authenticatedContext('seller').firestore();
@@ -31,6 +37,9 @@ try {
   const verifier=env.authenticatedContext('verifier').firestore();
   const flyerOwner=env.authenticatedContext('flyerOwner').firestore();
   const flyerRogue=env.authenticatedContext('flyerRogue').firestore();
+  const flyerReader=env.authenticatedContext('flyerReader').firestore();
+  const flyerOtherArea=env.authenticatedContext('flyerOtherArea').firestore();
+  const flyerDisabled=env.authenticatedContext('flyerDisabled').firestore();
   await assertSucceeds(getDoc(doc(seller,'deliveryLocations','delivery-org')));
   await assertSucceeds(getDoc(doc(reader,'deliveryLocations','delivery-org')));
   await assertSucceeds(getDoc(doc(reader,'pocketfolderSourceRows','2026-27__source-row-06')));
@@ -360,6 +369,13 @@ try {
   await assertSucceeds(setDoc(doc(flyerOwner,'flyerDocuments',flyerDraft.id),flyerDraft));
   await assertSucceeds(getDoc(doc(flyerOwner,'flyerDocuments',flyerDraft.id)));
   await assertFails(getDoc(doc(flyerRogue,'flyerDocuments',flyerDraft.id)));
+  await assertSucceeds(getDoc(doc(flyerReader,'flyerDocuments',flyerDraft.id)));
+  await assertFails(setDoc(doc(flyerReader,'flyerDocuments',flyerDraft.id),{...flyerDraft,title:'Read-only overwrite'}));
+  await assertFails(deleteDoc(doc(flyerReader,'flyerDocuments',flyerDraft.id)));
+  await assertFails(getDoc(doc(flyerOtherArea,'flyerDocuments',flyerDraft.id)));
+  await assertFails(setDoc(doc(flyerOtherArea,'flyerDocuments',flyerDraft.id),{...flyerDraft,title:'Foreign area overwrite'}));
+  await assertFails(getDoc(doc(flyerDisabled,'flyerDocuments',flyerDraft.id)));
+  await assertFails(setDoc(doc(flyerDisabled,'flyerDocuments',flyerDraft.id),{...flyerDraft,title:'Disabled overwrite'}));
   await assertFails(setDoc(doc(flyerOwner,'flyerDocuments','flyer-area2-draft'),{
     ...flyerDraft,
     id:'flyer-area2-draft',
