@@ -9,14 +9,14 @@ before(async()=>{
   await env.clearFirestore();await env.withSecurityRulesDisabled(async c=>{
     const put=(p,d)=>setDoc(doc(c.firestore(),p),d);
     await put(`users/${uid}`,{active:true,globalRoles:[]});
-    await put(`accessGrants/${uid}__reportingArea__${area}`,{active:true,permissions:['kp.read','kp.write','pricing.read','ticketSales.read']});
+    await put(`accessGrants/${uid}__reportingArea__${area}`,{active:true,permissions:['kp.read','kp.write','pricing.read','ticketSales.read','ticketSales.write']});
     await put(`memberships/${uid}__${own}`,{active:true,userId:uid,organizationId:own});
     await put('seasons/2026-27',{status:'active'});
     for(const m of [1,2,3]) await put(`kpMilestones/2026-27__m${m}`,{seasonId:'2026-27'});
     for(const org of [own,foreign]){
       await put(`organizations/${org}`,{reportingAreaIds:[area]});
       await put(`organizationToolAccess/${org}`,{organizationId:org,tools:{'data-entry':'write'}});
-      await put(`ticketPricingConfigs/${org}`,{scopeType:'organization',scopeId:org,seasonId:'2026-27',unitPrice:10});
+      await put(`ticketPricingConfigs/${org}`,{scopeType:'organization',scopeId:org,seasonId:'2026-27',unitPrice:10,settlementUnitPrice:10,active:true,productCode:'day',salesChannel:'official',salesPeriod:'regular'});
     }
     await put('users/dns-test-org-account',{active:true,globalRoles:[]});
     await put(`memberships/dns-test-org-account__${foreign}`,{active:true,userId:'dns-test-org-account',organizationId:foreign});
@@ -52,6 +52,18 @@ test('none policy still denies own organization despite territorial grant',async
   const db=env.authenticatedContext(uid).firestore();
   await assertFails(getDoc(doc(db,'ticketPricingConfigs',own)));
   await assertFails(getDoc(doc(db,'kpEntries',`2026-27__${own}`)));
+});
+test('W Area Admin sales with private organization pricing support zero and archived correction',async()=>{
+  await env.withSecurityRulesDisabled(c=>setDoc(doc(c.firestore(),'organizationToolAccess',own),{organizationId:own,tools:{'data-entry':'write'}}));
+  const db=env.authenticatedContext(uid).firestore();const id=`2026-27__${own}__${area}__day__official__regular`;
+  const value={id,draftKey:'dns-test-area-sale',seasonId:'2026-27',organizationId:own,reportingAreaId:area,
+    productCode:'day',salesChannel:'official',salesPeriod:'regular',quantity:0,amountOverride:null,amountOverrideReason:'',
+    pricing:{pricingConfigId:own,unitPrice:10,settlementUnitPrice:10,currency:'EUR'},calculatedAmount:0,revision:1,
+    provenance:{sourceSystem:'manual-data-entry',methodVersion:1,dataStatus:'draft'},updatedBy:uid,updatedAt:serverTimestamp()};
+  const ref=doc(db,'ticketSales',id);await assertSucceeds(setDoc(ref,value));
+  const previous=(await getDoc(ref)).data();const batch=writeBatch(db);
+  batch.set(doc(ref,'revisions','1'),previous);batch.set(ref,{...value,quantity:2,calculatedAmount:20,revision:2});
+  await assertSucceeds(batch.commit());
 });
 test('direct organization W grant also supports three milestones and archived corrections',async()=>{
   const db=env.authenticatedContext('dns-test-org-account').firestore();const id=`2026-27__${foreign}`;
