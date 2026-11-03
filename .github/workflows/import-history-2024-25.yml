@@ -12,6 +12,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   import:
+    environment:
+      name: production-dns-core
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
