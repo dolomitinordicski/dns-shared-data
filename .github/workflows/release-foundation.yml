@@ -13,6 +13,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   release:
+    environment:
+      name: production-dns-core
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.release.outputs.tag }}
