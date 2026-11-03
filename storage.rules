@@ -1,0 +1,70 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profile() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function activeUser() {
+      return signedIn()
+        && profile().active == true;
+    }
+
+    function isAdmin() {
+      return activeUser()
+        && profile().globalRoles is list
+        && 'dns-admin' in profile().globalRoles;
+    }
+
+    function grant(areaId) {
+      return firestore.get(/databases/(default)/documents/accessGrants/$(request.auth.uid + '__reportingArea__' + areaId)).data;
+    }
+
+    function grantWithinDates(areaId) {
+      return (!grant(areaId).keys().hasAny(['validFrom'])
+          || (grant(areaId).validFrom is string
+            && request.time >= timestamp.value(grant(areaId).validFrom)))
+        && (!grant(areaId).keys().hasAny(['validTo'])
+          || (grant(areaId).validTo is string
+            && request.time <= timestamp.value(grant(areaId).validTo)));
+    }
+
+    function hasAreaPermission(ownerUid, areaId, permission) {
+      return activeUser()
+        && request.auth.uid == ownerUid
+        && areaId.size() > 0
+        && grant(areaId).active == true
+        && grantWithinDates(areaId)
+        && grant(areaId).permissions is list
+        && permission in grant(areaId).permissions;
+    }
+
+    function validJpegUpload(fileName) {
+      return request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= 12 * 1024 * 1024
+        && request.resource.contentType == 'image/jpeg'
+        && fileName.size() > 4
+        && fileName.size() <= 140
+        && fileName.matches('^[A-Za-z0-9_.-]+\\.jpg$');
+    }
+
+    match /flyerAssets/{ownerUid}/{areaId}/{fileName} {
+      allow read: if isAdmin()
+        || hasAreaPermission(ownerUid, areaId, 'flyer.read');
+
+      allow write: if (isAdmin()
+          || hasAreaPermission(ownerUid, areaId, 'flyer.write'))
+        && (request.resource == null || validJpegUpload(fileName));
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
