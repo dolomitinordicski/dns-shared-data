@@ -9,6 +9,8 @@ permissions:
 
 jobs:
   seed:
+    environment:
+      name: production-dns-core
     runs-on: ubuntu-latest
     env:
       FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
