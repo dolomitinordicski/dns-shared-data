@@ -1,0 +1,78 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profile() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid));
+    }
+
+    function activeUser() {
+      return signedIn()
+        && profile() != null
+        && profile().data.active == true;
+    }
+
+    function isAdmin() {
+      return activeUser()
+        && profile().data.globalRoles is list
+        && 'dns-admin' in profile().data.globalRoles;
+    }
+
+    function grant(areaId) {
+      return firestore.get(/databases/(default)/documents/accessGrants/$(request.auth.uid + '__reportingArea__' + areaId));
+    }
+
+    function validDateString(value) {
+      return value is string
+        && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$');
+    }
+
+    function grantWithinDates(areaId) {
+      let currentGrant = grant(areaId).data;
+      return (!currentGrant.keys().hasAny(['validFrom'])
+          || (validDateString(currentGrant.validFrom)
+            && request.time >= timestamp.value(currentGrant.validFrom)))
+        && (!currentGrant.keys().hasAny(['validTo'])
+          || (validDateString(currentGrant.validTo)
+            && request.time <= timestamp.value(currentGrant.validTo)));
+    }
+
+    function hasAreaPermission(ownerUid, areaId, permission) {
+      return activeUser()
+        && request.auth.uid == ownerUid
+        && areaId.size() > 0
+        && grant(areaId) != null
+        && grant(areaId).data.active == true
+        && grantWithinDates(areaId)
+        && grant(areaId).data.permissions is list
+        && permission in grant(areaId).data.permissions;
+    }
+
+    function validJpegUpload(fileName) {
+      return request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= 12 * 1024 * 1024
+        && request.resource.contentType == 'image/jpeg'
+        && fileName.size() > 4
+        && fileName.size() <= 140
+        && fileName.matches('^[A-Za-z0-9_.-]+\\.jpg$');
+    }
+
+    match /flyerAssets/{ownerUid}/{areaId}/{fileName} {
+      allow read: if isAdmin()
+        || hasAreaPermission(ownerUid, areaId, 'flyer.read');
+
+      allow write: if (isAdmin()
+          || hasAreaPermission(ownerUid, areaId, 'flyer.write'))
+        && (request.resource == null || validJpegUpload(fileName));
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

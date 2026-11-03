@@ -26,6 +26,18 @@ service cloud.firestore {
           || (grant.validTo is string && request.time <= timestamp.value(grant.validTo)));
     }
 
+    // Permission snapshot only. Callers must separately require an active user.
+    function kpGrantAllows(scopeType, scopeId, permission) {
+      let grantId = request.auth.uid + "__" + scopeType + "__" + scopeId;
+      let grantPath = /databases/$(database)/documents/accessGrants/$(grantId);
+      let grant = get(grantPath);
+      return scopeId != ''
+        && grant != null
+        && grant.data.active == true
+        && grantWithinDates(grant.data)
+        && permission in grant.data.permissions;
+    }
+
     function hasGrant(scopeType, scopeId, permission) {
       let grantId = request.auth.uid + "__" + scopeType + "__" + scopeId;
       let grantPath = /databases/$(database)/documents/accessGrants/$(grantId);
@@ -137,15 +149,31 @@ service cloud.firestore {
     function dataEntryMatrixAllows(orgId, write) {
       let policyPath = /databases/$(database)/documents/organizationToolAccess/$(orgId);
       let memberPath = /databases/$(database)/documents/memberships/$(request.auth.uid + '__' + orgId);
-      // Reuse snapshots and avoid a member lookup during legacy policy rollout.
       let policy = exists(policyPath) ? get(policyPath) : null;
       let member = policy == null ? null : get(memberPath);
       return policy == null
-        || (member != null
-          && member.data.active == true
-          && grantWithinDates(member.data)
+        || (member != null && member.data.active == true && grantWithinDates(member.data)
           && (policy.data.tools.get('data-entry', 'none') == 'write'
             || (!write && policy.data.tools.get('data-entry', 'none') == 'read')));
+    }
+
+    function kpMatrixAllows(orgId, write) {
+      let policyPath = /databases/$(database)/documents/organizationToolAccess/$(orgId);
+      // The explicit absent-policy fallback preserves the existing rollout
+      // contract. Emulator probe verifies missing policy allows legacy grants,
+      // while an existing policy with a missing membership remains denied.
+      return configuredKpMatrixAllows(orgId, write) || !exists(policyPath);
+    }
+
+    function configuredKpMatrixAllows(orgId, write) {
+      let policyPath = /databases/$(database)/documents/organizationToolAccess/$(orgId);
+      let memberPath = /databases/$(database)/documents/memberships/$(request.auth.uid + '__' + orgId);
+      let policy = get(policyPath).data;
+      let member = get(memberPath).data;
+      return member.active == true
+          && grantWithinDates(member)
+          && (policy.tools.get('data-entry', 'none') == 'write'
+            || (!write && policy.tools.get('data-entry', 'none') == 'read'));
     }
 
     function hasOrderPermission(permission, data) {
@@ -543,8 +571,28 @@ service cloud.firestore {
       return getAfter(/databases/$(database)/documents/$(collectionName)/$(document)/revisions/$(revisionId)).data == resource.data;
     }
 
+    // Canonical organizations currently have one area (verified in the dataset).
+    // Resolve it from trusted metadata, never from the client's requested scope.
+    // Ambiguous mappings require explicit organization grants instead.
+    function organizationArea(orgId) {
+      let areas = get(/databases/$(database)/documents/organizations/$(orgId)).data.reportingAreaIds;
+      return areas.size() == 1 ? areas[0] : '';
+    }
+
+    function readPricing(data) {
+      return isAdmin() || (activeUser() && (data.scopeType != 'organization'
+        || (dataEntryMatrixAllows(data.scopeId, false)
+          && (hasGrant('organization',data.scopeId,'pricing.read')
+            || hasGrant('organization',data.scopeId,'ticketSales.read')
+            || hasGrant('reportingArea',organizationArea(data.scopeId),'pricing.read')
+            || hasGrant('reportingArea',organizationArea(data.scopeId),'ticketSales.read')
+            || hasGrant('network','dolomiti-nordicski','pricing.read')
+            || hasGrant('network','dolomiti-nordicski','ticketSales.read')))));
+    }
+
     match /ticketPricingConfigs/{document} {
-      allow read: if activeUser();
+      allow read: if readPricing(resource.data);
+      allow get: if !exists(/databases/$(database)/documents/ticketPricingConfigs/$(document)) && activeUser();
       allow create: if !historicalLocked(request.resource.data) && validPricing(request.resource.data) && managePricing(request.resource.data)
         && request.resource.data.id == document && request.resource.data.revision == 1;
       allow update: if !historicalLocked(request.resource.data) && validPricing(request.resource.data) && managePricing(resource.data)
@@ -557,7 +605,7 @@ service cloud.firestore {
         && request.resource.data.revision == resource.data.revision + 1 && archived('ticketPricingConfigs',document);
       allow delete: if false;
       match /revisions/{revision} {
-        allow read: if activeUser();
+        allow read: if readPricing(get(/databases/$(database)/documents/ticketPricingConfigs/$(document)).data);
         allow create: if managePricing(get(/databases/$(database)/documents/ticketPricingConfigs/$(document)).data)
           && request.resource.data == get(/databases/$(database)/documents/ticketPricingConfigs/$(document)).data
           && getAfter(/databases/$(database)/documents/ticketPricingConfigs/$(document)).data.revision == request.resource.data.revision + 1;
@@ -567,10 +615,19 @@ service cloud.firestore {
 
     function canReadNewSalesDocument(document) {
       let parts = document.split('__');
-      return isAdmin() || (parts.size() == 6 && (
-        hasGrant('network','dolomiti-nordicski','ticketSales.read')
-        || hasGrant('organization',parts[1],'ticketSales.read')
-        || hasGrant('reportingArea',parts[2],'ticketSales.read')));
+      return isAdmin() || (parts.size() == 6 && hasSalesPermission('ticketSales.read',
+        {'organizationId':parts[1], 'reportingAreaId':parts[2]}));
+    }
+
+    // Same active-profile, scoped grants, dates and matrix cap as orders, with
+    // snapshot reuse limited to seasonal sales (the ordinary order path stays unchanged).
+    function hasSalesPermission(permission, data) {
+      let profile = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return signedIn() && profile.active == true && ('dns-admin' in profile.globalRoles
+        || (kpMatrixAllows(data.organizationId, permission == 'ticketSales.write')
+          && (kpGrantAllows('reportingArea',data.reportingAreaId,permission)
+            || kpGrantAllows('organization',data.organizationId,permission)
+            || kpGrantAllows('network','dolomiti-nordicski',permission))));
     }
 
     // DNS Faktura commercial rates. Rates are internal DNS Commercial
@@ -761,13 +818,13 @@ service cloud.firestore {
 
     match /ticketSales/{document} {
       allow get: if (resource == null && canReadNewSalesDocument(document))
-        || (resource != null && hasOrderPermission('ticketSales.read',resource.data));
-      allow list: if hasOrderPermission('ticketSales.read',resource.data);
+        || (resource != null && hasSalesPermission('ticketSales.read',resource.data));
+      allow list: if hasSalesPermission('ticketSales.read',resource.data);
       allow create: if !historicalLocked(request.resource.data) && validSales(request.resource.data) && salesPricingMatches(request.resource.data)
-        && hasOrderPermission('ticketSales.write',request.resource.data)
+        && hasSalesPermission('ticketSales.write',request.resource.data)
         && request.resource.data.id == document && request.resource.data.revision == 1;
       allow update: if !historicalLocked(request.resource.data) && validSales(request.resource.data) && salesPricingMatches(request.resource.data)
-        && hasOrderPermission('ticketSales.write',resource.data)
+        && hasSalesPermission('ticketSales.write',resource.data)
         && request.resource.data.id == resource.data.id && request.resource.data.draftKey == resource.data.draftKey
         && request.resource.data.organizationId == resource.data.organizationId && request.resource.data.reportingAreaId == resource.data.reportingAreaId
         && request.resource.data.seasonId == resource.data.seasonId && request.resource.data.productCode == resource.data.productCode
@@ -776,8 +833,8 @@ service cloud.firestore {
         && request.resource.data.revision == resource.data.revision + 1 && archived('ticketSales',document);
       allow delete: if false;
       match /revisions/{revision} {
-        allow read: if hasOrderPermission('ticketSales.read',get(/databases/$(database)/documents/ticketSales/$(document)).data);
-        allow create: if hasOrderPermission('ticketSales.write',get(/databases/$(database)/documents/ticketSales/$(document)).data)
+        allow read: if hasSalesPermission('ticketSales.read',get(/databases/$(database)/documents/ticketSales/$(document)).data);
+        allow create: if hasSalesPermission('ticketSales.write',get(/databases/$(database)/documents/ticketSales/$(document)).data)
           && request.resource.data == get(/databases/$(database)/documents/ticketSales/$(document)).data
           && getAfter(/databases/$(database)/documents/ticketSales/$(document)).data.revision == request.resource.data.revision + 1;
         allow update, delete: if false;
@@ -789,12 +846,13 @@ service cloud.firestore {
     }
 
     function hasKpPermission(permission, data) {
-      return isAdmin()
+      let profile = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return signedIn() && profile.active == true && ('dns-admin' in profile.globalRoles
         || ((data.entityType != 'organization'
-              || dataEntryMatrixAllows(data.entityId, permission != 'kp.read'))
-          && ((data.entityType == 'organization' && hasGrant('organization',data.entityId,permission))
-            || hasGrant('reportingArea',data.reportingAreaId,permission)
-            || hasGrant('network','dolomiti-nordicski',permission)));
+              || kpMatrixAllows(data.entityId, permission != 'kp.read'))
+          && (kpGrantAllows('reportingArea',data.reportingAreaId,permission)
+            || (data.entityType == 'organization' && kpGrantAllows('organization',data.entityId,permission))
+            || kpGrantAllows('network','dolomiti-nordicski',permission))));
     }
 
     function validKpMilestone(data) {
@@ -811,19 +869,24 @@ service cloud.firestore {
     }
 
     function validKpMilestoneValue(value, seasonId) {
-      let snowTotal = value.naturalSnowKm + value.artificialSnowKm;
+      let opened = value.openedKm;
+      let natural = value.naturalSnowKm;
+      let artificial = value.artificialSnowKm;
+      let snowTotal = natural + artificial;
       return value.keys().hasOnly(['milestoneId','openedKm','naturalSnowKm','artificialSnowKm'])
         && value.milestoneId is string
         && get(/databases/$(database)/documents/kpMilestones/$(value.milestoneId)).data.seasonId == seasonId
-        && value.openedKm is number && value.openedKm >= 0
-        && value.naturalSnowKm is number && value.naturalSnowKm >= 0
-        && value.artificialSnowKm is number && value.artificialSnowKm >= 0
-        && value.artificialSnowKm <= value.openedKm
-        && snowTotal - value.openedKm < 0.011
-        && value.openedKm - snowTotal < 0.011;
+        && opened is number && opened >= 0
+        && natural is number && natural >= 0
+        && artificial is number && artificial >= 0
+        && artificial <= opened
+        && math.abs(snowTotal - opened) < 0.011;
     }
 
     function validKpEntry(data) {
+      let milestones = data.milestones;
+      let referenceKm = data.referenceKm;
+      let seasonId = data.seasonId;
       return data.keys().hasOnly(['id','seasonId','entityType','entityId','reportingAreaId','referenceKm','milestones','includeInKp','exclusionReason','provenance','notes','revision','updatedBy','updatedAt'])
         && !historicalLocked(data)
         && data.id == data.seasonId + '__' + data.entityId
@@ -831,15 +894,14 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/seasons/$(data.seasonId))
         && data.entityType == 'organization'
         && data.entityId is string
-        && exists(/databases/$(database)/documents/organizations/$(data.entityId))
         && data.reportingAreaId in get(/databases/$(database)/documents/organizations/$(data.entityId)).data.reportingAreaIds
-        && data.referenceKm.keys().hasOnly(['uniqueNetworkKm','potentialOperationalKm'])
-        && data.referenceKm.uniqueNetworkKm is number && data.referenceKm.uniqueNetworkKm >= 0
-        && data.referenceKm.potentialOperationalKm is number && data.referenceKm.potentialOperationalKm >= 0
-        && data.milestones is list && data.milestones.size() <= 3
-        && (data.milestones.size() < 1 || validKpMilestoneValue(data.milestones[0],data.seasonId))
-        && (data.milestones.size() < 2 || validKpMilestoneValue(data.milestones[1],data.seasonId))
-        && (data.milestones.size() < 3 || validKpMilestoneValue(data.milestones[2],data.seasonId))
+        && referenceKm.keys().hasOnly(['uniqueNetworkKm','potentialOperationalKm'])
+        && referenceKm.uniqueNetworkKm is number && referenceKm.uniqueNetworkKm >= 0
+        && referenceKm.potentialOperationalKm is number && referenceKm.potentialOperationalKm >= 0
+        && milestones is list && milestones.size() <= 3
+        && (milestones.size() < 1 || validKpMilestoneValue(milestones[0],seasonId))
+        && (milestones.size() < 2 || validKpMilestoneValue(milestones[1],seasonId))
+        && (milestones.size() < 3 || validKpMilestoneValue(milestones[2],seasonId))
         && data.includeInKp is bool
         && data.exclusionReason is string
         && data.provenance.sourceSystem == 'manual-data-entry'
@@ -917,13 +979,83 @@ service cloud.firestore {
       }
     }
 
-    match /kpEntries/{document} {
-      allow read: if hasKpPermission('kp.read',resource.data);
-      allow create: if validKpEntry(request.resource.data)
-        && hasKpPermission('kp.write',request.resource.data)
+    function qualityCan(permission, data) {
+      return isAdmin() || (
+        dataEntryMatrixAllows(data.organizationId, permission == 'kp.write')
+        && (hasGrant('organization', data.organizationId, permission)
+          || hasGrant('reportingArea', data.reportingAreaId, permission)
+          || hasGrant('network', 'dolomiti-nordicski', permission))
+      );
+    }
+
+    function qualityValid(d) {
+      return !historicalLocked(d)
+        && d.keys().hasOnly(['id','seasonId','reportingAreaId','organizationId','trackName',
+          'totalKm','earlyDecember','earlyDecemberKm','lateDecember','lateDecemberKm',
+          'closedAt','notes','revision','provenance','updatedBy','updatedAt'])
+        && d.id is string && d.seasonId is string && d.organizationId is string
+        && d.reportingAreaId is string
+        && exists(/databases/$(database)/documents/seasons/$(d.seasonId))
+        && exists(/databases/$(database)/documents/organizations/$(d.organizationId))
+        && d.reportingAreaId in get(/databases/$(database)/documents/organizations/$(d.organizationId)).data.reportingAreaIds
+        && d.trackName is string && d.trackName.size() > 0
+        && d.totalKm is number && d.totalKm > 0
+        && d.earlyDecember in ['yes','partial','no','unreported']
+        && d.lateDecember in ['yes','partial','no','unreported']
+        && (d.earlyDecember != 'partial' && d.earlyDecemberKm == null
+          || d.earlyDecember == 'partial' && d.earlyDecemberKm is number
+          && d.earlyDecemberKm > 0 && d.earlyDecemberKm <= d.totalKm)
+        && (d.lateDecember != 'partial' && d.lateDecemberKm == null
+          || d.lateDecember == 'partial' && d.lateDecemberKm is number
+          && d.lateDecemberKm > 0 && d.lateDecemberKm <= d.totalKm)
+        && d.closedAt is string && d.notes is string
+        && d.revision is int && d.revision >= 1
+        && d.provenance.sourceSystem == 'manual-data-entry'
+        && d.provenance.methodVersion == 1 && d.provenance.dataStatus == 'draft'
+        && d.updatedBy == request.auth.uid && d.updatedAt == request.time;
+    }
+
+    match /trackQualityReports/{document} {
+      allow read: if qualityCan('kp.read', resource.data);
+      // Transactions read a missing record before creating it. Decode only the
+      // canonical ID and apply the same scope policy; existing reads stay above.
+      allow get: if !exists(/databases/$(database)/documents/trackQualityReports/$(document))
+        && document.split('__').size() == 4
+        && qualityCan('kp.read', { 'organizationId': document.split('__')[2], 'reportingAreaId': document.split('__')[1] });
+      allow create: if qualityValid(request.resource.data)
+        && qualityCan('kp.write', request.resource.data)
         && request.resource.data.id == document
         && request.resource.data.revision == 1;
-      allow update: if validKpEntry(request.resource.data)
+      allow update: if qualityValid(request.resource.data)
+        && qualityCan('kp.write', resource.data)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.seasonId == resource.data.seasonId
+        && request.resource.data.organizationId == resource.data.organizationId
+        && request.resource.data.reportingAreaId == resource.data.reportingAreaId
+        && resource.data.provenance.dataStatus == 'draft'
+        && request.resource.data.revision == resource.data.revision + 1
+        && archived('trackQualityReports', document);
+      allow delete: if false;
+      match /revisions/{revision} {
+        allow read: if qualityCan('kp.read', get(/databases/$(database)/documents/trackQualityReports/$(document)).data);
+        allow create: if qualityCan('kp.write', get(/databases/$(database)/documents/trackQualityReports/$(document)).data)
+          && request.resource.data == get(/databases/$(database)/documents/trackQualityReports/$(document)).data
+          && getAfter(/databases/$(database)/documents/trackQualityReports/$(document)).data.revision == request.resource.data.revision + 1;
+        allow update, delete: if false;
+      }
+    }
+
+    match /kpEntries/{document} {
+      allow read: if hasKpPermission('kp.read',resource.data);
+      allow get: if !exists(/databases/$(database)/documents/kpEntries/$(document))
+        && document.split('__').size() == 2
+        && hasKpPermission('kp.read', {'entityType':'organization', 'entityId':document.split('__')[1],
+          'reportingAreaId':organizationArea(document.split('__')[1])});
+      allow create: if hasKpPermission('kp.write',request.resource.data)
+        && request.resource.data.id == document
+        && request.resource.data.revision == 1
+        && validKpEntry(request.resource.data);
+      allow update: if resource != null
         && hasKpPermission('kp.write',resource.data)
         && request.resource.data.id == resource.data.id
         && request.resource.data.seasonId == resource.data.seasonId
@@ -932,7 +1064,8 @@ service cloud.firestore {
         && request.resource.data.reportingAreaId == resource.data.reportingAreaId
         && resource.data.provenance.dataStatus == 'draft'
         && request.resource.data.revision == resource.data.revision + 1
-        && archived('kpEntries',document);
+        && archived('kpEntries',document)
+        && validKpEntry(request.resource.data);
       allow delete: if false;
 
       match /revisions/{revision} {
@@ -969,17 +1102,14 @@ service cloud.firestore {
 
     // DNS Flyer Studio working documents.
     match /flyerDocuments/{document} {
-      allow read: if activeUser() && (
-        (resource.data.ownerUserId == request.auth.uid
-          && canOwnFlyerScope(resource.data))
-        || hasFlyerPermission('flyer.read', resource.data)
-      );
+      allow read: if activeUser()
+        && hasFlyerPermission('flyer.read', resource.data);
 
       allow create: if activeUser()
         && validFlyerDocument(request.resource.data)
         && request.resource.data.id == document
         && request.resource.data.ownerUserId == request.auth.uid
-        && canOwnFlyerScope(request.resource.data);
+        && hasFlyerPermission('flyer.write', request.resource.data);
 
       allow update: if activeUser()
         && validFlyerDocument(request.resource.data)
@@ -988,16 +1118,10 @@ service cloud.firestore {
         && request.resource.data.scopeId == resource.data.scopeId
         && request.resource.data.seasonId == resource.data.seasonId
         && request.resource.data.ownerUserId == resource.data.ownerUserId
-        && (
-          (resource.data.ownerUserId == request.auth.uid
-            && canOwnFlyerScope(resource.data))
-          || hasFlyerPermission('flyer.write', resource.data)
-        );
+        && hasFlyerPermission('flyer.write', resource.data);
 
-      allow delete: if isAdmin()
-        || (activeUser()
-          && resource.data.ownerUserId == request.auth.uid
-          && canOwnFlyerScope(resource.data));
+      allow delete: if activeUser()
+        && hasFlyerPermission('flyer.write', resource.data);
     }
 
     // Immutable publication snapshots. Published records are append-only.
