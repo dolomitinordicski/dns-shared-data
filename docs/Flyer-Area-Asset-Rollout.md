@@ -84,7 +84,7 @@ Scenari definiti nella suite emulator:
 13. percorso legacy: proprietario in sola lettura, altri account di area negati, scrittura riservata ad Admin;
 14. metadati Firestore: percorso della stessa area accettato, area diversa e percorso legacy negati.
 
-Esito locale: in attesa dell’esecuzione CI, perché l’installazione emulator locale è stata bloccata da un errore filesystem Windows durante l’installazione delle dipendenze. Il PR deve restare draft finché il workflow GitHub non conferma l’esito.
+Esito CI sul commit candidato: **14/14 PASS** nella suite Storage/Firestore Emulator. Anche le regressioni Firestore generali e gli altri cinque workflow attivati dal PR sono PASS. Il job di deploy è stato correttamente saltato perché l’evento è una pull request. Le date malformate generano un errore di parsing interno nell’emulatore e vengono negate, coerentemente con il comportamento fail-closed di Firestore.
 
 ## 4. NON TESTATO
 
@@ -121,3 +121,4 @@ Esito locale: in attesa dell’esecuzione CI, perché l’installazione emulator
 
 - `organizationToolAccess` non viene consultato da Storage; i privilegi Storage derivano esclusivamente da profilo attivo, ruolo Admin e `accessGrants`. La differenza è intenzionale e documentata nelle regole.
 - Data Entry dispone già di protezione contro modifiche concorrenti per i quattro formulari principali: `src/services/seasonalPersistence.ts` usa transazioni e `expectedRevision` per Prezzi/Vendite; `src/features/track-quality/trackQualityPersistence.ts` applica lo stesso controllo alla Qualitätskontrolle; `src/services/kp.ts` lo applica ai KP. Non è stata apportata alcuna modifica.
+
