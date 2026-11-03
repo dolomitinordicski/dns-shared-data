@@ -29,16 +29,8 @@ function areaFile(uid, areaId, name = 'test.jpg') {
   return ref(storage(uid), `flyerAssets/${areaId}/${name}`);
 }
 
-function legacyFile(uid, ownerUid, areaId, name = 'test.jpg') {
-  return ref(storage(uid), `flyerAssets/${ownerUid}/${areaId}/${name}`);
-}
-
 async function uploadArea(uid, areaId, name = 'test.jpg', bytes = jpeg, contentType = 'image/jpeg') {
   return uploadBytes(areaFile(uid, areaId, name), bytes, { contentType });
-}
-
-async function uploadLegacy(uid, ownerUid, areaId, name = 'test.jpg', bytes = jpeg, contentType = 'image/jpeg') {
-  return uploadBytes(legacyFile(uid, ownerUid, areaId, name), bytes, { contentType });
 }
 
 async function seed() {
@@ -182,20 +174,22 @@ test('RFC3339 offset dates behave consistently in Storage and Firestore', async 
   await assertSucceeds(getDoc(doc(firestore('offset'), 'flyerAssets', 'seed-asset')));
 });
 
-test('admin has complete access to all area and legacy paths', async () => {
+test('admin has complete access to area paths', async () => {
   await assertSucceeds(uploadArea('admin', areaA, 'support.jpg'));
-  await assertSucceeds(uploadLegacy('admin', 'writerA', areaA, 'legacy-admin.jpg'));
   await assertSucceeds(deleteObject(areaFile('admin', areaA, 'support.jpg')));
-  await assertSucceeds(deleteObject(legacyFile('admin', 'writerA', areaA, 'legacy-admin.jpg')));
 });
 
-test('legacy path is owner-readable but area-account writes are denied', async () => {
-  await assertSucceeds(uploadLegacy('admin', 'writerA', areaA, 'legacy.jpg'));
-  await assertSucceeds(getBytes(legacyFile('writerA', 'writerA', areaA, 'legacy.jpg')));
-  await assertFails(getBytes(legacyFile('readerA', 'writerA', areaA, 'legacy.jpg')));
-  await assertFails(uploadLegacy('writerA', 'writerA', areaA, 'new-legacy.jpg'));
-  await assertFails(deleteObject(legacyFile('writerA', 'writerA', areaA, 'legacy.jpg')));
-  await assertSucceeds(deleteObject(legacyFile('admin', 'writerA', areaA, 'legacy.jpg')));
+test('legacy owner-scoped path is removed and denied even to admin', async () => {
+  await assertFails(uploadBytes(
+    ref(storage('writerA'), `flyerAssets/writerA/${areaA}/legacy.jpg`),
+    jpeg,
+    { contentType: 'image/jpeg' },
+  ));
+  await assertFails(uploadBytes(
+    ref(storage('admin'), `flyerAssets/writerA/${areaA}/legacy-admin.jpg`),
+    jpeg,
+    { contentType: 'image/jpeg' },
+  ));
 });
 
 test('upload validation rejects wrong types, extensions, empty, oversized and long names', async () => {

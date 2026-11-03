@@ -30,12 +30,13 @@ Il client attuale costruisce `flyerAssets/{uid}/{areaId}` e carica il JPEG nel p
 
 Fonte nel repository `dolomitinordicski/DNS-Flyer-Studio`: `src/data/flyerImageLibrary.ts`, riga 21 e righe 46-51. Il client non viene modificato in questo PR.
 
-### Audit produttivo preparato, non eseguito
+### Audit produttivo eseguito in sola lettura
 
-`scripts/audit-flyer-assets-rollout.mjs` è esclusivamente di lettura e produce:
+`scripts/audit-flyer-assets-rollout.mjs` è esclusivamente di lettura. L’audit autorizzato ha restituito:
 
-- il numero di oggetti sotto `flyerAssets/`;
-- gli `scopeType`/`scopeId` che hanno grant con `flyer.read` o `flyer.write`, aggregati senza esportare UID.
+- oggetti sotto `flyerAssets/`: **0**;
+- scope con grant `flyer.read` o `flyer.write`: **nessuno**;
+- Firestore: Native/Standard, `europe-west8`.
 
 Esecuzione prevista dall’amministratore:
 
@@ -43,7 +44,7 @@ Esecuzione prevista dall’amministratore:
 node scripts/audit-flyer-assets-rollout.mjs --project dns-core --bucket dns-core.firebasestorage.app
 ```
 
-Lo script usa Application Default Credentials dell’operatore e non contiene token o segreti.
+Lo script non contiene token o segreti. Poiché il conteggio è zero, il percorso legacy è stato rimosso completamente dal candidato e non serve alcuna migrazione.
 
 ## 2. Modifiche fatte, file per file
 
@@ -53,15 +54,13 @@ Lo script usa Application Default Credentials dell’operatore e non contiene to
   - scrittura/cancellazione per DNS Admin o `flyer.write` di area/rete;
   - grant solo `organization` deliberatamente ignorato e negato;
   - date allineate alla semantica `timestamp.value` di Firestore, inclusi offset RFC3339;
-  - percorso legacy mantenuto come variante prudenziale: lettura al proprietario con permesso valido o Admin; scrittura solo Admin.
+  - percorso legacy rimosso e negato dal default-deny, anche per Admin.
 - `firestore.rules`
   - `validFlyerAsset` lega `storagePath` allo `scopeId` e accetta solo il nuovo percorso JPEG.
 - `tests/flyer-storage-rules.test.mjs`
-  - nuova suite completa per condivisione per area, rete, date, isolamento, legacy e validazione upload.
+  - nuova suite completa per condivisione per area, rete, date, isolamento, rimozione legacy e validazione upload.
 - `scripts/audit-flyer-assets-rollout.mjs`
   - audit produttivo di sola lettura da eseguire manualmente.
-- `scripts/migrate-flyer-assets-to-area.mjs`
-  - migrazione copy-only; modalità predefinita dry-run, copia solo con `--apply`, non cancella sorgenti e blocca le collisioni.
 - `.github/workflows/*`
   - nessuna modifica.
 
@@ -81,44 +80,36 @@ Scenari definiti nella suite emulator:
 10. Admin: accesso completo;
 11. anonimo e percorsi non previsti: negati;
 12. PNG, estensione errata, file vuoto, oltre 12 MB e nome troppo lungo: negati;
-13. percorso legacy: proprietario in sola lettura, altri account di area negati, scrittura riservata ad Admin;
+13. percorso legacy: rimosso e negato sia agli account di area sia ad Admin;
 14. metadati Firestore: percorso della stessa area accettato, area diversa e percorso legacy negati.
 
 Esito CI sul commit candidato: **14/14 PASS** nella suite Storage/Firestore Emulator. Anche le regressioni Firestore generali e gli altri cinque workflow attivati dal PR sono PASS. Il job di deploy è stato correttamente saltato perché l’evento è una pull request. Le date malformate generano un errore di parsing interno nell’emulatore e vengono negate, coerentemente con il comportamento fail-closed di Firestore.
 
 ## 4. NON TESTATO
 
-- Conteggio reale degli oggetti in `dns-core.firebasestorage.app`: lo script è preparato ma non è stato eseguito, per rispettare il divieto di interrogare la produzione.
-- Scope reali dei grant Flyer: non interrogati; devono essere ottenuti dall’amministratore con lo script di sola lettura.
-- Migrazione reale: non eseguita; lo script resta dry-run e richiede `--apply` esplicito.
 - Client Flyer Studio con il nuovo percorso: non modificato né distribuito in questo PR.
 - Rollout produttivo e compatibilità con oggetti reali: non eseguiti.
-- Collisioni reali di nomi fra vecchie cartelle UID: non note finché non viene eseguito il dry-run della migrazione.
+- Accesso reale di account Area: non testato perché non esistono ancora grant Flyer in produzione.
 
 ## 5. Assunzioni
 
 - Gli ID di reporting area sono slug amministrati e non contengono `/`.
 - `flyer.write` implica anche la possibilità di leggere e usare la libreria dell’area.
 - Il grant di rete usa `scopeType=network` e `scopeId=dolomiti-nordicski`.
-- Il percorso legacy resta temporaneamente disponibile per lettura/migrazione finché l’audit non dimostra che è vuoto.
-- La migrazione copia senza eliminare; l’eliminazione dei sorgenti richiederà una decisione successiva.
+- Il bucket vuoto consente di rimuovere il percorso legacy senza migrazione dati.
 
 ## 6. Decisioni aperte dell’amministratore
 
-1. Eseguire lo script di audit e comunicare `flyerAssetObjectCount` e `flyerPermissionScopes`.
-2. Se il conteggio è zero, rimuovere completamente il match legacy; se è maggiore di zero, mantenerlo durante la migrazione.
-3. Scegliere il rollout senza interruzione. Il candidato finale rende il vecchio percorso non scrivibile dagli account di area:
+1. Scegliere il rollout senza interruzione. Il candidato finale rimuove il vecchio percorso:
    - regole finali prima del client: il client attuale non riesce più a caricare;
    - client nuovo prima delle regole: il nuovo percorso viene negato dalle regole oggi in produzione;
-   - sequenza sicura: regole transitorie che accettano entrambi i percorsi, aggiornamento client, migrazione, poi regole finali che bloccano/rimuovono il vecchio percorso.
-4. Decidere se la scrittura Admin sul percorso legacy deve restare durante la migrazione o essere negata a tutti.
+   - sequenza sicura: regole transitorie che accettano entrambi i percorsi, aggiornamento client, poi regole finali che rimuovono il vecchio percorso. Non serve migrazione perché il bucket è vuoto.
 
 ## 7. Azioni eseguite in produzione
 
-**Nessuna.**
+**Nessuna modifica.** È stato eseguito soltanto l’audit autorizzato di sola lettura; nessun dato, grant, oggetto, regola o configurazione è stato modificato.
 
 ## Fuori scope verificato
 
 - `organizationToolAccess` non viene consultato da Storage; i privilegi Storage derivano esclusivamente da profilo attivo, ruolo Admin e `accessGrants`. La differenza è intenzionale e documentata nelle regole.
 - Data Entry dispone già di protezione contro modifiche concorrenti per i quattro formulari principali: `src/services/seasonalPersistence.ts` usa transazioni e `expectedRevision` per Prezzi/Vendite; `src/features/track-quality/trackQualityPersistence.ts` applica lo stesso controllo alla Qualitätskontrolle; `src/services/kp.ts` lo applica ai KP. Non è stata apportata alcuna modifica.
-

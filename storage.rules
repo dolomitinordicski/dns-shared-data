@@ -82,18 +82,6 @@ service firebase.storage {
         && (request.resource == null || validJpegUpload(fileName));
     }
 
-    // Legacy owner-scoped compatibility path. Area users can only read their
-    // own former folder; only DNS Admin may write here for controlled
-    // migration or cleanup. Remove this match after the production audit and
-    // migration confirm that no legacy objects remain.
-    match /flyerAssets/{ownerUid}/{areaId}/{fileName} {
-      allow read: if isAdmin()
-        || (signedIn() && request.auth.uid == ownerUid && canReadArea(areaId));
-
-      allow write: if isAdmin()
-        && (request.resource == null || validJpegUpload(fileName));
-    }
-
     match /{allPaths=**} {
       allow read, write: if false;
     }
