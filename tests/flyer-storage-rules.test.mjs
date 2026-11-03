@@ -2,60 +2,104 @@ import assert from 'node:assert/strict';
 import { after, before, beforeEach, test } from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { deleteObject, getBytes, getMetadata, listAll, ref, uploadBytes } from 'firebase/storage';
 
 const projectId = 'demo-dns-storage';
 const bucket = `${projectId}.firebasestorage.app`;
-const areaA = 'dns-test-area';
-const areaB = 'dns-test-area-b';
+const areaA = 'seiser-alm-dolomites-val-gardena';
+const areaB = 'drei-zinnen';
+const orgA = 'seiser-alm-marketing';
 const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
 let env;
 
-function storage(uid) {
-  return env.authenticatedContext(uid, { email: `${uid}@example.test` }).storage(`gs://${bucket}`);
+function context(uid) {
+  return env.authenticatedContext(uid, { email: `${uid}@example.test` });
 }
 
-function file(uid, ownerUid, areaId, name = 'test.jpg') {
+function storage(uid) {
+  return context(uid).storage(`gs://${bucket}`);
+}
+
+function firestore(uid) {
+  return context(uid).firestore();
+}
+
+function areaFile(uid, areaId, name = 'test.jpg') {
+  return ref(storage(uid), `flyerAssets/${areaId}/${name}`);
+}
+
+function legacyFile(uid, ownerUid, areaId, name = 'test.jpg') {
   return ref(storage(uid), `flyerAssets/${ownerUid}/${areaId}/${name}`);
 }
 
-async function upload(uid, ownerUid, areaId, name = 'test.jpg', bytes = jpeg, contentType = 'image/jpeg') {
-  return uploadBytes(file(uid, ownerUid, areaId, name), bytes, { contentType });
+async function uploadArea(uid, areaId, name = 'test.jpg', bytes = jpeg, contentType = 'image/jpeg') {
+  return uploadBytes(areaFile(uid, areaId, name), bytes, { contentType });
+}
+
+async function uploadLegacy(uid, ownerUid, areaId, name = 'test.jpg', bytes = jpeg, contentType = 'image/jpeg') {
+  return uploadBytes(legacyFile(uid, ownerUid, areaId, name), bytes, { contentType });
 }
 
 async function seed() {
-  await env.withSecurityRulesDisabled(async context => {
-    const db = context.firestore();
+  await env.withSecurityRulesDisabled(async disabled => {
+    const db = disabled.firestore();
     const put = (path, data) => setDoc(doc(db, path), data);
-    for (const uid of ['admin', 'writer', 'reader', 'writeonly', 'none', 'inactive', 'expired', 'future', 'malformed', 'other']) {
+    const users = [
+      'admin', 'writerA', 'readerA', 'writerA2', 'replacementA', 'otherB',
+      'orgOnly', 'networkReader', 'networkWriter', 'inactive', 'expired',
+      'disabled', 'future', 'malformed', 'offset', 'none',
+    ];
+    for (const uid of users) {
       await put(`users/${uid}`, {
         active: uid !== 'inactive',
         globalRoles: uid === 'admin' ? ['dns-admin'] : [],
       });
     }
-    const grants = {
-      writer: ['flyer.read', 'flyer.write'],
-      reader: ['flyer.read'],
-      writeonly: ['flyer.write'],
-      expired: ['flyer.read', 'flyer.write'],
-      future: ['flyer.read', 'flyer.write'],
-      malformed: ['flyer.read', 'flyer.write'],
-      other: ['flyer.read', 'flyer.write'],
-    };
-    for (const [uid, permissions] of Object.entries(grants)) {
-      const areaId = uid === 'other' ? areaB : areaA;
-      await put(`accessGrants/${uid}__reportingArea__${areaId}`, {
-        active: true,
-        userId: uid,
-        scopeType: 'reportingArea',
-        scopeId: areaId,
-        permissions,
-        ...(uid === 'expired' ? { validTo: '2000-01-01T00:00:00Z' } : {}),
-        ...(uid === 'future' ? { validFrom: '2100-01-01T00:00:00Z' } : {}),
-        ...(uid === 'malformed' ? { validTo: 'not-a-date' } : {}),
-      });
+
+    await put(`reportingAreas/${areaA}`, { id: areaA, active: true });
+    await put(`reportingAreas/${areaB}`, { id: areaB, active: true });
+    await put(`organizations/${orgA}`, { id: orgA, reportingAreaIds: [areaA] });
+
+    const grant = async (uid, scopeType, scopeId, permissions, validity = {}) => put(
+      `accessGrants/${uid}__${scopeType}__${scopeId}`,
+      { active: true, userId: uid, scopeType, scopeId, permissions, ...validity },
+    );
+    for (const uid of ['writerA', 'writerA2', 'replacementA']) {
+      await grant(uid, 'reportingArea', areaA, ['flyer.read', 'flyer.write', 'flyer.assets.manage']);
     }
+    await grant('readerA', 'reportingArea', areaA, ['flyer.read']);
+    await grant('otherB', 'reportingArea', areaB, ['flyer.read', 'flyer.write']);
+    await grant('orgOnly', 'organization', orgA, ['flyer.read', 'flyer.write']);
+    await grant('networkReader', 'network', 'dolomiti-nordicski', ['flyer.read']);
+    await grant('networkWriter', 'network', 'dolomiti-nordicski', ['flyer.write']);
+    await grant('inactive', 'reportingArea', areaA, ['flyer.read', 'flyer.write']);
+    await put(`accessGrants/disabled__reportingArea__${areaA}`, {
+      active: false,
+      userId: 'disabled',
+      scopeType: 'reportingArea',
+      scopeId: areaA,
+      permissions: ['flyer.read', 'flyer.write'],
+    });
+    await grant('expired', 'reportingArea', areaA, ['flyer.read', 'flyer.write'], { validTo: '2000-01-01T00:00:00Z' });
+    await grant('future', 'reportingArea', areaA, ['flyer.read', 'flyer.write'], { validFrom: '2100-01-01T00:00:00Z' });
+    await grant('malformed', 'reportingArea', areaA, ['flyer.read', 'flyer.write'], { validTo: 'not-a-date' });
+    await grant('offset', 'reportingArea', areaA, ['flyer.read', 'flyer.write', 'flyer.assets.manage'], {
+      validFrom: '2026-01-01T00:00:00+01:00',
+      validTo: '2099-01-01T00:00:00+01:00',
+    });
+
+    await put('flyerAssets/seed-asset', {
+      id: 'seed-asset',
+      scopeType: 'reportingArea',
+      scopeId: areaA,
+      schema: 'dns.flyer-asset',
+      version: 1,
+      assetType: 'image',
+      storagePath: `flyerAssets/${areaA}/shared.jpg`,
+      updatedBy: 'writerA',
+      updatedAt: new Date('2026-01-01T00:00:00Z'),
+    });
   });
 }
 
@@ -75,65 +119,120 @@ beforeEach(async () => {
 
 after(async () => env?.cleanup());
 
-test('writer uploads, lists, reads and deletes only its own area folder', async () => {
-  await assertSucceeds(upload('writer', 'writer', areaA));
-  const listed = await assertSucceeds(listAll(ref(storage('writer'), `flyerAssets/writer/${areaA}`)));
+test('area writer uploads, lists, reads and deletes in area A', async () => {
+  await assertSucceeds(uploadArea('writerA', areaA));
+  const listed = await assertSucceeds(listAll(ref(storage('writerA'), `flyerAssets/${areaA}`)));
   assert.equal(listed.items.length, 1);
-  await assertSucceeds(getBytes(file('writer', 'writer', areaA)));
-  await assertSucceeds(deleteObject(file('writer', 'writer', areaA)));
-  await assertFails(upload('writer', 'writer', areaB));
-  await assertFails(upload('writer', 'other', areaA));
+  await assertSucceeds(getBytes(areaFile('writerA', areaA)));
+  await assertSucceeds(deleteObject(areaFile('writerA', areaA)));
 });
 
-test('reader can list and download but cannot upload or delete', async () => {
-  await env.withSecurityRulesDisabled(async context => {
-    await uploadBytes(ref(context.storage(`gs://${bucket}`), `flyerAssets/reader/${areaA}/seed.jpg`), jpeg, { contentType: 'image/jpeg' });
-  });
-  await assertSucceeds(listAll(ref(storage('reader'), `flyerAssets/reader/${areaA}`)));
-  await assertSucceeds(getBytes(file('reader', 'reader', areaA, 'seed.jpg')));
-  await assertFails(upload('reader', 'reader', areaA));
-  await assertFails(deleteObject(file('reader', 'reader', areaA, 'seed.jpg')));
+test('area reader reads another account file but cannot create, overwrite or delete', async () => {
+  await assertSucceeds(uploadArea('writerA', areaA, 'shared.jpg'));
+  await assertSucceeds(listAll(ref(storage('readerA'), `flyerAssets/${areaA}`)));
+  await assertSucceeds(getBytes(areaFile('readerA', areaA, 'shared.jpg')));
+  await assertFails(uploadArea('readerA', areaA, 'reader.jpg'));
+  await assertFails(uploadArea('readerA', areaA, 'shared.jpg'));
+  await assertFails(deleteObject(areaFile('readerA', areaA, 'shared.jpg')));
 });
 
-test('write-only can upload but cannot list, read or inspect metadata', async () => {
-  await assertSucceeds(upload('writeonly', 'writeonly', areaA));
-  await assertFails(listAll(ref(storage('writeonly'), `flyerAssets/writeonly/${areaA}`)));
-  await assertFails(getBytes(file('writeonly', 'writeonly', areaA)));
-  await assertFails(getMetadata(file('writeonly', 'writeonly', areaA)));
+test('second writer in the same area uploads and reads the first writer file', async () => {
+  await assertSucceeds(uploadArea('writerA', areaA, 'first.jpg'));
+  await assertSucceeds(getBytes(areaFile('writerA2', areaA, 'first.jpg')));
+  await assertSucceeds(uploadArea('writerA2', areaA, 'second.jpg'));
 });
 
-test('none, inactive and invalid validity windows fail closed', async () => {
-  for (const uid of ['none', 'inactive', 'expired', 'future', 'malformed']) {
-    await assertFails(upload(uid, uid, areaA));
-    await assertFails(listAll(ref(storage(uid), `flyerAssets/${uid}/${areaA}`)));
+test('replacement uid with area write reads and deletes files from the former uid', async () => {
+  await assertSucceeds(uploadArea('writerA', areaA, 'former-account.jpg'));
+  await assertSucceeds(getBytes(areaFile('replacementA', areaA, 'former-account.jpg')));
+  await assertSucceeds(deleteObject(areaFile('replacementA', areaA, 'former-account.jpg')));
+});
+
+test('account from area B cannot access area A', async () => {
+  await assertSucceeds(uploadArea('writerA', areaA, 'private.jpg'));
+  await assertFails(getBytes(areaFile('otherB', areaA, 'private.jpg')));
+  await assertFails(listAll(ref(storage('otherB'), `flyerAssets/${areaA}`)));
+  await assertFails(uploadArea('otherB', areaA, 'foreign.jpg'));
+  await assertSucceeds(uploadArea('otherB', areaB, 'own.jpg'));
+});
+
+test('organization-only grant is explicitly ineffective for Storage', async () => {
+  await assertFails(uploadArea('orgOnly', areaA, 'organization.jpg'));
+  await assertFails(listAll(ref(storage('orgOnly'), `flyerAssets/${areaA}`)));
+});
+
+test('network read and write grants apply across areas without admin', async () => {
+  await assertSucceeds(uploadArea('networkWriter', areaA, 'network.jpg'));
+  await assertSucceeds(getBytes(areaFile('networkWriter', areaA, 'network.jpg')));
+  await assertSucceeds(getBytes(areaFile('networkReader', areaA, 'network.jpg')));
+  await assertFails(uploadArea('networkReader', areaA, 'denied.jpg'));
+  await assertSucceeds(uploadArea('networkWriter', areaB, 'other-area.jpg'));
+});
+
+test('inactive, expired, future, malformed and absent grants fail closed in Storage and Firestore', async () => {
+  for (const uid of ['inactive', 'disabled', 'expired', 'future', 'malformed', 'none']) {
+    await assertFails(uploadArea(uid, areaA, `${uid}.jpg`));
+    await assertFails(listAll(ref(storage(uid), `flyerAssets/${areaA}`)));
+    await assertFails(getDoc(doc(firestore(uid), 'flyerAssets', 'seed-asset')));
   }
-  await assertFails(uploadBytes(file('none', 'none', areaA), jpeg, { contentType: 'image/jpeg' }));
 });
 
-test('another organization cannot access another owner or area', async () => {
-  await assertSucceeds(upload('writer', 'writer', areaA, 'private.jpg'));
-  await assertFails(getBytes(file('other', 'writer', areaA, 'private.jpg')));
-  await assertFails(listAll(ref(storage('other'), `flyerAssets/writer/${areaA}`)));
-  await assertSucceeds(upload('other', 'other', areaB, 'own.jpg'));
+test('RFC3339 offset dates behave consistently in Storage and Firestore', async () => {
+  await assertSucceeds(uploadArea('offset', areaA, 'offset.jpg'));
+  await assertSucceeds(getDoc(doc(firestore('offset'), 'flyerAssets', 'seed-asset')));
 });
 
-test('admin can administer network and organization folders', async () => {
-  await assertSucceeds(upload('admin', 'admin', 'dns_central', 'central.jpg'));
-  await assertSucceeds(upload('admin', 'writer', areaA, 'support.jpg'));
-  await assertSucceeds(getBytes(file('admin', 'writer', areaA, 'support.jpg')));
-  await assertSucceeds(deleteObject(file('admin', 'writer', areaA, 'support.jpg')));
+test('admin has complete access to all area and legacy paths', async () => {
+  await assertSucceeds(uploadArea('admin', areaA, 'support.jpg'));
+  await assertSucceeds(uploadLegacy('admin', 'writerA', areaA, 'legacy-admin.jpg'));
+  await assertSucceeds(deleteObject(areaFile('admin', areaA, 'support.jpg')));
+  await assertSucceeds(deleteObject(legacyFile('admin', 'writerA', areaA, 'legacy-admin.jpg')));
 });
 
-test('upload validation rejects wrong types, extensions, empty and oversized data', async () => {
-  await assertFails(upload('writer', 'writer', areaA, 'bad.png', jpeg, 'image/png'));
-  await assertFails(upload('writer', 'writer', areaA, 'bad.exe', jpeg, 'image/jpeg'));
-  await assertFails(upload('writer', 'writer', areaA, 'empty.jpg', new Uint8Array(), 'image/jpeg'));
-  await assertFails(upload('writer', 'writer', areaA, 'huge.jpg', new Uint8Array(12 * 1024 * 1024 + 1), 'image/jpeg'));
-  await assertFails(upload('writer', 'writer', areaA, `${'x'.repeat(141)}.jpg`, jpeg, 'image/jpeg'));
+test('legacy path is owner-readable but area-account writes are denied', async () => {
+  await assertSucceeds(uploadLegacy('admin', 'writerA', areaA, 'legacy.jpg'));
+  await assertSucceeds(getBytes(legacyFile('writerA', 'writerA', areaA, 'legacy.jpg')));
+  await assertFails(getBytes(legacyFile('readerA', 'writerA', areaA, 'legacy.jpg')));
+  await assertFails(uploadLegacy('writerA', 'writerA', areaA, 'new-legacy.jpg'));
+  await assertFails(deleteObject(legacyFile('writerA', 'writerA', areaA, 'legacy.jpg')));
+  await assertSucceeds(deleteObject(legacyFile('admin', 'writerA', areaA, 'legacy.jpg')));
 });
 
-test('anonymous and unmatched paths are denied', async () => {
+test('upload validation rejects wrong types, extensions, empty, oversized and long names', async () => {
+  await assertFails(uploadArea('writerA', areaA, 'bad.png', jpeg, 'image/png'));
+  await assertFails(uploadArea('writerA', areaA, 'bad.exe', jpeg, 'image/jpeg'));
+  await assertFails(uploadArea('writerA', areaA, 'empty.jpg', new Uint8Array(), 'image/jpeg'));
+  await assertFails(uploadArea('writerA', areaA, 'huge.jpg', new Uint8Array(12 * 1024 * 1024 + 1), 'image/jpeg'));
+  await assertFails(uploadArea('writerA', areaA, `${'x'.repeat(141)}.jpg`, jpeg, 'image/jpeg'));
+});
+
+test('anonymous users and unmatched paths are denied', async () => {
   const anonymous = env.unauthenticatedContext().storage(`gs://${bucket}`);
-  await assertFails(uploadBytes(ref(anonymous, `flyerAssets/writer/${areaA}/anon.jpg`), jpeg, { contentType: 'image/jpeg' }));
-  await assertFails(uploadBytes(ref(storage('writer'), 'other/path.jpg'), jpeg, { contentType: 'image/jpeg' }));
+  await assertFails(uploadBytes(ref(anonymous, `flyerAssets/${areaA}/anon.jpg`), jpeg, { contentType: 'image/jpeg' }));
+  await assertFails(uploadBytes(ref(storage('writerA'), 'other/path.jpg'), jpeg, { contentType: 'image/jpeg' }));
+});
+
+test('Firestore flyer asset metadata must point to its own scope folder', async () => {
+  const valid = {
+    id: 'valid-area-asset',
+    scopeType: 'reportingArea',
+    scopeId: areaA,
+    schema: 'dns.flyer-asset',
+    version: 1,
+    assetType: 'image',
+    storagePath: `flyerAssets/${areaA}/metadata.jpg`,
+    updatedBy: 'writerA',
+    updatedAt: serverTimestamp(),
+  };
+  await assertSucceeds(setDoc(doc(firestore('writerA'), 'flyerAssets', valid.id), valid));
+  await assertFails(setDoc(doc(firestore('writerA'), 'flyerAssets', 'wrong-area'), {
+    ...valid,
+    id: 'wrong-area',
+    storagePath: `flyerAssets/${areaB}/metadata.jpg`,
+  }));
+  await assertFails(setDoc(doc(firestore('writerA'), 'flyerAssets', 'legacy-path'), {
+    ...valid,
+    id: 'legacy-path',
+    storagePath: `flyerAssets/writerA/${areaA}/metadata.jpg`,
+  }));
 });
