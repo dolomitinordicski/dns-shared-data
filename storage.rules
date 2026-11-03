@@ -7,41 +7,49 @@ service firebase.storage {
     }
 
     function profile() {
-      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid));
     }
 
     function activeUser() {
       return signedIn()
-        && profile().active == true;
+        && profile() != null
+        && profile().data.active == true;
     }
 
     function isAdmin() {
       return activeUser()
-        && profile().globalRoles is list
-        && 'dns-admin' in profile().globalRoles;
+        && profile().data.globalRoles is list
+        && 'dns-admin' in profile().data.globalRoles;
     }
 
     function grant(areaId) {
-      return firestore.get(/databases/(default)/documents/accessGrants/$(request.auth.uid + '__reportingArea__' + areaId)).data;
+      return firestore.get(/databases/(default)/documents/accessGrants/$(request.auth.uid + '__reportingArea__' + areaId));
+    }
+
+    function validDateString(value) {
+      return value is string
+        && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$');
     }
 
     function grantWithinDates(areaId) {
-      return (!grant(areaId).keys().hasAny(['validFrom'])
-          || (grant(areaId).validFrom is string
-            && request.time >= timestamp.value(grant(areaId).validFrom)))
-        && (!grant(areaId).keys().hasAny(['validTo'])
-          || (grant(areaId).validTo is string
-            && request.time <= timestamp.value(grant(areaId).validTo)));
+      let currentGrant = grant(areaId).data;
+      return (!currentGrant.keys().hasAny(['validFrom'])
+          || (validDateString(currentGrant.validFrom)
+            && request.time >= timestamp.value(currentGrant.validFrom)))
+        && (!currentGrant.keys().hasAny(['validTo'])
+          || (validDateString(currentGrant.validTo)
+            && request.time <= timestamp.value(currentGrant.validTo)));
     }
 
     function hasAreaPermission(ownerUid, areaId, permission) {
       return activeUser()
         && request.auth.uid == ownerUid
         && areaId.size() > 0
-        && grant(areaId).active == true
+        && grant(areaId) != null
+        && grant(areaId).data.active == true
         && grantWithinDates(areaId)
-        && grant(areaId).permissions is list
-        && permission in grant(areaId).permissions;
+        && grant(areaId).data.permissions is list
+        && permission in grant(areaId).data.permissions;
     }
 
     function validJpegUpload(fileName) {
