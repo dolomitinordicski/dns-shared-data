@@ -140,6 +140,8 @@ service cloud.firestore {
         && data.assetType in ['image', 'logo', 'icon', 'document']
         && data.storagePath is string
         && data.storagePath.size() > 0
+        && data.storagePath.size() <= 220
+        && data.storagePath.matches('^flyerAssets/' + data.scopeId + '/[A-Za-z0-9_.-]+[.]jpg$')
         && data.updatedBy == request.auth.uid
         && data.updatedAt == request.time;
     }
