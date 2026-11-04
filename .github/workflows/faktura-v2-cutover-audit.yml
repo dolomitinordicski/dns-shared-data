@@ -1,15 +1,6 @@
 name: Faktura v2 read-only cutover audit
 
 on:
-  push:
-    branches:
-      - faktura-v2-security-boundary-v2
-    paths:
-      - '.github/workflows/faktura-v2-cutover-audit.yml'
-      - 'src/idm-premium-programs.ts'
-      - 'scripts/seed-idm-premium-programs.ts'
-      - 'scripts/seed-billing-rates-2026-27.ts'
-      - 'firestore.indexes.json'
   workflow_dispatch:
 
 permissions:
