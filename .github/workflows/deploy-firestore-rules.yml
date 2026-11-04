@@ -1,16 +1,24 @@
-name: Validate and deploy Firestore rules
+name: Validate and deploy Firebase rules
 
 on:
   pull_request:
     paths:
       - 'firestore.rules'
+      - 'storage.rules'
+      - 'firebase.json'
+      - 'firebase.storage.json'
       - 'tests/seasonal-rules.test.mjs'
+      - 'tests/flyer-storage-rules.test.mjs'
       - '.github/workflows/deploy-firestore-rules.yml'
   push:
     branches: [main]
     paths:
       - 'firestore.rules'
+      - 'storage.rules'
+      - 'firebase.json'
+      - 'firebase.storage.json'
       - 'tests/seasonal-rules.test.mjs'
+      - 'tests/flyer-storage-rules.test.mjs'
       - '.github/workflows/deploy-firestore-rules.yml'
   workflow_dispatch:
 
@@ -28,8 +36,10 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npm run test:rules
+      - run: npm run test:storage:rules
 
   deploy:
+    environment: dns-production-auto
     if: github.event_name != 'pull_request'
     needs: test
     runs-on: ubuntu-latest
