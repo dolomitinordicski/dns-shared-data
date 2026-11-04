@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+
 import {
   DNS_PRINT_PROFILE_IDS,
   DNS_PRINT_PROFILES,
@@ -8,6 +10,16 @@ import { initDNSPrintRuntime } from '../dist/ui/print.js';
 import { initDNSFoundation } from '../dist/foundation.js';
 
 const errors = [];
+const printRuntimeSource = fs.readFileSync('src/ui/print.ts', 'utf8');
+
+if (printRuntimeSource.includes('.dns-print-sheet { display: none; }')) {
+  errors.push('Print sheets must remain measurable before print; display:none breaks canvas/chart rendering.');
+}
+for (const token of ['preflightWidthMm', 'visibility: hidden', 'visibility: visible !important']) {
+  if (!printRuntimeSource.includes(token)) {
+    errors.push(`Print preflight contract missing: ${token}`);
+  }
+}
 
 if (JSON.stringify(DNS_PRINT_PROFILE_IDS) !== JSON.stringify(['operational-table','report','document'])) {
   errors.push('Print profile IDs must be operational-table, report, document.');

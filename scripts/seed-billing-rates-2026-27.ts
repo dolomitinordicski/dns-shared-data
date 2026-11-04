@@ -26,7 +26,18 @@ const TICKET_ITEM_IDS = [
   '2026-27-press',
 ] as const;
 
-const ticketUnitPrice = Math.round((2200 / 24415) * 100000000) / 100000000;
+function roundUpToCent(value: number) {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error('INVALID_MONEY_VALUE');
+  }
+  return Math.ceil(value * 100 - 1e-9) / 100;
+}
+
+const legacyWristbandUnitPrice = 15.9 / 100;
+// Match the exact value stored by the previous seed.
+const legacyTicketUnitPrice = Math.round((2200 / 24415) * 100000000) / 100000000;
+const wristbandUnitPrice = roundUpToCent(legacyWristbandUnitPrice);
+const ticketUnitPrice = roundUpToCent(legacyTicketUnitPrice);
 
 type BillingRateSeed = {
   id: string;
@@ -37,6 +48,7 @@ type BillingRateSeed = {
   currency: 'EUR';
   source: Record<string, unknown>;
   active: true;
+  prepaymentRequired: boolean;
   revision: number;
   notes: string;
 };
@@ -48,7 +60,7 @@ function wristbandRate(catalogItemId: string): BillingRateSeed {
     seasonId: SEASON_ID,
     sourceType: 'order',
     catalogItemId,
-    billingUnitPrice: 0.159,
+    billingUnitPrice: wristbandUnitPrice,
     currency: 'EUR',
     source: {
       documentLabel: 'Brady Italia / PDC · ordine 1013437506',
@@ -56,9 +68,10 @@ function wristbandRate(catalogItemId: string): BillingRateSeed {
       documentDate: '2026-09-02',
       packSize: 100,
       packPriceNet: 15.9,
-      calculatedPurchaseUnitPrice: 0.159,
+      calculatedPurchaseUnitPrice: wristbandUnitPrice,
     },
     active: true,
+    prepaymentRequired: true,
     revision: 1,
     notes:
       'Preisquelle: 15,90 EUR netto je 100er-Pack. Fakturierbare Menge ausschließlich aus DNS Data Entry.',
@@ -83,6 +96,7 @@ function ticketRate(catalogItemId: string): BillingRateSeed {
       calculatedPurchaseUnitPrice: ticketUnitPrice,
     },
     active: true,
+    prepaymentRequired: true,
     revision: 1,
     notes:
       'Durchschnittlicher Netto-Stückpreis aus 2.200,00 EUR / 24.415 Stück. Gutschrift 2025 (-100 EUR) nicht in den Stückpreis eingerechnet.',
@@ -181,6 +195,19 @@ async function seed() {
     }
 
     const current = existing.data() as Record<string, unknown>;
+    const currentSource =
+      current.source &&
+      typeof current.source === 'object' &&
+      !Array.isArray(current.source)
+        ? (current.source as Record<string, unknown>)
+        : undefined;
+
+    const legacyUnitPrice = WRISTBAND_ITEM_IDS.includes(
+      rate.catalogItemId as (typeof WRISTBAND_ITEM_IDS)[number],
+    )
+      ? legacyWristbandUnitPrice
+      : legacyTicketUnitPrice;
+
     const sameKnownSeed =
       current.seasonId === rate.seasonId &&
       current.sourceType === rate.sourceType &&
@@ -190,7 +217,54 @@ async function seed() {
       current.active === rate.active;
 
     if (sameKnownSeed) {
-      console.log(`= unchanged ${rate.id}`);
+      if (current.prepaymentRequired === rate.prepaymentRequired) {
+        console.log(`= unchanged ${rate.id}`);
+        continue;
+      }
+
+      if (current.prepaymentRequired === undefined) {
+        await ref.set({
+          prepaymentRequired: rate.prepaymentRequired,
+          updatedBy: 'dns-core-admin-seed',
+          updatedAt: FieldValue.serverTimestamp(),
+        }, { merge: true });
+        console.log(`✓ normalized explicit prepayment policy ${rate.id}`);
+        continue;
+      }
+    }
+
+    const isKnownLegacySeed =
+      (
+        current.updatedBy === 'dns-core-admin-seed' ||
+        currentSource?.documentLabel === rate.source.documentLabel
+      ) &&
+      current.seasonId === rate.seasonId &&
+      current.sourceType === rate.sourceType &&
+      current.catalogItemId === rate.catalogItemId &&
+      current.currency === rate.currency &&
+      current.active === true &&
+      current.billingUnitPrice === legacyUnitPrice;
+
+    if (isKnownLegacySeed) {
+      const currentRevision =
+        typeof current.revision === 'number' &&
+        Number.isInteger(current.revision) &&
+        current.revision >= 1
+          ? current.revision
+          : 1;
+
+      await ref.set({
+        billingUnitPrice: rate.billingUnitPrice,
+        revision: currentRevision + 1,
+        ...(current.prepaymentRequired === undefined
+          ? { prepaymentRequired: rate.prepaymentRequired }
+          : {}),
+        updatedBy: 'dns-core-admin-seed',
+        updatedAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
+      console.log(
+        `✓ migrated ${rate.id}: ${legacyUnitPrice.toFixed(8)} -> ${rate.billingUnitPrice.toFixed(2)} EUR`,
+      );
       continue;
     }
 

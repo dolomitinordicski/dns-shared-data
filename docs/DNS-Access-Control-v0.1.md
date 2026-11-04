@@ -134,6 +134,12 @@ kp.verify
 
 verification.read
 verification.manage
+
+flyer.read
+flyer.write
+flyer.publish
+flyer.templates.manage
+flyer.assets.manage
 ```
 
 Permissions are deliberately domain-specific. A contributor who may enter sales does not automatically receive pricing administration rights.
@@ -152,11 +158,11 @@ May enter operational quantities within granted scope:
 - ticket sales;
 - KP.
 
-Pricing remains read-only.
+Pricing remains read-only. Flyer drafts can be created/edited inside the contributor's granted scope.
 
 ### reviewer
 
-May verify submitted operational data within granted scope, but does not receive pricing or season administration by default.
+May verify submitted operational data within granted scope and may publish Flyer snapshots when the corresponding `flyer.publish` grant is assigned, but does not receive pricing or season administration by default.
 
 ### dns-admin
 

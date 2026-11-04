@@ -1,0 +1,15 @@
+{
+  "name": "dns-digital-pass-emulator-tools",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Isolated test-only toolchain; no production dependencies",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "firebase-tools": "15.34.2",
+    "qrcode": "1.5.4",
+    "pngjs": "7.0.0",
+    "@zxing/library": "0.21.3"
+  }
+}

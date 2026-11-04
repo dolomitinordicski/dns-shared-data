@@ -1,3 +1,4 @@
+import { VIRTUAL_AREA, VIRTUAL_IDENTITIES, virtualPolicy, syntheticOrder } from './fixtures/virtual-dns-area.mjs';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { doc, setDoc, getDoc, getDocs, deleteDoc, collection, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
 import fs from 'node:fs';
@@ -10,9 +11,12 @@ try {
     await setDoc(doc(db,'users','seller'),{active:true,globalRoles:[]});
     await setDoc(doc(db,'users','reader'),{active:true,globalRoles:[]});
     await setDoc(doc(db,'users','verifier'),{active:true,globalRoles:[]});
+    await setDoc(doc(db,'users','flyerOwner'),{active:true,globalRoles:[]});
+    await setDoc(doc(db,'users','flyerRogue'),{active:true,globalRoles:[]});
     await setDoc(doc(db,'seasons','2026-27'),{status:'active'});
     await setDoc(doc(db,'seasons','2024-25'),{status:'historical'});
     await setDoc(doc(db,'reportingAreas','area'),{canonicalName:'Area'});
+    await setDoc(doc(db,'reportingAreas','area2'),{canonicalName:'Area 2'});
     await setDoc(doc(db,'organizations','org'),{reportingAreaIds:['area']});
     await setDoc(doc(db,'deliveryLocations','delivery-org'),{id:'delivery-org',organizationId:'org',reportingAreaId:'area',recipientName:'Org',label:'Org delivery',status:'verified'});
     await setDoc(doc(db,'pocketfolderSourceRows','2026-27__source-row-06'),{id:'2026-27__source-row-06',seasonId:'2026-27',sourceRow:6,label:'Antholzertal',comparison2025:3500,requested2026:3000,dnsCopies:100,areaTotal2026:4200,printerTotal2026:4550,backLanguageNote:'Rückseite dt-it-en',rowKind:'area'});
@@ -20,11 +24,14 @@ try {
       await setDoc(doc(db,'accessGrants',`${uid}__organization__org`),{active:true,permissions});
     await setDoc(doc(db,'accessGrants','reader__reportingArea__area'),{active:true,permissions:['kp.read']});
     await setDoc(doc(db,'accessGrants','verifier__reportingArea__area'),{active:true,permissions:['kp.read','kp.verify','ticketOrders.read','ticketOrders.verify']});
+    await setDoc(doc(db,'accessGrants','flyerOwner__reportingArea__area'),{active:true,permissions:['flyer.read','flyer.write']});
   });
   const admin=env.authenticatedContext('admin').firestore();
   const seller=env.authenticatedContext('seller').firestore();
   const reader=env.authenticatedContext('reader').firestore();
   const verifier=env.authenticatedContext('verifier').firestore();
+  const flyerOwner=env.authenticatedContext('flyerOwner').firestore();
+  const flyerRogue=env.authenticatedContext('flyerRogue').firestore();
   await assertSucceeds(getDoc(doc(seller,'deliveryLocations','delivery-org')));
   await assertSucceeds(getDoc(doc(reader,'deliveryLocations','delivery-org')));
   await assertSucceeds(getDoc(doc(reader,'pocketfolderSourceRows','2026-27__source-row-06')));
@@ -40,6 +47,18 @@ try {
   await assertFails(setDoc(doc(seller,'ticketOrders',pocketfolderOrder.id),{...pocketfolderOrder,status:'draft'}));
   await assertSucceeds(setDoc(doc(verifier,'ticketOrders',pocketfolderOrder.id),{...pocketfolderOrder,status:'draft'}));
   await assertSucceeds(setDoc(doc(verifier,'ticketOrderLines',line.id),{...line,quantity:12}));
+
+  // Closing the season stops all contributor mutations, but reads remain open.
+  await assertFails(setDoc(doc(seller,'orderDeadlines','2026-27'),{enabled:true}));
+  await assertSucceeds(setDoc(doc(admin,'orderDeadlines','2026-27'),{
+    enabled:true, deadlineAt: new Date('2020-01-01T00:00:00Z'),
+  }));
+  await assertSucceeds(getDoc(doc(seller,'ticketOrders',pocketfolderOrder.id)));
+  await assertFails(setDoc(doc(seller,'ticketOrders',pocketfolderOrder.id),{...pocketfolderOrder,status:'submitted'}));
+  await assertFails(setDoc(doc(seller,'ticketOrderLines',line.id),{...line,quantity:24}));
+  await assertFails(deleteDoc(doc(seller,'ticketOrderLines',line.id)));
+  await assertSucceeds(setDoc(doc(admin,'ticketOrderLines',line.id),{...line,quantity:24}));
+  await assertSucceeds(deleteDoc(doc(admin,'orderDeadlines','2026-27')));
 
   const billingRate={
     id:'2026-27__order__item',
@@ -280,6 +299,16 @@ try {
   const milestone={id:'2026-27__m1',seasonId:'2026-27',date:'2026-12-23',label:'Milestone 1',order:1,updatedBy:'admin',updatedAt:serverTimestamp()};
   await assertSucceeds(setDoc(doc(admin,'kpMilestones',milestone.id),milestone));
   await assertFails(setDoc(doc(seller,'kpMilestones','2026-27__m2'),{...milestone,id:'2026-27__m2',order:2,updatedBy:'seller'}));
+  // Existing KP regression now also exercises an explicitly configured W matrix.
+  await env.withSecurityRulesDisabled(async context => {
+    const db = context.firestore();
+    for (const uid of ['seller','reader']) {
+      await setDoc(doc(db,'memberships',uid+'__org'),{userId:uid,organizationId:'org',active:true});
+    }
+  });
+  const kpPolicy = level => ({organizationId:'org',tools:{'data-entry':level},updatedBy:'admin',updatedAt:serverTimestamp()});
+  const kpPolicyRef = doc(admin,'organizationToolAccess','org');
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('write')));
   const kpEntry={id:'2026-27__org',seasonId:'2026-27',entityType:'organization',entityId:'org',reportingAreaId:'area',referenceKm:{uniqueNetworkKm:20,potentialOperationalKm:25},milestones:[{milestoneId:milestone.id,openedKm:10,naturalSnowKm:6,artificialSnowKm:4}],includeInKp:true,exclusionReason:'',provenance:{sourceSystem:'manual-data-entry',methodVersion:1,dataStatus:'draft'},notes:'',revision:1,updatedBy:'seller',updatedAt:serverTimestamp()};
   await assertSucceeds(setDoc(doc(seller,'kpEntries',kpEntry.id),kpEntry));
   await assertSucceeds(getDoc(doc(reader,'kpEntries',kpEntry.id)));
@@ -287,6 +316,15 @@ try {
   await assertFails(setDoc(doc(seller,'kpEntries','2026-27__org-wrong'),{...kpEntry,id:'2026-27__org-wrong',reportingAreaId:'unrelated'}));
   const kpPrevious=(await getDoc(doc(seller,'kpEntries',kpEntry.id))).data();
   const kpBatch=writeBatch(seller);kpBatch.set(doc(seller,'kpEntries',kpEntry.id,'revisions','1'),kpPrevious);kpBatch.set(doc(seller,'kpEntries',kpEntry.id),{...kpEntry,revision:2,milestones:[{milestoneId:milestone.id,openedKm:11,naturalSnowKm:7,artificialSnowKm:4}]});await assertSucceeds(kpBatch.commit());
+  // W applies to the existing successful KP write; R denies writes despite grants.
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('read')));
+  await assertSucceeds(getDoc(doc(seller,'kpEntries',kpEntry.id)));
+  await assertFails(setDoc(doc(seller,'kpEntries',kpEntry.id),{...kpEntry,revision:3}));
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('none')));
+  await assertFails(getDoc(doc(reader,'kpEntries',kpEntry.id)));
+  await assertFails(getDoc(doc(seller,'kpEntries',kpEntry.id)));
+  await assertSucceeds(getDoc(doc(admin,'kpEntries',kpEntry.id)));
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('write')));
   const fairValidation={id:'2026-27__area__2026-27__m1',seasonId:'2026-27',reportingAreaId:'area',milestoneId:milestone.id,potentialOperationalKm:25,openedKm:11,naturalSnowKm:7,artificialSnowKm:4,revision:1,validatedBy:'verifier',validatedAt:serverTimestamp()};
   await assertFails(setDoc(doc(seller,'kpFairValidations',fairValidation.id),{...fairValidation,validatedBy:'seller'}));
   await assertSucceeds(setDoc(doc(verifier,'kpFairValidations',fairValidation.id),fairValidation));
@@ -325,6 +363,83 @@ try {
   const weeklyBatch=writeBatch(admin);weeklyBatch.set(doc(admin,'ticketPricingConfigs','price-weekly','revisions','1'),weeklyPrevious);weeklyBatch.set(doc(admin,'ticketPricingConfigs','price-weekly'),{...price,id:'price-weekly',productCode:'wk-area',revision:2,unitPrice:12,settlementUnitPrice:12});await assertSucceeds(weeklyBatch.commit());
   await assertFails(setDoc(doc(seller,'ticketSales',newId),newSale));
   await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'ticketSales',saleId)));
+  const flyerDraft={
+    id:'flyer-area-draft',
+    schema:'dns.flyer-document',
+    version:1,
+    title:'Area Flyer',
+    scopeType:'reportingArea',
+    scopeId:'area',
+    seasonId:'2026-27',
+    status:'draft',
+    ownerUserId:'flyerOwner',
+    document:{schema:'dns.flyer-document',version:1},
+    updatedBy:'flyerOwner',
+    updatedAt:serverTimestamp(),
+  };
+  await assertSucceeds(setDoc(doc(flyerOwner,'flyerDocuments',flyerDraft.id),flyerDraft));
+  await assertSucceeds(getDoc(doc(flyerOwner,'flyerDocuments',flyerDraft.id)));
+  await assertFails(setDoc(doc(flyerOwner,'flyerDocuments','flyer-area2-draft'),{
+    ...flyerDraft,
+    id:'flyer-area2-draft',
+    scopeId:'area2',
+  }));
+  await assertFails(setDoc(doc(flyerRogue,'flyerDocuments','flyer-rogue'),{
+    ...flyerDraft,
+    id:'flyer-rogue',
+    ownerUserId:'flyerRogue',
+    updatedBy:'flyerRogue',
+  }));
+  await assertSucceeds(setDoc(doc(admin,'flyerDocuments','flyer-admin-area2'),{
+    ...flyerDraft,
+    id:'flyer-admin-area2',
+    scopeId:'area2',
+    ownerUserId:'admin',
+    updatedBy:'admin',
+  }));
+
+  // Template/asset updates must be authorized against their original scope.
+  await env.withSecurityRulesDisabled(async context=>{
+    const db=context.firestore();
+    for (const uid of ['flyerManagerA','flyerManagerB','flyerManagerBoth']) {
+      await setDoc(doc(db,'users',uid),{active:true,globalRoles:[]});
+      for (const area of uid === 'flyerManagerBoth' ? ['area','area2'] : [uid === 'flyerManagerA' ? 'area' : 'area2']) {
+        await setDoc(doc(db,'accessGrants',`${uid}__reportingArea__${area}`),{
+          active:true,permissions:['flyer.read','flyer.templates.manage','flyer.assets.manage'],
+        });
+      }
+    }
+  });
+  const managerA=env.authenticatedContext('flyerManagerA').firestore();
+  const managerB=env.authenticatedContext('flyerManagerB').firestore();
+  const managerBoth=env.authenticatedContext('flyerManagerBoth').firestore();
+  for (const [collectionName,fields] of [
+    ['flyerTemplates',{schema:'dns.flyer-template',name:'Scope test',blockStack:[]}],
+    ['flyerAssets',{schema:'dns.flyer-asset',assetType:'image',storagePath:'flyerAssets/area/scope.jpg'}],
+  ]) {
+    const original={...fields,id:'scope-test',version:1,scopeType:'reportingArea',scopeId:'area'};
+    const payload=(uid,extra={})=>({...original,...extra,updatedBy:uid,updatedAt:serverTimestamp()});
+    const write=(db,uid,extra={})=>setDoc(doc(db,collectionName,original.id),payload(uid,extra));
+    await assertSucceeds(write(managerA,'flyerManagerA'));
+    await assertSucceeds(write(managerA,'flyerManagerA'));
+    await assertSucceeds(write(admin,'admin'));
+    await assertFails(write(managerB,'flyerManagerB'));
+    await assertFails(write(flyerRogue,'flyerRogue'));
+    await assertFails(write(env.unauthenticatedContext().firestore(),'anonymous'));
+    await assertFails(write(managerA,'flyerManagerA',{id:'different-id'}));
+    await assertFails(write(managerA,'flyerManagerA',collectionName === 'flyerTemplates' ? {name:42} : {assetType:42}));
+    const moved={scopeId:'area2',...(collectionName === 'flyerAssets' ? {storagePath:'flyerAssets/area2/scope.jpg'} : {})};
+    // Destination-only permission cannot hijack an existing source document.
+    await assertFails(write(managerB,'flyerManagerB',moved));
+    // Even actors with access to both scopes must create a separate document.
+    await assertFails(write(managerBoth,'flyerManagerBoth',moved));
+    await assertFails(write(admin,'admin',moved));
+    await assertFails(write(managerBoth,'flyerManagerBoth',{scopeType:'organization',scopeId:'org',
+      ...(collectionName === 'flyerAssets' ? {storagePath:'flyerAssets/org/scope.jpg'} : {})}));
+    await assertSucceeds(getDoc(doc(managerA,collectionName,original.id)));
+    await assertFails(getDoc(doc(managerB,collectionName,original.id)));
+  }
+
   const historical={seasonId:'2025-26',domain:'sales',organizationId:'org',reportingAreaId:'area',facts:[{quantity:5,amount:50}]};
   await env.withSecurityRulesDisabled(async context=>{
     await setDoc(doc(context.firestore(),'historicalSeasonRecords','history'),historical);
@@ -346,5 +461,293 @@ try {
   await assertFails(setDoc(doc(admin,'ticketSales','2024-25__org__area__day__official__regular'),{...sale,id:'2024-25__org__area__day__official__regular',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketPricingConfigs','historic-price-2024'),{...price,id:'historic-price-2024',seasonId:'2024-25'}));
   await assertFails(setDoc(doc(admin,'ticketOrders','historic-order-2024'),{seasonId:'2024-25',organizationId:'org',category:'ticket',status:'draft'}));
-  console.log('Seasonal rules passed: scoped reads/writes, sourced billing rates/extras, legacy and unified revisioned billing snapshots, READY completeness guards, read-only users, immutable audit history, stale pricing and anonymous access.');
+  await env.withSecurityRulesDisabled(async context=>{
+    await setDoc(doc(context.firestore(),'idmPremiumPrograms','2026-27-idm-premium'),{
+      id:'2026-27-idm-premium',
+      seasonId:'2026-27',
+      amountPerReportingArea:15000,
+      reportingAreaIds:['ahrntal','drei-zinnen'],
+      sourceLabel:'IDM Premiumpartner WS2026/27',
+      active:true,
+      revision:1,
+    });
+  });
+  await assertSucceeds(getDoc(doc(admin,'idmPremiumPrograms','2026-27-idm-premium')));
+  await assertSucceeds(getDoc(doc(seller,'idmPremiumPrograms','2026-27-idm-premium')));
+  await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'idmPremiumPrograms','2026-27-idm-premium')));
+  await assertFails(setDoc(doc(admin,'idmPremiumPrograms','client-write'),{
+    id:'client-write',
+    seasonId:'2026-27',
+    amountPerReportingArea:1,
+    reportingAreaIds:['drei-zinnen'],
+    sourceLabel:'blocked',
+    active:true,
+    revision:1,
+  }));
+
+  // DNS Hub consumes only the public operational registry.
+  await env.withSecurityRulesDisabled(async context=>{
+    await setDoc(doc(context.firestore(),'toolRegistryPublic','data-entry'),{
+      id:'data-entry',
+      lifecycle:'production',
+      health:{connectivity:'active'},
+    });
+  });
+  await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),'toolRegistryPublic','data-entry')));
+  await assertSucceeds(getDocs(collection(env.unauthenticatedContext().firestore(),'toolRegistryPublic')));
+  await assertFails(setDoc(doc(env.unauthenticatedContext().firestore(),'toolRegistryPublic','blocked'),{id:'blocked'}));
+  await assertFails(setDoc(doc(admin,'toolRegistryPublic','blocked-admin'),{id:'blocked-admin'}));
+
+  // Faktura v2 internal collections are DNS-admin only.
+  const fakturaConfirmation={
+    id:'confirmation-test',
+    seasonId:'2026-27',
+    organizationId:'org',
+    orderId:'order-test',
+    revision:1,
+    status:'DRAFT',
+    acceptanceTextVersion:'v1',
+    lines:[],
+    createdAt:'2026-10-02T20:00:00Z',
+    createdBy:'admin',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaConfirmations','confirmation-test'),fakturaConfirmation));
+  await assertSucceeds(getDoc(doc(admin,'fakturaConfirmations','confirmation-test')));
+  await assertFails(getDoc(doc(seller,'fakturaConfirmations','confirmation-test')));
+  await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'fakturaConfirmations','confirmation-test')));
+
+  const token={
+    id:'token-test',
+    confirmationId:'confirmation-test',
+    tokenHash:'0123456789abcdef',
+    active:true,
+    createdAt:'2026-10-02T20:00:00Z',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaConfirmationTokens','token-test'),token));
+  await assertFails(getDoc(doc(seller,'fakturaConfirmationTokens','token-test')));
+  await assertFails(
+    getDocs(
+      query(
+        collection(seller,'fakturaConfirmationTokens'),
+        where('tokenHash','==','0123456789abcdef')
+      )
+    )
+  );
+  await assertFails(getDocs(collection(env.unauthenticatedContext().firestore(),'fakturaConfirmationTokens')));
+  await assertFails(
+    getDocs(
+      query(
+        collection(env.unauthenticatedContext().firestore(),'fakturaConfirmationTokens'),
+        where('tokenHash','==','0123456789abcdef')
+      )
+    )
+  );
+
+  const ledger={
+    orderId:'order-test',
+    confirmedByLine:{},
+    updatedAt:'2026-10-02T20:00:00Z',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaConfirmationLedgers','order-test'),ledger));
+  await assertFails(getDoc(doc(reader,'fakturaConfirmationLedgers','order-test')));
+
+  const fakturaEvent={
+    id:'event-test',
+    type:'CONFIRMATION_CREATED',
+    occurredAt:'2026-10-02T20:00:00Z',
+    actorId:'admin',
+    seasonId:'2026-27',
+    organizationId:'org',
+    entityType:'CONFIRMATION',
+    entityId:'confirmation-test',
+    entityRevision:1,
+    payload:{toStatus:'DRAFT'},
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaEvents','event-test'),fakturaEvent));
+  await assertSucceeds(getDoc(doc(admin,'fakturaEvents','event-test')));
+  await assertFails(setDoc(doc(admin,'fakturaEvents','event-test'),{...fakturaEvent,type:'CONFIRMATION_SENT'}));
+  await assertFails(deleteDoc(doc(admin,'fakturaEvents','event-test')));
+  await assertFails(getDoc(doc(seller,'fakturaEvents','event-test')));
+
+  const fakturaBilling={
+    id:'billing-test',
+    seasonId:'2026-27',
+    organizationId:'org',
+    revision:1,
+    status:'DRAFT',
+    lines:[],
+    totalAmount:0,
+    createdAt:'2026-10-02T20:00:00Z',
+    createdBy:'admin',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaBillingSheets','billing-test'),fakturaBilling));
+  await assertFails(getDoc(doc(reader,'fakturaBillingSheets','billing-test')));
+  await assertFails(setDoc(doc(seller,'fakturaBillingSheets','billing-seller'),fakturaBilling));
+
+  const fakturaPayment={
+    billingSheetId:'billing-test',
+    required:true,
+    status:'OPEN',
+    updatedAt:'2026-10-02T20:05:00Z',
+    updatedBy:'admin',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaPayments','billing-test'),fakturaPayment));
+  await assertFails(getDoc(doc(reader,'fakturaPayments','billing-test')));
+  await assertFails(setDoc(doc(seller,'fakturaPayments','billing-seller'),fakturaPayment));
+
+  const fakturaDelivery={
+    id:'delivery-test',
+    seasonId:'2026-27',
+    organizationId:'org',
+    orderId:'order-test',
+    billingSheetId:'billing-test',
+    confirmationIds:['confirmation-test'],
+    status:'PENDING',
+    lines:[],
+    createdAt:'2026-10-02T20:06:00Z',
+    createdBy:'admin',
+  };
+  await assertSucceeds(setDoc(doc(admin,'fakturaDeliveries','delivery-test'),fakturaDelivery));
+  await assertFails(getDoc(doc(reader,'fakturaDeliveries','delivery-test')));
+  await assertFails(setDoc(doc(seller,'fakturaDeliveries','delivery-seller'),fakturaDelivery));
+
+
+  // DNS Identity: a persisted W/R/none matrix further restricts existing grants.
+  // The emulator uses synthetic organizations; it never writes to dns-core.
+  await env.withSecurityRulesDisabled(async context => {
+    const db = context.firestore();
+    await setDoc(doc(db,'memberships','seller__org'),{userId:'seller',organizationId:'org',active:true});
+    await setDoc(doc(db,'memberships','reader__org'),{userId:'reader',organizationId:'org',active:true});
+    await setDoc(doc(db,'organizations','other-org'),{reportingAreaIds:['area2']});
+    await setDoc(doc(db,'ticketOrders','matrix-existing'),{
+      id:'matrix-existing',seasonId:'2026-27',organizationId:'org',reportingAreaId:'area',
+      category:'ticket',status:'draft',
+    });
+    await setDoc(doc(db,'ticketOrders','matrix-other'),{
+      id:'matrix-other',seasonId:'2026-27',organizationId:'other-org',reportingAreaId:'area2',
+      category:'ticket',status:'draft',
+    });
+  });
+  const matrixPolicy = level => ({
+    organizationId:'org',tools:{'data-entry':level},
+    updatedBy:'admin',updatedAt:serverTimestamp(),
+  });
+  const matrixRef=doc(admin,'organizationToolAccess','org');
+  // Non-admins cannot alter the access matrix.
+  await assertFails(setDoc(doc(seller,'organizationToolAccess','org'),matrixPolicy('write')));
+  await assertSucceeds(setDoc(matrixRef,matrixPolicy('write')));
+  await assertSucceeds(getDoc(doc(seller,'ticketOrders','matrix-existing')));
+  await assertSucceeds(setDoc(doc(seller,'ticketOrders','matrix-w-new'),{
+    id:'matrix-w-new',seasonId:'2026-27',organizationId:'org',reportingAreaId:'area',
+    category:'ticket',status:'draft',
+  }));
+  await assertFails(getDoc(doc(seller,'ticketOrders','matrix-other')));
+  // R permits reads but no writes even when an older grant contains write.
+  await assertSucceeds(setDoc(matrixRef,matrixPolicy('read')));
+  await assertSucceeds(getDoc(doc(seller,'ticketOrders','matrix-existing')));
+  await assertFails(setDoc(doc(seller,'ticketOrders','matrix-r-new'),{
+    id:'matrix-r-new',seasonId:'2026-27',organizationId:'org',reportingAreaId:'area',
+    category:'ticket',status:'draft',
+  }));
+  // None blocks even users with otherwise-valid scoped grants.
+  await assertSucceeds(setDoc(matrixRef,matrixPolicy('none')));
+  await assertFails(getDoc(doc(seller,'ticketOrders','matrix-existing')));
+  await assertFails(getDoc(doc(reader,'ticketOrders','matrix-existing')));
+  // DNS admin retains full access independent of the matrix.
+  await assertSucceeds(getDoc(doc(admin,'ticketOrders','matrix-existing')));
+  await assertSucceeds(setDoc(matrixRef,matrixPolicy('write')));
+  await assertSucceeds(getDoc(doc(reader,'ticketOrders','matrix-existing')));
+  await assertFails(setDoc(doc(reader,'ticketOrders','matrix-reader-new'),{
+    id:'matrix-reader-new',seasonId:'2026-27',organizationId:'org',reportingAreaId:'area',
+    category:'ticket',status:'draft',
+  }));
+
+  // Virtual DNS test area: multiple organizations sharing a reporting area.
+  // All users, memberships, orders and policy documents live exclusively in the emulator.
+  await env.withSecurityRulesDisabled(async context => {
+    const db = context.firestore();
+    await setDoc(doc(db,'reportingAreas',VIRTUAL_AREA.reportingAreaId),{canonicalName:VIRTUAL_AREA.name});
+    for (const orgId of [VIRTUAL_AREA.organizationId,VIRTUAL_AREA.secondaryOrganizationId]) {
+      await setDoc(doc(db,'organizations',orgId),{reportingAreaIds:[VIRTUAL_AREA.reportingAreaId]});
+    }
+    for (const userId of [VIRTUAL_IDENTITIES.writer,VIRTUAL_IDENTITIES.reader,VIRTUAL_IDENTITIES.outsider]) {
+      await setDoc(doc(db,'users',userId),{active:true,globalRoles:[]});
+    }
+    await setDoc(doc(db,'users',VIRTUAL_IDENTITIES.admin),{active:true,globalRoles:['dns-admin']});
+    for(const uid of [VIRTUAL_IDENTITIES.writer,VIRTUAL_IDENTITIES.reader]){
+      await setDoc(doc(db,'memberships',uid+'__'+VIRTUAL_AREA.organizationId),{userId:uid,organizationId:VIRTUAL_AREA.organizationId,active:true});
+      await setDoc(doc(db,'accessGrants',uid+'__organization__'+VIRTUAL_AREA.organizationId),{
+        active:true,permissions:['ticketOrders.read',...(uid===VIRTUAL_IDENTITIES.writer?['ticketOrders.write']:[])],
+      });
+    }
+    await setDoc(doc(db,'memberships',VIRTUAL_IDENTITIES.outsider+'__'+VIRTUAL_AREA.secondaryOrganizationId),{
+      userId:VIRTUAL_IDENTITIES.outsider,organizationId:VIRTUAL_AREA.secondaryOrganizationId,active:true,
+    });
+    await setDoc(doc(db,'accessGrants',VIRTUAL_IDENTITIES.outsider+'__reportingArea__'+VIRTUAL_AREA.reportingAreaId),{
+      active:true,permissions:['ticketOrders.read','ticketOrders.write'],
+    });
+    await setDoc(doc(db,'ticketOrders','virtual-owned'),syntheticOrder('virtual-owned'));
+  });
+  const virtualWriter=env.authenticatedContext(VIRTUAL_IDENTITIES.writer).firestore();
+  const virtualReader=env.authenticatedContext(VIRTUAL_IDENTITIES.reader).firestore();
+  const virtualOutsider=env.authenticatedContext(VIRTUAL_IDENTITIES.outsider).firestore();
+  const virtualAdmin=env.authenticatedContext(VIRTUAL_IDENTITIES.admin).firestore();
+  const virtualPolicyRef=doc(virtualAdmin,'organizationToolAccess',VIRTUAL_AREA.organizationId);
+  await assertSucceeds(setDoc(virtualPolicyRef,virtualPolicy('write')));
+  await assertSucceeds(getDoc(doc(virtualWriter,'ticketOrders','virtual-owned')));
+  await assertSucceeds(setDoc(doc(virtualWriter,'ticketOrders','virtual-w-new'),syntheticOrder('virtual-w-new')));
+  await assertSucceeds(getDoc(doc(virtualReader,'ticketOrders','virtual-owned')));
+  await assertFails(setDoc(doc(virtualReader,'ticketOrders','virtual-r-new'),syntheticOrder('virtual-r-new')));
+  // Even a reporting-area-wide grant does not override a configured organization's membership.
+  await assertFails(getDoc(doc(virtualOutsider,'ticketOrders','virtual-owned')));
+  await assertSucceeds(setDoc(virtualPolicyRef,virtualPolicy('read')));
+  await assertSucceeds(getDoc(doc(virtualWriter,'ticketOrders','virtual-owned')));
+  await assertFails(setDoc(doc(virtualWriter,'ticketOrders','virtual-read-new'),syntheticOrder('virtual-read-new')));
+  await assertSucceeds(setDoc(virtualPolicyRef,virtualPolicy('none')));
+  await assertFails(getDoc(doc(virtualWriter,'ticketOrders','virtual-owned')));
+  await assertFails(getDoc(doc(virtualReader,'ticketOrders','virtual-owned')));
+  await assertSucceeds(getDoc(doc(virtualAdmin,'ticketOrders','virtual-owned')));
+  console.log('Virtual DNS test area passed: W/R/none, two organizations in one area, member isolation, admin.');
+  console.log('Identity matrix emulator passed: W/R/none, existing grants, cross-organization isolation, admin override.');
+  // Identity grant validity must be enforced by the backend, not just Workspace.
+  // Use the existing synthetic seller/order and restore the grant after each check.
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(),'accessGrants','seller__organization__org'),{
+      active:true,permissions:['ticketOrders.read','ticketOrders.write','ticketSales.read','ticketSales.write','kp.read','kp.write'],
+      validTo:'2000-01-01T00:00:00Z',
+    });
+  });
+  await assertFails(getDoc(doc(seller,'ticketOrders',pocketfolderOrder.id)));
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(),'accessGrants','seller__organization__org'),{
+      active:true,permissions:['ticketOrders.read','ticketOrders.write','ticketSales.read','ticketSales.write','kp.read','kp.write'],
+      validFrom:'2999-01-01T00:00:00Z',
+    });
+  });
+  await assertFails(getDoc(doc(seller,'ticketOrders',pocketfolderOrder.id)));
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(),'accessGrants','seller__organization__org'),{
+      active:true,permissions:['ticketOrders.read','ticketOrders.write','ticketSales.read','ticketSales.write','kp.read','kp.write'],
+    });
+  });
+  await assertSucceeds(getDoc(doc(seller,'ticketOrders',pocketfolderOrder.id)));
+  console.log('Backend grant validity windows enforced: expired, future and unbounded grants.');
+  // Organization-scoped pricing must respect the matrix even with an explicit pricing grant.
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(),'accessGrants','seller__organization__org'),{
+      active:true,permissions:['ticketOrders.read','ticketOrders.write','ticketSales.read','ticketSales.write','kp.read','kp.write','pricing.manage']
+    });
+  });
+  const orgPrice = {...price,id:'identity-org-price-w',scopeType:'organization',scopeId:'org',updatedBy:'seller'};
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('write')));
+  await assertSucceeds(setDoc(doc(seller,'ticketPricingConfigs',orgPrice.id),orgPrice));
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('read')));
+  await assertFails(setDoc(doc(seller,'ticketPricingConfigs','identity-org-price-r'),{...orgPrice,id:'identity-org-price-r'}));
+  await assertSucceeds(setDoc(kpPolicyRef,kpPolicy('none')));
+  await assertFails(setDoc(doc(seller,'ticketPricingConfigs','identity-org-price-none'),{...orgPrice,id:'identity-org-price-none'}));
+  await assertSucceeds(setDoc(doc(admin,'ticketPricingConfigs','identity-org-price-admin'),{...orgPrice,id:'identity-org-price-admin',updatedBy:'admin'}));
+  console.log('Identity organization pricing matrix W/R/none and DNS Admin passed.');
+  console.log('Faktura v2 rules passed: internal collections are admin-only, public token collection is not directly readable, and audit events are append-only.');
+
+  console.log('Seasonal rules passed: scoped reads/writes, sourced billing rates/extras, explicit Flyer read/write grants, legacy and unified revisioned billing snapshots, READY completeness guards, read-only users, immutable audit history, stale pricing and anonymous access.');
 } finally { await env.cleanup(); }

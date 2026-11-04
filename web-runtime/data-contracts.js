@@ -51,7 +51,7 @@ export const DNS_DATA_CONTRACTS = [
     status: 'implemented',
     owner: 'DNS operational pricing',
     runtime: 'DNS_Core',
-    collections: ['pricingConfigs'],
+    collections: ['ticketPricingConfigs'],
     source: 'src/seasonal-operational-data.ts',
     schema: 'Seasonal Operational schema 4',
     write: 'Authorized pricing managers',
