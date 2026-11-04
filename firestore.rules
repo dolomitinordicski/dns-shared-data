@@ -1142,10 +1142,18 @@ service cloud.firestore {
     match /flyerTemplates/{document} {
       allow read: if hasFlyerPermission('flyer.read', resource.data);
 
-      allow create, update: if activeUser()
+      allow create: if activeUser()
         && validFlyerTemplate(request.resource.data)
         && request.resource.data.id == document
         && hasFlyerPermission('flyer.templates.manage', request.resource.data);
+
+      allow update: if activeUser()
+        && validFlyerTemplate(request.resource.data)
+        && request.resource.data.id == document
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.scopeType == resource.data.scopeType
+        && request.resource.data.scopeId == resource.data.scopeId
+        && hasFlyerPermission('flyer.templates.manage', resource.data);
 
       allow delete: if isAdmin();
     }
@@ -1154,10 +1162,18 @@ service cloud.firestore {
     match /flyerAssets/{document} {
       allow read: if hasFlyerPermission('flyer.read', resource.data);
 
-      allow create, update: if activeUser()
+      allow create: if activeUser()
         && validFlyerAsset(request.resource.data)
         && request.resource.data.id == document
         && hasFlyerPermission('flyer.assets.manage', request.resource.data);
+
+      allow update: if activeUser()
+        && validFlyerAsset(request.resource.data)
+        && request.resource.data.id == document
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.scopeType == resource.data.scopeType
+        && request.resource.data.scopeId == resource.data.scopeId
+        && hasFlyerPermission('flyer.assets.manage', resource.data);
 
       allow delete: if isAdmin();
     }

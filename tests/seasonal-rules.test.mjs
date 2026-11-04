@@ -398,6 +398,48 @@ try {
     updatedBy:'admin',
   }));
 
+  // Template/asset updates must be authorized against their original scope.
+  await env.withSecurityRulesDisabled(async context=>{
+    const db=context.firestore();
+    for (const uid of ['flyerManagerA','flyerManagerB','flyerManagerBoth']) {
+      await setDoc(doc(db,'users',uid),{active:true,globalRoles:[]});
+      for (const area of uid === 'flyerManagerBoth' ? ['area','area2'] : [uid === 'flyerManagerA' ? 'area' : 'area2']) {
+        await setDoc(doc(db,'accessGrants',`${uid}__reportingArea__${area}`),{
+          active:true,permissions:['flyer.read','flyer.templates.manage','flyer.assets.manage'],
+        });
+      }
+    }
+  });
+  const managerA=env.authenticatedContext('flyerManagerA').firestore();
+  const managerB=env.authenticatedContext('flyerManagerB').firestore();
+  const managerBoth=env.authenticatedContext('flyerManagerBoth').firestore();
+  for (const [collectionName,fields] of [
+    ['flyerTemplates',{schema:'dns.flyer-template',name:'Scope test',blockStack:[]}],
+    ['flyerAssets',{schema:'dns.flyer-asset',assetType:'image',storagePath:'flyerAssets/area/scope.jpg'}],
+  ]) {
+    const original={...fields,id:'scope-test',version:1,scopeType:'reportingArea',scopeId:'area'};
+    const payload=(uid,extra={})=>({...original,...extra,updatedBy:uid,updatedAt:serverTimestamp()});
+    const write=(db,uid,extra={})=>setDoc(doc(db,collectionName,original.id),payload(uid,extra));
+    await assertSucceeds(write(managerA,'flyerManagerA'));
+    await assertSucceeds(write(managerA,'flyerManagerA'));
+    await assertSucceeds(write(admin,'admin'));
+    await assertFails(write(managerB,'flyerManagerB'));
+    await assertFails(write(flyerRogue,'flyerRogue'));
+    await assertFails(write(env.unauthenticatedContext().firestore(),'anonymous'));
+    await assertFails(write(managerA,'flyerManagerA',{id:'different-id'}));
+    await assertFails(write(managerA,'flyerManagerA',collectionName === 'flyerTemplates' ? {name:42} : {assetType:42}));
+    const moved={scopeId:'area2',...(collectionName === 'flyerAssets' ? {storagePath:'flyerAssets/area2/scope.jpg'} : {})};
+    // Destination-only permission cannot hijack an existing source document.
+    await assertFails(write(managerB,'flyerManagerB',moved));
+    // Even actors with access to both scopes must create a separate document.
+    await assertFails(write(managerBoth,'flyerManagerBoth',moved));
+    await assertFails(write(admin,'admin',moved));
+    await assertFails(write(managerBoth,'flyerManagerBoth',{scopeType:'organization',scopeId:'org',
+      ...(collectionName === 'flyerAssets' ? {storagePath:'flyerAssets/org/scope.jpg'} : {})}));
+    await assertSucceeds(getDoc(doc(managerA,collectionName,original.id)));
+    await assertFails(getDoc(doc(managerB,collectionName,original.id)));
+  }
+
   const historical={seasonId:'2025-26',domain:'sales',organizationId:'org',reportingAreaId:'area',facts:[{quantity:5,amount:50}]};
   await env.withSecurityRulesDisabled(async context=>{
     await setDoc(doc(context.firestore(),'historicalSeasonRecords','history'),historical);
