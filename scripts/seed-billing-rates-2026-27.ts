@@ -34,7 +34,8 @@ function roundUpToCent(value: number) {
 }
 
 const legacyWristbandUnitPrice = 15.9 / 100;
-const legacyTicketUnitPrice = 2200 / 24415;
+// Match the exact value stored by the previous seed.
+const legacyTicketUnitPrice = Math.round((2200 / 24415) * 100000000) / 100000000;
 const wristbandUnitPrice = roundUpToCent(legacyWristbandUnitPrice);
 const ticketUnitPrice = roundUpToCent(legacyTicketUnitPrice);
 
@@ -253,11 +254,14 @@ async function seed() {
           : 1;
 
       await ref.set({
-        ...rate,
+        billingUnitPrice: rate.billingUnitPrice,
         revision: currentRevision + 1,
+        ...(current.prepaymentRequired === undefined
+          ? { prepaymentRequired: rate.prepaymentRequired }
+          : {}),
         updatedBy: 'dns-core-admin-seed',
         updatedAt: FieldValue.serverTimestamp(),
-      });
+      }, { merge: true });
       console.log(
         `✓ migrated ${rate.id}: ${legacyUnitPrice.toFixed(8)} -> ${rate.billingUnitPrice.toFixed(2)} EUR`,
       );
