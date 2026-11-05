@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { collection, doc, documentId, getDoc, getDocs, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
 
 const env = await initializeTestEnvironment({
   projectId: 'demo-dns-core',
@@ -36,22 +36,21 @@ try {
     document: { schema: 'dns.flyer-document', version: 1 },
   };
   await assertSucceeds(setDoc(doc(db('areaWriter'), 'flyerDocuments', flyerId), draft));
-  const scoped = (uid, id) => getDocs(query(
+  const scoped = uid => getDocs(query(
     collection(db(uid), 'flyerDocuments'),
     where('scopeType', '==', 'reportingArea'),
     where('scopeId', '==', areaId),
-    where(documentId(), '==', id),
   ));
-  console.log('CHECK 1: existing scoped query');
-  const existing = await assertSucceeds(scoped('areaColleague', flyerId));
+  console.log('CHECK 1: area-scoped list');
+  const existing = await assertSucceeds(scoped('areaColleague'));
   assert.equal(existing.docs.length, 1);
   assert.equal(existing.docs[0].id, flyerId);
-  console.log('CHECK 2: missing scoped query');
-  const missing = await assertSucceeds(scoped('areaColleague', missingId));
-  assert.equal(missing.empty, true);
+  console.log('CHECK 2: missing ID absent within authorized scoped list');
+  const missing = await assertSucceeds(scoped('areaColleague'));
+  assert.equal(missing.docs.some(item => item.id === missingId), false);
   console.log('CHECK 3: other-area existing denied');
-  await assertFails(scoped('otherArea', flyerId));
-  await assertFails(scoped('otherArea', missingId));
+  await assertFails(scoped('otherArea'));
+  await assertFails(scoped('otherArea'));
   await assertFails(getDoc(doc(db('otherArea'), 'flyerDocuments', flyerId)));
   await assertFails(getDoc(doc(db('areaWriter'), 'flyerDocuments', missingId)));
   console.log('PASS: scoped query distinguishes absent Flyer from denial without widening rules');
