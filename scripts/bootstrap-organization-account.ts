@@ -42,13 +42,16 @@ if (apply) {
   const userRef = db.collection('users').doc(account.uid);
   const memberRef = db.collection('memberships').doc(record.membership.id);
   const grantRef = db.collection('accessGrants').doc(record.grant.id);
+  const flyerReaderRef = db.collection('flyerPolicyReaders').doc(account.uid);
   const auditRef = db.collection('identityAdminAudit').doc();
   await db.runTransaction(async tx => {
-    const [user, membership, grant] = await Promise.all([tx.get(userRef), tx.get(memberRef), tx.get(grantRef)]);
-    if (user.exists || membership.exists || grant.exists) throw new Error('Existing identity records require manual review. No overwrite.');
+    const [user, membership, grant, flyerReader] = await Promise.all([tx.get(userRef), tx.get(memberRef), tx.get(grantRef), tx.get(flyerReaderRef)]);
+    if (user.exists || membership.exists || grant.exists || flyerReader.exists) throw new Error('Existing identity records require manual review. No overwrite.');
     tx.create(userRef, { ...record.user, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
     tx.create(memberRef, { ...record.membership, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
     tx.create(grantRef, { ...record.grant, grantedBy: 'dns-org-account-bootstrap', grantReason: 'Organization account initial provisioning', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+    // Private reader index only selects the already-authorized area grant; it does not grant any new permission.
+    tx.create(flyerReaderRef, { scopeType: 'reportingArea', scopeId: reportingAreaId });
     tx.create(auditRef, { action:'organization-account.provision', targetUid:account.uid,
       organizationId, reportingAreaId, timestamp:FieldValue.serverTimestamp(), source:'manual-cli' });
   });
