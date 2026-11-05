@@ -29,7 +29,7 @@ jobs:
           [[ "$BRIDGE_ACCOUNT" =~ ^[a-z][a-z0-9-]*@dns-core\.iam\.gserviceaccount\.com$ ]]
           test "$BRIDGE_ORIGINS" = 'https://dolomitinordicski.github.io'
           [[ "$BRIDGE_REGION" =~ ^europe-[a-z]+[0-9]+$ ]]
-      - uses: google-github-actions/auth@v2
+      - uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}
       - uses: google-github-actions/setup-gcloud@v2

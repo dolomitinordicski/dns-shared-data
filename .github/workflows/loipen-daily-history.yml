@@ -23,7 +23,7 @@ jobs:
         run: npm run publish:loipen:current -- loipen-network.json
       - name: Authenticate current widget publisher
         if: vars.DNS_LOIPEN_WIDGET_PUBLISH_ENABLED == 'true'
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ secrets.DNS_GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.DNS_LOIPEN_ARCHIVE_SERVICE_ACCOUNT }}
@@ -47,7 +47,7 @@ jobs:
         run: npm run archive:loipen:daily -- loipen-network.json
       - name: Authenticate dedicated publisher
         if: steps.archive-date.outputs.eligible == 'true' && vars.DNS_LOIPEN_ARCHIVE_ENABLED == 'true'
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ secrets.DNS_GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.DNS_LOIPEN_ARCHIVE_SERVICE_ACCOUNT }}
