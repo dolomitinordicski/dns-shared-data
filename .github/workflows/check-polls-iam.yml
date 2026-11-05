@@ -1,0 +1,57 @@
+name: DNS Polls IAM preflight (read only)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_check:
+        description: 'Type dns-polls/check-iam (no deploy or policy changes)'
+        required: true
+        type: string
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  check:
+    if: github.ref == 'refs/heads/main' && inputs.confirm_check == 'dns-polls/check-iam'
+    runs-on: ubuntu-latest
+    environment: dns-polls-bridge-production
+    env:
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+      BRIDGE_ACCOUNT: ${{ vars.DNS_POLLS_BRIDGE_SERVICE_ACCOUNT }}
+      BRIDGE_REGION: ${{ vars.DNS_POLLS_REGION }}
+      BRIDGE_ORIGINS: ${{ vars.DNS_POLLS_ALLOWED_ORIGINS }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate release variables
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$FIREBASE_SERVICE_ACCOUNT_JSON"
+          [[ "$BRIDGE_ACCOUNT" =~ ^[a-z][a-z0-9-]*@dns-core\.iam\.gserviceaccount\.com$ ]]
+          test "$BRIDGE_ORIGINS" = 'https://dolomitinordicski.github.io'
+          [[ "$BRIDGE_REGION" =~ ^europe-[a-z]+[0-9]+$ ]]
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Check existence of resources without modifying IAM
+        shell: bash
+        run: |
+          set -euo pipefail
+          gcloud iam service-accounts describe "$BRIDGE_ACCOUNT" --project=dns-core --format='value(email)' >/dev/null
+          gcloud firestore databases describe --project=dns-core --database='(default)' --format='value(name)' >/dev/null
+          gcloud firestore databases describe --project=dns-polls --database='(default)' --format='value(name)' >/dev/null
+          gcloud projects get-iam-policy dns-core --format=json > "$RUNNER_TEMP/dns-core-policy.json"
+          gcloud projects get-iam-policy dns-polls --format=json > "$RUNNER_TEMP/dns-polls-policy.json"
+          MEMBER="serviceAccount:$BRIDGE_ACCOUNT"
+          jq -e --arg member "$MEMBER" \
+            '[.bindings[] | select(.role == "roles/firebaseauth.viewer" and ((.members // []) | index($member) != null))] | length > 0' \
+            "$RUNNER_TEMP/dns-core-policy.json" >/dev/null
+          jq -e --arg member "$MEMBER" --arg expected 'resource.name=="projects/dns-core/databases/(default)"' \
+            '[.bindings[] | select(.role == "roles/datastore.viewer" and ((.members // []) | index($member) != null) and ((.condition.expression // "" | gsub(" "; "")) == $expected))] | length > 0' \
+            "$RUNNER_TEMP/dns-core-policy.json" >/dev/null
+          jq -e --arg member "$MEMBER" --arg expected 'resource.name=="projects/dns-polls/databases/(default)"' \
+            '[.bindings[] | select(.role == "roles/datastore.user" and ((.members // []) | index($member) != null) and ((.condition.expression // "" | gsub(" "; "")) == $expected))] | length > 0' \
+            "$RUNNER_TEMP/dns-polls-policy.json" >/dev/null
+          echo 'Direct IAM role bindings verified for DNS Core and dns-polls.'
+          echo 'Review inherited roles, denies, runtime impersonation and effective privileges separately.'
+          echo 'Database-level datastore.user still grants broad collection access.'

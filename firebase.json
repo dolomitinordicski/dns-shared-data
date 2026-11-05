@@ -2,5 +2,19 @@
   "firestore": {
     "database": "(default)",
     "rules": "firestore.rules"
-  }
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "functions": [
+    {
+      "source": "server",
+      "codebase": "digital-pass",
+      "ignore": [
+        "node_modules",
+        ".env*",
+        "*.log"
+      ]
+    }
+  ]
 }

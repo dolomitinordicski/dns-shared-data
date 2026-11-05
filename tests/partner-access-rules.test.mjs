@@ -1,5 +1,5 @@
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, getDoc, getDocs, collection, setDoc, query, where } from 'firebase/firestore';
+import { doc, getDoc, getDocs, collection, setDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -45,7 +45,54 @@ try {
   await assertSucceeds(getDocs(query(collection(env.authenticatedContext('regionalA').firestore(),'partnerEstablishments'),where('reportingAreaId','==','areaA'))));
   await assertFails(getDoc(doc(env.authenticatedContext('dnsAdmin').firestore(),'partnerVouchers','v1')));
   await assertFails(getDoc(doc(env.authenticatedContext('dnsAdmin').firestore(),'partnerEvidence','e1')));
-  assert.ok(true);
+  // Organization and territory queries must work without permitting global scans.
+  const scopedQuery=(uid,field,value)=>getDocs(query(
+    collection(env.authenticatedContext(uid).firestore(),'partnerEstablishments'),where(field,'==',value)));
+  assert.equal((await assertSucceeds(scopedQuery('hotelA','organizationId','orgA'))).size,1);
+  await assertFails(scopedQuery('hotelA','organizationId','orgB'));
+  await assertFails(scopedQuery('regionalA','reportingAreaId','areaB'));
+  await assertFails(getDocs(collection(env.unauthenticatedContext().firestore(),'partnerEstablishments')));
+
+  await env.withSecurityRulesDisabled(async ctx=>{
+    const db=ctx.firestore();
+    for (const uid of ['networkReader','revoked','expired','future','malformed']) {
+      await setDoc(doc(db,'users',uid),{active:true,globalRoles:[]});
+      const bounds=uid==='expired' ? {validTo:'2000-01-01T00:00:00Z'}
+        : uid==='future' ? {validFrom:'2100-01-01T00:00:00Z'}
+        : uid==='malformed' ? {validFrom:'invalid'} : {};
+      await setDoc(doc(db,'accessGrants',uid+'__network__dolomiti-nordicski'),{
+        active:uid!=='revoked',permissions:['partner.read'],...bounds,
+      });
+    }
+    for (const name of ['partnerCapacityRevisions','partnerAssessments','partnerAccreditations',
+      'partnerEvidence','partnerEvents','partnerVouchers','partnerCommunications']) {
+      await setDoc(doc(db,name,'private'),{establishmentId:'a'});
+    }
+  });
+  assert.equal((await assertSucceeds(getDocs(collection(
+    env.authenticatedContext('networkReader').firestore(),'partnerEstablishments')))).size,2);
+  for (const uid of ['revoked','expired','future','malformed']) {
+    await assertFails(read(uid,'a'));
+    await assertFails(scopedQuery(uid,'organizationId','orgA'));
+  }
+
+  // Every mutation remains backend-only, including existing records and admins.
+  for (const uid of ['hotelA','regionalA','networkReader','dnsAdmin']) {
+    const db=env.authenticatedContext(uid).firestore();
+    await assertFails(updateDoc(doc(db,'partnerEstablishments','a'),{displayName:'Changed'}));
+    await assertFails(deleteDoc(doc(db,'partnerEstablishments','a')));
+    for (const name of ['partnerCapacityRevisions','partnerAssessments','partnerAccreditations',
+      'partnerEvidence','partnerEvents','partnerVouchers','partnerCommunications']) {
+      await assertFails(getDoc(doc(db,name,'private')));
+      await assertFails(getDocs(collection(db,name)));
+      await assertFails(setDoc(doc(db,name,'new'),{establishmentId:'a'}));
+      await assertFails(updateDoc(doc(db,name,'private'),{establishmentId:'b'}));
+      await assertFails(deleteDoc(doc(db,name,'private')));
+    }
+  }
+  const hotelDb=env.authenticatedContext('hotelA').firestore();
+  await assertFails(updateDoc(doc(hotelDb,'users','hotelA'),{globalRoles:['dns-admin']}));
+  await assertFails(setDoc(doc(hotelDb,'accessGrants','hotelA__network__dolomiti-nordicski'),{active:true,permissions:['partner.read']}));
   console.log('Partner access boundary: scoped reads, deny-by-default and tenant isolation passed');
 } finally {
   await env.cleanup();

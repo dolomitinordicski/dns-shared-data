@@ -1,0 +1,11 @@
+{
+  "schema": "dns.digital-pass-inventory.v1",
+  "seasonId": "2026-27",
+  "revision": "synthetic-staging-v1",
+  "synthetic": true,
+  "approved": true,
+  "rows": [
+    {"itemCode":"sk-dns","organizationId":"synthetic-org-a","from":1,"to":20},
+    {"itemCode":"sk-dns","organizationId":"synthetic-org-b","from":21,"to":30}
+  ]
+}
