@@ -25,10 +25,10 @@ jobs:
     env:
       FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Checkout Faktura v2 branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: dolomitinordicski/DNS-Faktura
           ref: refactor/faktura-v2-domain
