@@ -1,0 +1,57 @@
+name: Cleanup legacy Flyer documents
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/cleanup-legacy-flyer-documents.ts'
+      - 'tests/cleanup-legacy-flyer-documents.test.ts'
+      - '.github/workflows/cleanup-legacy-flyer-documents.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/cleanup-legacy-flyer-documents.ts'
+      - 'tests/cleanup-legacy-flyer-documents.test.ts'
+      - '.github/workflows/cleanup-legacy-flyer-documents.yml'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx tsx --test tests/cleanup-legacy-flyer-documents.test.ts
+
+  cleanup:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: dns-production-auto
+    env:
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+      GOOGLE_CLOUD_PROJECT: dns-core
+      EXPECTED_LEGACY_COUNT: '172'
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check Firebase credentials
+        shell: bash
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::Missing FIREBASE_SERVICE_ACCOUNT_DNS_CORE repository secret."
+            exit 1
+          fi
+      - uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm install
+      - name: Delete legacy Flyer documents
+        run: npx tsx scripts/cleanup-legacy-flyer-documents.ts --apply
