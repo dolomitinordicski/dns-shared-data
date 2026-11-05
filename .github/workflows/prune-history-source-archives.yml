@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - uses: google-github-actions/auth@v2
+      - uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
       - name: Remove duplicated original cells and verify history
