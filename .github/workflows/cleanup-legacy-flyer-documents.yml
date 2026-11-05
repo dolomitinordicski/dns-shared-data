@@ -1,12 +1,16 @@
 name: Cleanup legacy Flyer documents
 
 on:
-  push:
-    branches:
-      - chore/cleanup-legacy-flyer-documents
-      - main
+  pull_request:
     paths:
       - 'scripts/cleanup-legacy-flyer-documents.ts'
+      - 'tests/cleanup-legacy-flyer-documents.test.ts'
+      - '.github/workflows/cleanup-legacy-flyer-documents.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/cleanup-legacy-flyer-documents.ts'
+      - 'tests/cleanup-legacy-flyer-documents.test.ts'
       - '.github/workflows/cleanup-legacy-flyer-documents.yml'
 
 permissions:
@@ -14,7 +18,19 @@ permissions:
   id-token: write
 
 jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx tsx --test tests/cleanup-legacy-flyer-documents.test.ts
+
   cleanup:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: dns-production-auto
     env:
@@ -37,9 +53,5 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - name: Dry-run legacy Flyer cleanup
-        if: github.ref != 'refs/heads/main'
-        run: npx tsx scripts/cleanup-legacy-flyer-documents.ts
       - name: Delete legacy Flyer documents
-        if: github.ref == 'refs/heads/main'
         run: npx tsx scripts/cleanup-legacy-flyer-documents.ts --apply
