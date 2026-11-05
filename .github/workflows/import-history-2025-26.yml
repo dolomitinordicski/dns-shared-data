@@ -1,8 +1,7 @@
+# Archived history maintenance must be started explicitly.
+# Dependency and workflow updates must not write or prune historical data.
 name: Import immutable 2025-26 history
 on:
-  push:
-    branches: [main]
-    paths: ['scripts/history/extract.py', 'scripts/history/import.mjs', '.github/workflows/import-history-2025-26.yml']
   workflow_dispatch:
 permissions:
   contents: read
