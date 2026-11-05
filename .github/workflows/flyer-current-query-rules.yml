@@ -1,0 +1,25 @@
+name: Flyer current document rules regression
+on:
+  pull_request:
+    paths:
+      - 'tests/flyer-current-query-rules.test.mjs'
+      - 'firestore.rules'
+      - '.github/workflows/flyer-current-query-rules.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scoped-flyer-document:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npx firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core "node tests/flyer-current-query-rules.test.mjs"
