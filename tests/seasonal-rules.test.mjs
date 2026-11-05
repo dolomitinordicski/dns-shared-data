@@ -361,6 +361,40 @@ try {
   const priceBatch=writeBatch(admin);priceBatch.set(doc(admin,'ticketPricingConfigs','price','revisions','1'),oldPrice);priceBatch.set(doc(admin,'ticketPricingConfigs','price'),{...price,revision:2,unitPrice:12,settlementUnitPrice:12});await assertSucceeds(priceBatch.commit());
   const weeklyPrevious=(await getDoc(doc(admin,'ticketPricingConfigs','price-weekly'))).data();
   const weeklyBatch=writeBatch(admin);weeklyBatch.set(doc(admin,'ticketPricingConfigs','price-weekly','revisions','1'),weeklyPrevious);weeklyBatch.set(doc(admin,'ticketPricingConfigs','price-weekly'),{...price,id:'price-weekly',productCode:'wk-area',revision:2,unitPrice:12,settlementUnitPrice:12});await assertSucceeds(weeklyBatch.commit());
+  // Organization price overrides are retired, never hard-deleted. Revision
+  // snapshots survive retirement and explicit reactivation.
+  const overrideRef=doc(admin,'ticketPricingConfigs','test-org-override');
+  const orgOverride={...price,id:'test-org-override',scopeType:'organization',scopeId:'org'};
+  await assertFails(setDoc(overrideRef,{...orgOverride,active:false}));
+  await assertSucceeds(setDoc(overrideRef,orgOverride));
+  const originalOverride=(await getDoc(overrideRef)).data();
+  await assertFails(setDoc(overrideRef,{...originalOverride,active:false,revision:2,updatedBy:'admin',updatedAt:serverTimestamp()}));
+  const retirementWithoutArchive=writeBatch(admin);
+  retirementWithoutArchive.update(overrideRef,{active:false,revision:2,updatedBy:'admin',updatedAt:serverTimestamp()});
+  await assertFails(retirementWithoutArchive.commit());
+  const invalidRetirement=writeBatch(admin);
+  invalidRetirement.set(doc(admin,'ticketPricingConfigs','test-org-override','revisions','1'),originalOverride);
+  invalidRetirement.update(overrideRef,{active:false,unitPrice:0,revision:2,updatedBy:'admin',updatedAt:serverTimestamp()});
+  await assertFails(invalidRetirement.commit());
+  const validRetirement=writeBatch(admin);
+  validRetirement.set(doc(admin,'ticketPricingConfigs','test-org-override','revisions','1'),originalOverride);
+  validRetirement.update(overrideRef,{active:false,revision:2,updatedBy:'admin',updatedAt:serverTimestamp()});
+  await assertSucceeds(validRetirement.commit());
+  assert.equal((await getDoc(overrideRef)).data().active,false);
+  assert.equal((await getDoc(doc(admin,'ticketPricingConfigs','test-org-override','revisions','1'))).data().active,true);
+  await assertFails(deleteDoc(overrideRef));
+  const inactiveOverride=(await getDoc(overrideRef)).data();
+  const restoration=writeBatch(admin);
+  restoration.set(doc(admin,'ticketPricingConfigs','test-org-override','revisions','2'),inactiveOverride);
+  restoration.update(overrideRef,{active:true,unitPrice:14,settlementUnitPrice:14,revision:3,updatedBy:'admin',updatedAt:serverTimestamp()});
+  await assertSucceeds(restoration.commit());
+  assert.equal((await getDoc(overrideRef)).data().active,true);
+  const areaPricePrevious=(await getDoc(doc(admin,'ticketPricingConfigs','price-weekly'))).data();
+  const invalidAreaRetirement=writeBatch(admin);
+  invalidAreaRetirement.set(doc(admin,'ticketPricingConfigs','price-weekly','revisions','2'),areaPricePrevious);
+  invalidAreaRetirement.update(doc(admin,'ticketPricingConfigs','price-weekly'),{active:false,revision:3,updatedBy:'admin',updatedAt:serverTimestamp()});
+  await assertFails(invalidAreaRetirement.commit());
+
   await assertFails(setDoc(doc(seller,'ticketSales',newId),newSale));
   await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'ticketSales',saleId)));
   const flyerDraft={
