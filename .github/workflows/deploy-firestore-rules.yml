@@ -10,6 +10,7 @@ on:
       - 'tests/seasonal-rules.test.mjs'
       - 'tests/partner-access-rules.test.mjs'
       - 'tests/flyer-storage-rules.test.mjs'
+      - 'tests/flyer-availability-rules.test.mjs'
       - '.github/workflows/deploy-firestore-rules.yml'
   push:
     branches: [main]
@@ -21,6 +22,7 @@ on:
       - 'tests/seasonal-rules.test.mjs'
       - 'tests/partner-access-rules.test.mjs'
       - 'tests/flyer-storage-rules.test.mjs'
+      - 'tests/flyer-availability-rules.test.mjs'
       - '.github/workflows/deploy-firestore-rules.yml'
   workflow_dispatch:
 
@@ -40,6 +42,7 @@ jobs:
       - run: npm run test:rules
       - run: npm run test:partners:rules
       - run: npm run test:storage:rules
+      - run: npm run test:flyer-availability:rules
 
   deploy:
     environment: dns-production-auto
