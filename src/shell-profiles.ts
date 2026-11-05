@@ -180,6 +180,10 @@ export const DNS_SHELL_PROFILES: Readonly<Record<DNSShellProfileId, DNSShellProf
       'Organization switching must not change UI language automatically.',
       'Desktop may use application navigation; mobile collapses it into a drawer.',
       'Portal shell must not be forked into a separate visual identity.',
+      'Portal header must use the shared DNS design-system header and responsive tokens, brand assets, typography and UI primitives; shell profile defines structure but does not provide a ready-made React header.',
+      'Portal navigation is a left application sidebar on desktop and a drawer on mobile; it must remain visually and semantically separate from the shared top header.',
+      'Portal applications must not add a second demo-role toolbar or unrelated floating navigation; authenticated role and organization context come from DNS Core, never a browser-selected privilege.',
+      'Any new shared header visual rule or reusable component must be defined and reviewed in Foundation before an application implements it locally.',
     ],
   },
 

@@ -22,6 +22,10 @@ export type DNSMembershipRole =
   | 'reviewer';
 
 export type DNSPermission =
+  | 'passActivation.issue'
+  | 'passSale.attest'
+  | 'passValidation.check'
+  | 'passCredential.revoke'
   | 'season.read'
   | 'season.manage'
   | 'pricing.read'
@@ -41,7 +45,13 @@ export type DNSPermission =
   | 'flyer.write'
   | 'flyer.publish'
   | 'flyer.templates.manage'
-  | 'flyer.assets.manage';
+  | 'flyer.assets.manage'
+  | 'polls.read'
+  | 'polls.manage'
+  | 'events.read'
+  | 'events.manage'
+  | 'registrations.read'
+  | 'registrations.export';
 
 export interface DNSUserProfile {
   /** Firebase Authentication UID. */
@@ -135,6 +145,10 @@ export const DNS_ROLE_DEFAULT_PERMISSIONS = {
 } as const satisfies Record<DNSMembershipRole, readonly DNSPermission[]>;
 
 export const DNS_ADMIN_PERMISSIONS = [
+  'passActivation.issue',
+  'passSale.attest',
+  'passValidation.check',
+  'passCredential.revoke',
   'season.read',
   'season.manage',
   'pricing.read',
@@ -155,6 +169,12 @@ export const DNS_ADMIN_PERMISSIONS = [
   'flyer.publish',
   'flyer.templates.manage',
   'flyer.assets.manage',
+  'polls.read',
+  'polls.manage',
+  'events.read',
+  'events.manage',
+  'registrations.read',
+  'registrations.export',
 ] as const satisfies readonly DNSPermission[];
 
 export const FIRESTORE_ACCESS_COLLECTIONS = {

@@ -1,3 +1,4 @@
+import { partnerDateTime, effectiveAt } from './partner-dates.js';
 /** DNS Partner Registry v1: pure import, temporal selection and quality checks. No persistence. */
 import type { ReportingAreaId } from './canonical-data.js';
 import type { PartnerEstablishment, PartnerCapacityRevision, PartnerPartnership } from './partner-contracts.js';
@@ -57,13 +58,20 @@ export function suggestLegacyMatches(row: LegacyPartnerRow, existing: readonly P
 export function resolveLegacyMatch(row: LegacyPartnerRow, decisions: readonly LegacyMatch[]): string | null {
   const matches = decisions.filter(d => d.sourceSystem === row.sourceSystem && d.sourceRowId === row.sourceRowId);
   if (matches.length > 1) throw new Error('Ambiguous legacy review: ' + row.sourceRowId);
-  return matches[0]?.establishmentId ?? null;
+  const decision = matches[0];
+  if (!decision) return null;
+  if (!decision.establishmentId.trim() || !decision.reviewedBy.trim() || !decision.reviewedAt.trim()) {
+    throw new Error('Incomplete legacy review: ' + row.sourceRowId);
+  }
+  partnerDateTime(decision.reviewedAt);
+  return decision.establishmentId;
 }
 
 export function atDate<T extends { validFrom: string; validTo?: string }>(
   rows: readonly T[], date: string,
 ): T | null {
-  const matches = rows.filter(r => r.validFrom <= date && (r.validTo === undefined || date < r.validTo));
+  const instant = partnerDateTime(date);
+  const matches = rows.filter(r => effectiveAt(r.validFrom, r.validTo, instant));
   if (matches.length > 1) throw new Error('Overlapping effective revisions');
   return matches[0] ?? null;
 }
@@ -81,16 +89,18 @@ export function validatePartnerRegistry(
     if (!e.organizationId) issues.push({code:'missing-organization',establishmentId:e.establishmentId,detail:'Canonical organizationId required'});
     if (!e.reportingAreaId) issues.push({code:'missing-area',establishmentId:e.establishmentId,detail:'Canonical reportingAreaId required'});
   }
+  for (const a of areas) effectiveAt(a.validFrom, a.validTo, 0);
   for (const c of capacities) {
+    effectiveAt(c.validFrom, c.validTo, 0);
     if ([c.beds,c.rooms,c.units,c.openingDays].some(n => n != null && (!Number.isInteger(n) || n < 0)))
       issues.push({code:'invalid-capacity',establishmentId:c.establishmentId,detail:'Capacity fields must be nonnegative integers or unknown'});
   }
   for (const e of establishments) {
-    const cap = capacities.filter(c=>c.establishmentId===e.establishmentId).sort((a,b)=>a.validFrom.localeCompare(b.validFrom));
-    for(let i=1;i<cap.length;i++) if(!cap[i-1].validTo || cap[i-1].validTo! > cap[i].validFrom)
+    const cap = capacities.filter(c=>c.establishmentId===e.establishmentId).sort((a,b)=>partnerDateTime(a.validFrom) - partnerDateTime(b.validFrom));
+    for(let i=1;i<cap.length;i++) if(!cap[i-1].validTo || partnerDateTime(cap[i-1].validTo!) > partnerDateTime(cap[i].validFrom))
       issues.push({code:'overlapping-capacity',establishmentId:e.establishmentId,detail:'Capacity date ranges overlap'});
-    const ar = areas.filter(a=>a.establishmentId===e.establishmentId).sort((a,b)=>a.validFrom.localeCompare(b.validFrom));
-    for(let i=1;i<ar.length;i++) if(!ar[i-1].validTo || ar[i-1].validTo! > ar[i].validFrom)
+    const ar = areas.filter(a=>a.establishmentId===e.establishmentId).sort((a,b)=>partnerDateTime(a.validFrom) - partnerDateTime(b.validFrom));
+    for(let i=1;i<ar.length;i++) if(!ar[i-1].validTo || partnerDateTime(ar[i-1].validTo!) > partnerDateTime(ar[i].validFrom))
       issues.push({code:'overlapping-area',establishmentId:e.establishmentId,detail:'Area date ranges overlap'});
   }
   return issues;
@@ -105,13 +115,14 @@ export function partnerRegistrySnapshot(
   area: ReportingAreaId,
   asOf: string,
 ) {
+  const instant = partnerDateTime(asOf);
   const current = establishments.filter(e => {
     const actualArea = atDate(areaRevisions.filter(r=>r.establishmentId===e.establishmentId),asOf);
     return actualArea?.reportingAreaId===area;
   });
   const ids = new Set(current.map(e=>e.establishmentId));
   const active = new Set(partnerships.filter(p => p.status==='active' &&
-    p.effectiveFrom <= asOf && (p.effectiveTo===undefined || asOf < p.effectiveTo) &&
+    effectiveAt(p.effectiveFrom, p.effectiveTo, instant) &&
     ids.has(p.establishmentId)).map(p=>p.establishmentId));
   let knownBeds=0, unknownBeds=0;
   for (const establishmentId of active) {

@@ -1,8 +1,10 @@
+import { partnerDateTime, effectiveAt } from './partner-dates.js';
 /** DNS Partner domain contracts v1.0 — additive, NO persistence or live writes. */
 import type { Language, ReportingAreaId, OrganizationId } from './canonical-data.js';
 
 export const DNS_PARTNER_CONTRACT_VERSION = '1.0.0' as const;
 
+/** Calendar date (YYYY-MM-DD) or ISO timestamp with an explicit timezone. */
 export type ISODate = string;
 export type EvidenceQuality = 'verified' | 'self-declared' | 'estimated' | 'missing' | 'not-applicable';
 export type EstablishmentType = 'hotel' | 'residence' | 'apartment' | 'camping' | 'rental' | 'ski-school' | 'service-provider' | 'other';
@@ -136,11 +138,11 @@ export function countActivePartnerEstablishments(
   reportingAreaId: ReportingAreaId,
   asOf: ISODate,
 ): number {
+  const asOfTime = partnerDateTime(asOf);
   const eligibleIds = new Set(establishments.filter(e => e.active && e.reportingAreaId === reportingAreaId).map(e => e.establishmentId));
   const activeIds = new Set(partnerships.filter(p =>
     p.status === 'active' &&
-    p.effectiveFrom <= asOf &&
-    (p.effectiveTo === undefined || asOf < p.effectiveTo) &&
+    effectiveAt(p.effectiveFrom, p.effectiveTo, asOfTime) &&
     eligibleIds.has(p.establishmentId)
   ).map(p => p.establishmentId));
   return activeIds.size;
@@ -152,12 +154,13 @@ export function summarizePartnerBeds(
   capacities: readonly PartnerCapacityRevision[],
   asOf: ISODate,
 ): { knownBeds: number; withKnownBeds: number; withUnknownBeds: number } {
+  const asOfTime = partnerDateTime(asOf);
   let knownBeds = 0;
   let withKnownBeds = 0;
   let withUnknownBeds = 0;
   for (const establishment of establishments) {
     const rows = capacities.filter(c => c.establishmentId === establishment.establishmentId &&
-      c.validFrom <= asOf && (c.validTo === undefined || asOf < c.validTo));
+      effectiveAt(c.validFrom, c.validTo, asOfTime));
     if (rows.length > 1) throw new Error('Overlapping capacity revisions: ' + establishment.establishmentId);
     const beds = rows[0]?.beds;
     if (beds === undefined || beds === null) { withUnknownBeds++; continue; }

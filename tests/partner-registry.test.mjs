@@ -39,3 +39,32 @@ assert.equal(partnerRegistrySnapshot(hotels,partnerships,areas,capacities,'area-
 assert.ok(validatePartnerRegistry(hotels,[...capacities,{...capacities[1],revisionId:'duplicate',validFrom:'2025-07-01'}],areas).some(x=>x.code==='overlapping-capacity'));
 assert.ok(validatePartnerRegistry(hotels,[{...capacities[0],beds:-2}],areas).some(x=>x.code==='invalid-capacity'));
 console.log('Partner Registry assertions passed');
+
+// Regression: compare actual instants, not date strings with different offsets.
+const before='2026-01-01T00:30:00Z';
+const future='2025-12-31T23:45:00-01:00'; // 00:45 UTC, after `before`.
+assert.equal(atDate([{validFrom:future,value:1}],before),null);
+assert.equal(atDate([{validFrom:'2026-01-01T01:00:00+01:00',value:1}],before)?.value,1);
+assert.equal(atDate([{validFrom:'2025-01-01',validTo:'2026-01-01T01:00:00+01:00'}],'2026-01-01'),null);
+assert.throws(()=>atDate([{validFrom:'2026-02-30'}],'2026-03-01'),/Invalid partner date/);
+assert.throws(()=>atDate([{validFrom:'2026-01-02',validTo:'2026-01-01'}],'2026-01-01'),/Invalid partner date interval/);
+const single=[hotels[0]];
+const sameArea=[{...areas[0],validFrom:'2025-01-01',validTo:undefined}];
+assert.equal(partnerRegistrySnapshot(single,[{...partnerships[0],effectiveFrom:future}],sameArea,capacities,'area-a',before).activeEstablishments,0);
+assert.equal(partnerRegistrySnapshot(single,[partnerships[0]],sameArea,[{...capacities[0],validFrom:future,validTo:undefined}],'area-a',before).establishmentsWithUnknownBeds,1);
+// Ranges that are adjacent in UTC must not be reported as overlapping.
+const adjacent=[
+  {...capacities[0],validFrom:'2025-01-01',validTo:'2026-01-01T01:00:00+01:00'},
+  {...capacities[1],validFrom:'2026-01-01T00:00:00Z'},
+];
+assert.deepEqual(validatePartnerRegistry(single,adjacent,sameArea),[]);
+assert.ok(validatePartnerRegistry(single,[adjacent[0],{...adjacent[1],validFrom:'2025-12-31T23:30:00Z'}],sameArea).some(i=>i.code==='overlapping-capacity'));
+
+const legacyRow={sourceSystem:'form',sourceRowId:'1',name:'x'};
+const reviewed={sourceSystem:'form',sourceRowId:'1',establishmentId:'h1',reviewedBy:'admin',reviewedAt:'2026-01-01'};
+for (const field of ['establishmentId','reviewedBy','reviewedAt']) {
+  assert.throws(()=>resolveLegacyMatch(legacyRow,[{...reviewed,[field]:' '}]),/Incomplete legacy review/);
+}
+assert.throws(()=>resolveLegacyMatch(legacyRow,[{...reviewed,reviewedAt:'2026-02-30'}]),/Invalid partner date/);
+assert.throws(()=>resolveLegacyMatch(legacyRow,[reviewed,reviewed]),/Ambiguous legacy review/);
+console.log('Partner Registry timezone and explicit-review regressions passed');
