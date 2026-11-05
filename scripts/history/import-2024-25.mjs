@@ -1,3 +1,4 @@
+import { persistHistory2024_25 } from './verify-2024-25.mjs';
 import { GoogleAuth } from 'google-auth-library';
 import { applicationDefault, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -77,34 +78,10 @@ try {
   if (apply) {
   initializeApp({ credential: applicationDefault(), projectId: 'dns-core' });
   const db = getFirestore();
-  const season = await db.doc('seasons/2024-25').get();
-  if (!season.exists) throw new Error('Canonical season seasons/2024-25 is missing; import aborted without writes.');
-  const refs = entries.map(([collectionName, id]) => db.collection(collectionName).doc(id));
-  await db.runTransaction(async (transaction) => {
-    const markerRef = db.doc('historicalSeasonImports/2024-25');
-    const marker = await transaction.get(markerRef);
-    if (marker.exists) {
-      if (marker.data().importHash !== importHash) throw new Error('2024-25 import exists with a different hash. No overwrite allowed.');
-      console.log('Identical 2024-25 import already exists; preserved.');
-      return;
-    }
-    const existing = await transaction.getAll(...refs);
-    if (existing.some((document) => document.exists)) throw new Error('Historical 2024-25 documents exist without an import marker. No overwrite allowed.');
-    entries.forEach(([, , data], index) => transaction.create(refs[index], data));
-  });
-
-  const persisted = await db.getAll(...refs);
-  function normalize(value) {
-    return Array.isArray(value) ? value.map(normalize)
-      : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, normalize(value[key])]))
-        : value;
-  }
-  persisted.forEach((document, index) => {
-    if (!document.exists || JSON.stringify(normalize(document.data())) !== JSON.stringify(normalize(entries[index][2]))) {
-      throw new Error(`Read-back verification failed for ${entries[index][0]}/${entries[index][1]}.`);
-    }
-  });
-  console.log('2024-25 import persisted and all records verified by read-back.');
+  const result = await persistHistory2024_25(db, entries, importHash);
+  console.log(result.exportChanged
+    ? 'Existing 2024-25 content verified; only export-byte metadata differs. Original records and metadata preserved without writes.'
+    : '2024-25 import and all records verified by read-back.');
   }
 } finally {
   await rm(directory, { recursive: true, force: true });
