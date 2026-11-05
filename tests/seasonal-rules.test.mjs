@@ -671,6 +671,29 @@ try {
   await assertFails(setDoc(doc(seller,'organizationToolAccess','org'),matrixPolicy('write')));
   await assertSucceeds(setDoc(matrixRef,matrixPolicy('write')));
   await assertSucceeds(getDoc(doc(seller,'ticketOrders','matrix-existing')));
+  // Data Entry reads existing orders using area-constrained collection queries,
+  // rather than getDoc calls for missing IDs (which have no resource metadata).
+  const ownedHeaders = await assertSucceeds(getDocs(query(
+    collection(seller,'ticketOrders'),
+    where('seasonId','==','2026-27'),
+    where('category','==','ticket'),
+    where('organizationId','==','org'),
+    where('reportingAreaId','==','area'),
+  )));
+  assert.ok(ownedHeaders.docs.some(item => item.id === 'matrix-existing'));
+  await assertSucceeds(getDocs(query(
+    collection(seller,'ticketOrderLines'),
+    where('seasonId','==','2026-27'),
+    where('organizationId','==','org'),
+    where('reportingAreaId','==','area'),
+  )));
+  await assertFails(getDocs(query(
+    collection(seller,'ticketOrders'),
+    where('seasonId','==','2026-27'),
+    where('category','==','ticket'),
+    where('organizationId','==','other-org'),
+    where('reportingAreaId','==','area2'),
+  )));
   await assertSucceeds(setDoc(doc(seller,'ticketOrders','matrix-w-new'),{
     id:'matrix-w-new',seasonId:'2026-27',organizationId:'org',reportingAreaId:'area',
     category:'ticket',status:'draft',
