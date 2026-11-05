@@ -8,6 +8,7 @@ on:
       - 'firebase.json'
       - 'firebase.storage.json'
       - 'tests/seasonal-rules.test.mjs'
+      - 'tests/partner-access-rules.test.mjs'
       - 'tests/flyer-storage-rules.test.mjs'
       - '.github/workflows/deploy-firestore-rules.yml'
   push:
@@ -18,6 +19,7 @@ on:
       - 'firebase.json'
       - 'firebase.storage.json'
       - 'tests/seasonal-rules.test.mjs'
+      - 'tests/partner-access-rules.test.mjs'
       - 'tests/flyer-storage-rules.test.mjs'
       - '.github/workflows/deploy-firestore-rules.yml'
   workflow_dispatch:
@@ -36,6 +38,7 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npm run test:rules
+      - run: npm run test:partners:rules
       - run: npm run test:storage:rules
 
   deploy:
