@@ -17,3 +17,13 @@ Orders use only the 2025-26 sections of the primary sheets. Copied sections, pre
 Import is atomic and create-only. A matching digest makes a rerun harmless; a different digest or pre-existing unmatched record aborts. Persisted documents are read back and compared with every imported value. The extraction script validates all three original file checksums and reconciles source order totals and sales differences.
 
 Public Git contains code and, when private Drive access is unavailable, an encrypted payload only. Payload encryption uses AES-256-GCM with a random data key wrapped by RSA-OAEP/SHA-256 for the Firebase service account. The private key stays in the existing repository secret and trusted Actions runner. Never commit decrypted JSON, the workbooks or credentials. The authenticated ciphertext must remain available until its import has been verified.
+
+## Firebase is the operational source
+
+Normal application reads of 2025-26 history use the scoped facts in Firestore, not Google Drive or workbook downloads. Drive files are original evidence for a one-time controlled migration or explicitly initiated recovery only. Do not introduce a runtime fallback that fetches or reimports the workbooks when Firestore data is missing; report the missing data instead.
+
+For future seasons the canonical flow is DNS Data Entry -> DNS_Core / Firestore -> authorized consumers. Data Entry writes to the appropriate operational collections under the existing authorization, validation and revision controls. Consumers read those persisted records and derive totals from the correct domain; they must not require an Excel/Drive synchronization step or combine historical snapshots with operational records for the same observations.
+
+Historical snapshots remain read-only and separate from editable current-season data. Retain original workbook evidence; copying redundant source cells into Firestore is not required for normal operation. An explicitly initiated archive cleanup removes only duplicate source-cell documents, never the historical fact records.
+
+The 2025-26 import and duplicate-source cleanup workflows are manual maintenance tools (`workflow_dispatch`). Updating dependencies or workflow files must not start either operation. Existing source discrepancies remain explicit until a documented correction is approved; moving data to Firestore does not resolve those discrepancies.
