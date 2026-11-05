@@ -1354,7 +1354,36 @@ service cloud.firestore {
         && data.updatedBy == request.auth.uid
         // Repository writes an ISO string, not serverTimestamp().
         && data.updatedAt is string && data.updatedAt.size() == 24
-        && data.updatedAt.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z
+        && data.updatedAt.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z$');
+    }
+
+    function validFlyerAvailabilityPolicy(data) {
+      return data.keys().hasAll(['schemaVersion', 'enabled', 'updatedAt', 'updatedBy'])
+        && data.keys().hasOnly(['schemaVersion', 'enabled', 'updatedAt', 'updatedBy'])
+        && data.schemaVersion is int && data.schemaVersion == 1
+        && data.enabled is map
+        && data.enabled.keys().hasAll([
+          'dns_price_list','regional_price_list','ticket_weekly_dns','ticket_weekly_area',
+          'ticket_daily_area','hotel_package','voucher','gutschein','promotion'
+        ])
+        && data.enabled.keys().hasOnly([
+          'dns_price_list','regional_price_list','ticket_weekly_dns','ticket_weekly_area',
+          'ticket_daily_area','hotel_package','voucher','gutschein','promotion'
+        ])
+        && data.enabled['dns_price_list'] is bool
+        && data.enabled['regional_price_list'] is bool
+        && data.enabled['ticket_weekly_dns'] is bool
+        && data.enabled['ticket_weekly_area'] is bool
+        && data.enabled['ticket_daily_area'] is bool
+        && data.enabled['hotel_package'] is bool
+        && data.enabled['voucher'] is bool
+        && data.enabled['gutschein'] is bool
+        && data.enabled['promotion'] is bool
+        && data.updatedBy == request.auth.uid
+        && data.updatedAt is string && data.updatedAt.size() == 24
+        && data.updatedAt.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z$');
+    }
+
     match /flyerDesignPolicies/{policyId} {
       allow get: if policyId == 'dns-global' && canReadFlyerDesignPolicy();
       allow list: if false;
