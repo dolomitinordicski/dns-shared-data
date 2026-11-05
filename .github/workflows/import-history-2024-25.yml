@@ -1,8 +1,7 @@
+# Historical archive: normal reads use Firestore; original files remain provenance.
+# Reimport is recovery tooling only and must be started explicitly.
 name: Import immutable 2024-25 history
 on:
-  push:
-    branches: [main]
-    paths: ['scripts/history/extract-2024-25.py', 'scripts/history/import-2024-25.mjs', '.github/workflows/import-history-2024-25.yml']
   workflow_dispatch:
 permissions:
   contents: read
