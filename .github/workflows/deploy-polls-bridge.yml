@@ -36,7 +36,7 @@ jobs:
           [[ "$DNS_POLLS_BRIDGE_SERVICE_ACCOUNT" =~ ^[a-z][a-z0-9-]*@dns-core\.iam\.gserviceaccount\.com$ ]] || { echo "::error::DNS Core runtime service account not configured"; exit 1; }
           test "$DNS_POLLS_ALLOWED_ORIGINS" = 'https://dolomitinordicski.github.io' || { echo "::error::Unexpected CORS origins"; exit 1; }
           [[ "$DNS_POLLS_REGION" =~ ^europe-[a-z]+[0-9]+$ ]] || { echo "::error::Region must be reviewed and explicitly configured"; exit 1; }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Install locked toolchain
