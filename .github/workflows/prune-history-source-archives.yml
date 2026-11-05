@@ -1,8 +1,8 @@
+# Archived history maintenance must be started explicitly.
+# Dependency and workflow updates must not write or prune historical data.
 name: Remove duplicated 2025-26 source-cell archive
 on:
-  push:
-    branches: [main]
-    paths: ['scripts/history/prune-source-archives.mjs', '.github/workflows/prune-history-source-archives.yml']
+  workflow_dispatch:
 permissions:
   contents: read
   id-token: write
