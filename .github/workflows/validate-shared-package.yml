@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'src/**'
+      - 'assets/tool-icons/**'
+      - 'tests/tool-icons.test.mjs'
       - 'tests/trail-status.test.mjs'
       - 'scripts/partner-activation-policy.mjs'
       - 'scripts/partner-provisioning-service.mjs'
@@ -39,6 +41,8 @@ on:
   pull_request:
     paths:
       - 'src/**'
+      - 'assets/tool-icons/**'
+      - 'tests/tool-icons.test.mjs'
       - 'tests/trail-status.test.mjs'
       - 'scripts/partner-activation-policy.mjs'
       - 'scripts/partner-provisioning-service.mjs'
@@ -102,6 +106,9 @@ jobs:
 
       - name: Test Partner provisioning policy
         run: npm run test:partner-provisioning
+
+      - name: Test canonical tool icon catalog
+        run: node --test tests/tool-icons.test.mjs
 
       - name: Typecheck
         run: npm run typecheck
