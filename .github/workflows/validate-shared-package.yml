@@ -84,6 +84,9 @@ jobs:
       - name: Test Partner contract aggregations
         run: node --test tests/partner-contracts.test.mjs
 
+      - name: Test Partner registry and onboarding
+        run: node --test tests/partner-registry.test.mjs tests/partner-activation.test.mjs tests/partner-onboarding-journey.test.mjs tests/partner-import-selection.test.mjs
+
       - name: Typecheck
         run: npm run typecheck
 

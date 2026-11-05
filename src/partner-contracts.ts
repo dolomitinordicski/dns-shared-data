@@ -1,3 +1,4 @@
+import { partnerDateTime, effectiveAt } from './partner-dates.js';
 /** DNS Partner domain contracts v1.0 — additive, NO persistence or live writes. */
 import type { Language, ReportingAreaId, OrganizationId } from './canonical-data.js';
 
@@ -128,24 +129,6 @@ export interface BlindVoucherRecord {
   productCode: string;
   status: 'issued' | 'redeemed' | 'cancelled' | 'expired';
   /** No guestName, guest email, address, birth date, or other guest identifying attributes. */
-}
-
-function partnerDateTime(value: ISODate): number {
-  const iso = /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2}))?$/;
-  const time = Date.parse(value);
-  const day = Date.parse(value.slice(0, 10) + 'T00:00:00Z');
-  if (!iso.test(value) || !Number.isFinite(time) || !Number.isFinite(day)
-      || new Date(day).toISOString().slice(0, 10) !== value.slice(0, 10)) {
-    throw new Error('Invalid partner date: ' + value);
-  }
-  return time;
-}
-
-function effectiveAt(from: ISODate, to: ISODate | undefined, asOf: number): boolean {
-  const start = partnerDateTime(from);
-  const end = to === undefined ? Infinity : partnerDateTime(to);
-  if (end <= start) throw new Error('Invalid partner date interval');
-  return start <= asOf && asOf < end;
 }
 
 /** Pure deterministic aggregation. Input rows represent a single consistent time snapshot. */
