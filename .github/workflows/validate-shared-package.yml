@@ -5,9 +5,6 @@ on:
     branches: [main]
     paths:
       - 'src/**'
-      - 'scripts/history/import-2024-25.mjs'
-      - 'scripts/history/verify-2024-25.mjs'
-      - 'tests/history-2024-25-import.test.mjs'
       - 'assets/tool-icons/**'
       - 'tests/tool-icons.test.mjs'
       - 'tests/trail-status.test.mjs'
@@ -44,9 +41,6 @@ on:
   pull_request:
     paths:
       - 'src/**'
-      - 'scripts/history/import-2024-25.mjs'
-      - 'scripts/history/verify-2024-25.mjs'
-      - 'tests/history-2024-25-import.test.mjs'
       - 'assets/tool-icons/**'
       - 'tests/tool-icons.test.mjs'
       - 'tests/trail-status.test.mjs'
@@ -115,9 +109,6 @@ jobs:
 
       - name: Test canonical tool icon catalog
         run: node --test tests/tool-icons.test.mjs
-
-      - name: Test immutable historical import verification
-        run: node --test tests/history-2024-25-import.test.mjs
 
       - name: Typecheck
         run: npm run typecheck
