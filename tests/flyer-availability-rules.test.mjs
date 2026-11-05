@@ -51,6 +51,20 @@ try {
 
   await assertSucceeds(getDoc(doc(admin, 'flyerAvailabilityPolicies', 'dns-global')));
   await assertSucceeds(getDoc(doc(area, 'flyerAvailabilityPolicies', 'dns-global')));
+  // A reporting-area grant alone does not permit reading a global policy.
+  // This reproduces the missing-index failure observed during workspace onboarding.
+  await env.withSecurityRulesDisabled(async ctx => {
+    const { deleteDoc } = await import('firebase/firestore');
+    await deleteDoc(doc(ctx.firestore(), 'flyerPolicyReaders', 'area'));
+  });
+  await assertFails(getDoc(doc(area, 'flyerAvailabilityPolicies', 'dns-global')));
+  await env.withSecurityRulesDisabled(async ctx => {
+    await setDoc(doc(ctx.firestore(), 'flyerPolicyReaders', 'area'), {
+      scopeType: 'reportingArea', scopeId: 'drei-zinnen',
+    });
+  });
+  await assertSucceeds(getDoc(doc(area, 'flyerAvailabilityPolicies', 'dns-global')));
+
   await assertFails(getDoc(doc(inactive, 'flyerAvailabilityPolicies', 'dns-global')));
   await assertFails(getDoc(doc(anonymous, 'flyerAvailabilityPolicies', 'dns-global')));
 
