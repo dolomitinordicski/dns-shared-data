@@ -42,11 +42,14 @@ try {
     where('scopeId', '==', areaId),
     where(documentId(), '==', id),
   ));
+  console.log('CHECK 1: existing scoped query');
   const existing = await assertSucceeds(scoped('areaColleague', flyerId));
   assert.equal(existing.docs.length, 1);
   assert.equal(existing.docs[0].id, flyerId);
+  console.log('CHECK 2: missing scoped query');
   const missing = await assertSucceeds(scoped('areaColleague', missingId));
   assert.equal(missing.empty, true);
+  console.log('CHECK 3: other-area existing denied');
   await assertFails(scoped('otherArea', flyerId));
   await assertFails(scoped('otherArea', missingId));
   await assertFails(getDoc(doc(db('otherArea'), 'flyerDocuments', flyerId)));
