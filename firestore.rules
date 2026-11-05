@@ -607,7 +607,10 @@ service cloud.firestore {
         && (resource.data.active == true
             || (resource.data.scopeType == 'organization' && request.resource.data.active == true))
         && (request.resource.data.active == true
-            || (request.resource.data.active == false && resource.data.scopeType == 'organization'))
+            || (request.resource.data.active == false
+                && resource.data.scopeType == 'organization'
+                && request.resource.data.diff(resource.data).affectedKeys()
+                     .hasOnly(['active','revision','updatedBy','updatedAt'])))
         && request.resource.data.revision == resource.data.revision + 1 && archived('ticketPricingConfigs',document);
       allow delete: if false;
       match /revisions/{revision} {
