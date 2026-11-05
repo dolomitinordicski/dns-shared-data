@@ -15,11 +15,15 @@ function fixture({email='hotel@example.com',verified=true,disabled=false,contact
     async runTransaction(callback){
       const writes=[];
       const tx={
-        async get(ref){const val=records.get(ref.path);return {exists:val!==undefined,data:()=>val}},
+        async get(ref){
+          if(writes.length)throw new Error('Transaction reads must precede writes');
+          const val=records.get(ref.path);return {exists:val!==undefined,data:()=>val};
+        },
         create(ref,value){writes.push([ref.path,value])},
       };
       const result=await callback(tx);
-      for(const [path,val] of writes){if(records.has(path))throw new Error('Already exists: '+path);records.set(path,val)}
+      for(const [path] of writes)if(records.has(path))throw new Error('Already exists: '+path);
+      for(const [path,val] of writes)records.set(path,val);
       return result;
     },
   };
@@ -32,11 +36,25 @@ assert.equal(a.activated,true);
 assert.equal(a.establishmentId,'hotel-1');
 assert.deepEqual(f.records.get('accessGrants/uid-1__organization__org-1').permissions,['partner.read']);
 assert.equal(f.records.get('users/uid-1').globalRoles.length,0);
+const firstSnapshot=JSON.stringify([...f.records]);
 assert.equal((await f.service.activateVerifiedMember('uid-1')).alreadyProvisioned,true);
+assert.equal(JSON.stringify([...f.records]),firstSnapshot,'Repeated activation must preserve all records');
 assert.equal(f.records.get('partnerActivationEvents/uid-1__org-1').type,'registered-email-activation');
 assert.equal((await fixture({verified:false}).service.activateVerifiedMember('uid-2')).activated,false);
 assert.equal((await fixture({disabled:true}).service.activateVerifiedMember('uid-2')).activated,false);
 assert.equal((await fixture({contacts:[{email:'hotel@example.com',organizationId:'org-1',establishmentId:'hotel-1',active:true},{email:'hotel@example.com',organizationId:'org-2',establishmentId:'hotel-2',active:true}]}).service.activateVerifiedMember('uid-3')).activated,false);
 assert.equal((await fixture({contacts:[{email:'attacker@example.com',organizationId:'org-1',establishmentId:'hotel-1',active:true}]}).service.activateVerifiedMember('uid-4')).activated,false);
 assert.equal((await fixture({override:{'memberships/uid-5__org-1':{active:false,userId:'uid-5',organizationId:'org-1'}}}).service.activateVerifiedMember('uid-5')).activated,false);
+for(const options of [
+  {verified:false},
+  {disabled:true},
+  {override:{'users/uid-6':{id:'uid-6',active:false,globalRoles:[]}}},
+  {override:{'accessGrants/uid-6__organization__org-1':{active:false,userId:'uid-6',scopeId:'org-1'}}},
+  {override:{'partnerEstablishments/hotel-1':{organizationId:'other-org'}}},
+]){
+  const denied=fixture(options);
+  const before=JSON.stringify([...denied.records]);
+  assert.equal((await denied.service.activateVerifiedMember('uid-6')).activated,false);
+  assert.equal(JSON.stringify([...denied.records]),before,'Denied activation must write nothing');
+}
 console.log('Partner provisioning policy assertions passed');

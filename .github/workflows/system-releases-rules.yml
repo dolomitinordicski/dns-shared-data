@@ -1,0 +1,27 @@
+name: System Releases Firestore Rules
+on:
+  pull_request:
+    paths:
+      - 'firestore.rules'
+      - 'tests/system-releases-rules.test.mjs'
+      - 'package.json'
+      - '.github/workflows/system-releases-rules.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  emulator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: npm install --no-package-lock
+      - run: npm run test:system-releases:rules
+      - name: Validate release publication dry run
+        run: npx tsx scripts/publish-system-release.ts --file=releases/pending/workspace-news-example.json

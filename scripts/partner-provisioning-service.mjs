@@ -48,8 +48,10 @@ export function createPartnerProvisioningService({ auth, db, clock = () => new D
         const membershipRef = db.collection('memberships').doc(uid + '__' + contact.organizationId);
         const grantRef = db.collection('accessGrants').doc(uid + '__organization__' + contact.organizationId);
         const establishmentRef = db.collection('partnerEstablishments').doc(contact.establishmentId);
-        const [profile, membership, grant, establishment] = await Promise.all([
-          tx.get(profileRef), tx.get(membershipRef), tx.get(grantRef), tx.get(establishmentRef),
+        const eventRef = db.collection('partnerActivationEvents').doc(uid + '__' + contact.organizationId);
+        // Firestore requires every read to finish before the first write.
+        const [profile, membership, grant, establishment, event] = await Promise.all([
+          tx.get(profileRef), tx.get(membershipRef), tx.get(grantRef), tx.get(establishmentRef), tx.get(eventRef),
         ]);
         if (!establishment.exists || establishment.data().organizationId !== contact.organizationId) {
           return { activated: false, reason: 'contact-review-required' };
@@ -80,8 +82,6 @@ export function createPartnerProvisioningService({ auth, db, clock = () => new D
           permissions: ['partner.read'], active: true, grantedBy: 'partner-activation',
           grantReason: 'registered-email', createdAt: timestamp, updatedAt: timestamp,
         });
-        const eventRef = db.collection('partnerActivationEvents').doc(uid + '__' + contact.organizationId);
-        const event = await tx.get(eventRef);
         if (!event.exists) tx.create(eventRef, {
           uid, organizationId: contact.organizationId, establishmentId: contact.establishmentId,
           type: 'registered-email-activation', createdAt: timestamp,

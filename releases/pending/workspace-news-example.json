@@ -1,0 +1,15 @@
+{
+  "id": "workspace-news-example",
+  "toolId": "workspace",
+  "version": "0.0.0-example",
+  "type": "feature",
+  "audience": "area",
+  "title": {
+    "it": "Esempio di aggiornamento",
+    "de": "Beispiel einer Aktualisierung"
+  },
+  "description": {
+    "it": "Voce di prova per il controllo della pubblicazione. Non pubblicare.",
+    "de": "Testeintrag zur Prüfung des Veröffentlichungsprozesses. Nicht veröffentlichen."
+  }
+}

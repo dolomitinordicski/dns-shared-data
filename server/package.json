@@ -1,0 +1,13 @@
+{
+  "name": "dns-digital-pass-functions",
+  "private": true,
+  "type": "module",
+  "main": "firebase-entry.mjs",
+  "engines": {
+    "node": "22"
+  },
+  "dependencies": {
+    "firebase-admin": "^14.5.0",
+    "firebase-functions": "^7.4.0"
+  }
+}
