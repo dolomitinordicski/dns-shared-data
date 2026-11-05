@@ -33,6 +33,12 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Test canonical organization contacts
+        run: npm run test:organizations
+
+      - name: Test Identity Admin authorization guards
+        run: npm run test:identity-admin
+
       - name: Validate seed plan
         run: npm run seed:firebase
 

@@ -8,11 +8,23 @@
   },
   "scripts": {
     "build:package": "tsc -p tsconfig.package.json",
+    "inspect:loipen": "tsx scripts/inspect-loipen-html.ts",
+    "inspect:loipen:live": "tsx scripts/inspect-live-loipen.ts",
+    "prepare:loipen:widget": "tsx scripts/prepare-loipen-widget-candidate.ts",
+    "test:loipen": "tsx --test tests/loipen-html-adapter.test.ts",
+    "test:widget:merge": "tsx --test tests/widget-trails-snapshot-merge.test.ts",
+    "test:widget:carousel": "tsx --test tests/widget-carousel-aggregation.test.ts",
+    "inspect:loipen:network": "tsx scripts/inspect-loipen-network.ts",
+    "archive:loipen:daily": "tsx scripts/archive-loipen-daily.ts",
+    "publish:loipen:widget": "tsx scripts/publish-loipen-widget-from-history.ts",
+    "publish:loipen:current": "tsx scripts/publish-loipen-widget-current.ts",
+    "test:loipen:history": "tsx --test tests/loipen-opening-history.test.ts",
     "prepare": "npm run build:package",
     "seed:firebase": "tsx scripts/seed-firestore.ts",
     "seed:firebase:apply": "tsx scripts/seed-firestore.ts --apply",
     "typecheck": "tsc --noEmit",
-    "deploy:firebase:rules": "npx firebase-tools@latest deploy --only firestore:rules --project dns-core",
+    "deploy:firebase:rules": "npx firebase-tools@latest deploy --only firestore:rules,storage --project dns-core",
+    "test:storage:rules": "firebase emulators:exec --config firebase.storage.json --only firestore,storage --project demo-dns-storage \"node --test --test-concurrency=1 tests/flyer-storage-rules.test.mjs\"",
     "seed:design-system": "tsx scripts/seed-design-system.ts",
     "seed:design-system:apply": "tsx scripts/seed-design-system.ts --apply",
     "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
@@ -33,7 +45,20 @@
     "seed:idm-premium-programs:apply": "tsx scripts/seed-idm-premium-programs.ts --apply",
     "sync:tool-registry": "tsx scripts/sync-tool-registry.ts",
     "sync:tool-registry:apply": "tsx scripts/sync-tool-registry.ts --apply",
-    "test:collective-orders:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/collective-orders-rules.test.mjs\""
+    "test:collective-orders:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/collective-orders-rules.test.mjs\"",
+    "test:system-releases:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/system-releases-rules.test.mjs\"",
+    "release:system:validate": "tsx scripts/publish-system-release.ts",
+    "test:digital-pass:e2e": "node scripts/run-digital-pass-e2e.mjs",
+    "test:organizations": "tsx --test tests/organization-contacts.test.ts",
+    "test:area-admin": "tsx --test tests/area-admin-provisioning.test.ts",
+    "test:identity-admin": "node --test tests/identity-admin-http.test.mjs",
+    "bootstrap:organization": "tsx scripts/bootstrap-organization-account.ts",
+    "test:partner-registry": "npm run build:package && node tests/partner-registry.test.mjs",
+    "test:partner-activation": "npm run build:package && node tests/partner-activation.test.mjs",
+    "test:partner-onboarding-journey": "npm run build:package && node tests/partner-onboarding-journey.test.mjs",
+    "test:partner-import": "npm run build:package && node tests/partner-import-selection.test.mjs",
+    "test:partners:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/partner-access-rules.test.mjs\"",
+    "test:partner-provisioning": "node tests/partner-activation-policy.test.mjs && node tests/partner-provisioning.test.mjs"
   },
   "devDependencies": {
     "firebase-admin": "^14.5.0",
@@ -208,6 +233,10 @@
     "./tool-registry": {
       "types": "./dist/tool-registry.d.ts",
       "import": "./dist/tool-registry.js"
+    },
+    "./partner-quality-criteria": {
+      "types": "./dist/partner-quality-criteria.d.ts",
+      "import": "./dist/partner-quality-criteria.js"
     }
   }
 }

@@ -293,6 +293,11 @@ async function main() {
       syncedAt: FieldValue.serverTimestamp(),
     });
   }
+  // Remove only explicitly retired registry IDs; never delete unrelated records.
+  const retiredIds = ['qr', 'strategy', 'ar360', 'portal-v2', 'smartslopes', 'partnerportal'];
+  for (const id of retiredIds) {
+    batch.delete(db.collection(COLLECTION).doc(id));
+  }
   batch.set(db.collection(COLLECTION).doc(META_DOC), {
     id: META_DOC,
     registryVersion: DNS_TOOL_REGISTRY_VERSION,

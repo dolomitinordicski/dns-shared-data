@@ -33,8 +33,8 @@ export interface TrailStatusSummary {
 
 /**
  * Aggregates uniquely keyed physical segments after a provider-specific
- * normalization step. Excludes segments with unknown opening state
- * rather than silently treating them as closed; returns null if incomplete.
+ * normalization step. Rejects ambiguous segment-to-area assignments.
+ * Unknown opening states are not treated as closed; returns null if incomplete.
  */
 export interface NormalizedTrailSegment {
   id: string;
@@ -49,22 +49,30 @@ export function summarizeTrailSegments(
 ): Pick<TrailStatusSummary, 'openKm' | 'totalKm' | 'openPercent'> {
   const unique = new Map<string, NormalizedTrailSegment>();
   for (const segment of segments) {
-    if (segment.reportingAreaId !== scopeId && scopeId !== 'dolomiti-nordicski') continue;
-    if (!segment.id || !Number.isFinite(segment.lengthKm) || segment.lengthKm < 0) {
+    if (typeof segment.id !== 'string' || !segment.id.trim()
+        || typeof segment.reportingAreaId !== 'string' || !segment.reportingAreaId.trim()) {
       return { openKm: null, totalKm: null, openPercent: null };
     }
     const previous = unique.get(segment.id);
-    if (previous && (previous.lengthKm !== segment.lengthKm || previous.open !== segment.open)) {
+    if (previous && (previous.reportingAreaId !== segment.reportingAreaId
+        || previous.lengthKm !== segment.lengthKm || previous.open !== segment.open)) {
       return { openKm: null, totalKm: null, openPercent: null };
     }
     unique.set(segment.id, segment);
   }
-  if (unique.size === 0 || [...unique.values()].some(s => s.open === null)) {
+  // Validate duplicate assignments before selecting an area so network and
+  // area summaries cannot silently disagree about the same physical segment.
+  const rows = [...unique.values()].filter(row =>
+    scopeId === 'dolomiti-nordicski' || row.reportingAreaId === scopeId);
+  if (rows.length === 0 || rows.some(row => typeof row.open !== 'boolean'
+      || !Number.isFinite(row.lengthKm) || row.lengthKm < 0)) {
     return { openKm: null, totalKm: null, openPercent: null };
   }
-  const rows = [...unique.values()];
   const totalKm = rows.reduce((sum, row) => sum + row.lengthKm, 0);
   const openKm = rows.filter(row => row.open).reduce((sum, row) => sum + row.lengthKm, 0);
+  if (!Number.isFinite(totalKm * 100) || !Number.isFinite(openKm * 100)) {
+    return { openKm: null, totalKm: null, openPercent: null };
+  }
   return {
     openKm: Math.round(openKm * 100) / 100,
     totalKm: Math.round(totalKm * 100) / 100,

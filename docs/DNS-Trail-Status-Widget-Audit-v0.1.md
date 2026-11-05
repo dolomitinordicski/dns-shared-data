@@ -9,6 +9,9 @@
 ## Architecture
 Contwise approved read-only feed → controlled ingestion/cache (DNS platform) → normalized TrailStatusSummary by canonical reportingAreaId → Partner Portal's embed endpoint → hotel websites. Shared Data owns types and canonical IDs, not provider credentials or live mutable data. Do not make each iframe call the provider directly.
 
+## Aggregation guardrails
+The same physical segment ID must map to one canonical area. Contradictory duplicates return unknown values before area filtering. Missing, null or malformed opening states never become closed trails. Tests cover scoped/network reconciliation, duplicates, unknown states and invalid inputs; they do not validate a live provider integration.
+
 ## Before enabling live values
 1. Obtain approved endpoint, authentication model, terms, attribution, expected refresh frequency and outage semantics from Contwise/General Solutions.
 2. Inspect real samples with segment ID, geometry/length, open status, update timestamp and area mapping.

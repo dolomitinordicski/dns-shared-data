@@ -5,6 +5,11 @@ on:
     branches: [main]
     paths:
       - 'src/**'
+      - 'tests/trail-status.test.mjs'
+      - 'scripts/partner-activation-policy.mjs'
+      - 'scripts/partner-provisioning-service.mjs'
+      - 'tests/partner-activation-policy.test.mjs'
+      - 'tests/partner-provisioning.test.mjs'
       - 'web-runtime/**'
       - 'index.html'
       - 'scripts/check-web-design-system.mjs'
@@ -34,6 +39,11 @@ on:
   pull_request:
     paths:
       - 'src/**'
+      - 'tests/trail-status.test.mjs'
+      - 'scripts/partner-activation-policy.mjs'
+      - 'scripts/partner-provisioning-service.mjs'
+      - 'tests/partner-activation-policy.test.mjs'
+      - 'tests/partner-provisioning.test.mjs'
       - 'web-runtime/**'
       - 'index.html'
       - 'scripts/check-web-design-system.mjs'
@@ -80,6 +90,18 @@ jobs:
 
       - name: Build package
         run: npm run build:package
+
+      - name: Test trail segment summaries
+        run: node --test tests/trail-status.test.mjs
+
+      - name: Test Partner contract aggregations
+        run: node --test tests/partner-contracts.test.mjs
+
+      - name: Test Partner registry and onboarding
+        run: node --test tests/partner-registry.test.mjs tests/partner-activation.test.mjs tests/partner-onboarding-journey.test.mjs tests/partner-import-selection.test.mjs
+
+      - name: Test Partner provisioning policy
+        run: npm run test:partner-provisioning
 
       - name: Typecheck
         run: npm run typecheck
