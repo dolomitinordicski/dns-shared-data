@@ -1,4 +1,6 @@
 export * from './canonical-data.js';
+export * from './public-organization-contacts.js';
+export * from './workspace-usage.js';
 export * from './seasonal-operational-data.js';
 export * from './design-system.js';
 export * from './access-control.js';
@@ -56,3 +58,10 @@ export * from './partner-quality-criteria.js';
 
 export * from './public-widget.js';
 export * from './public-widget-publisher.js';
+
+export * from './area-admin-provisioning.js';
+export * from './partner-contracts.js';
+export * from './partner-registry.js';
+export * from './partner-activation.js';
+export * from './partner-onboarding-journey.js';
+export * from './partner-import-selection.js';

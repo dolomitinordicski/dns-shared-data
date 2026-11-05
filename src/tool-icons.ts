@@ -16,6 +16,7 @@ export const DNS_TOOL_ICON_ASSIGNMENTS: Readonly<Record<string, DNSToolIconCateg
   hub: 'general', fair: 'analytics',
 };
 export function getDNSToolIcon(toolId: string) {
-  const category = DNS_TOOL_ICON_ASSIGNMENTS[toolId] ?? 'general';
+  const category = Object.hasOwn(DNS_TOOL_ICON_ASSIGNMENTS, toolId)
+    ? DNS_TOOL_ICON_ASSIGNMENTS[toolId] : 'general';
   return { category, ...DNS_TOOL_ICON_CATEGORIES[category] };
 }

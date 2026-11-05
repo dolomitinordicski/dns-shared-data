@@ -1,0 +1,89 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profile() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid));
+    }
+
+    function activeUser() {
+      return signedIn()
+        && profile() != null
+        && profile().data.active == true;
+    }
+
+    function isAdmin() {
+      return activeUser()
+        && profile().data.globalRoles is list
+        && 'dns-admin' in profile().data.globalRoles;
+    }
+
+    function grant(scopeType, scopeId) {
+      return firestore.get(/databases/(default)/documents/accessGrants/$(request.auth.uid + '__' + scopeType + '__' + scopeId));
+    }
+
+    // Keep the same RFC3339 parsing semantics as firestore.rules. In
+    // particular, valid timezone offsets are accepted and malformed values
+    // fail closed when timestamp.value cannot parse them.
+    function grantWithinDates(currentGrant) {
+      return (!currentGrant.keys().hasAny(['validFrom'])
+          || (currentGrant.validFrom is string
+            && request.time >= timestamp.value(currentGrant.validFrom)))
+        && (!currentGrant.keys().hasAny(['validTo'])
+          || (currentGrant.validTo is string
+            && request.time <= timestamp.value(currentGrant.validTo)));
+    }
+
+    function hasScopedPermission(scopeType, scopeId, permission) {
+      let currentGrant = grant(scopeType, scopeId);
+      return activeUser()
+        && scopeId.size() > 0
+        && currentGrant != null
+        && currentGrant.data.active == true
+        && grantWithinDates(currentGrant.data)
+        && currentGrant.data.permissions is list
+        && permission in currentGrant.data.permissions;
+    }
+
+    function canReadArea(areaId) {
+      return hasScopedPermission('reportingArea', areaId, 'flyer.read')
+        || hasScopedPermission('reportingArea', areaId, 'flyer.write')
+        || hasScopedPermission('network', 'dolomiti-nordicski', 'flyer.read')
+        || hasScopedPermission('network', 'dolomiti-nordicski', 'flyer.write');
+    }
+
+    function canWriteArea(areaId) {
+      return hasScopedPermission('reportingArea', areaId, 'flyer.write')
+        || hasScopedPermission('network', 'dolomiti-nordicski', 'flyer.write');
+    }
+
+    function validJpegUpload(fileName) {
+      return request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= 12 * 1024 * 1024
+        && request.resource.contentType == 'image/jpeg'
+        && fileName.size() > 4
+        && fileName.size() <= 140
+        && fileName.matches('^[A-Za-z0-9_.-]+\\.jpg$');
+    }
+
+    // Area-shared library. Organization-only grants are intentionally not
+    // consulted: Storage cannot reliably resolve an organization to all of
+    // its reporting areas without duplicating mutable authorization data.
+    match /flyerAssets/{areaId}/{fileName} {
+      allow read: if isAdmin() || canReadArea(areaId);
+
+      allow write: if (isAdmin()
+          || canWriteArea(areaId))
+        && (request.resource == null || validJpegUpload(fileName));
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
