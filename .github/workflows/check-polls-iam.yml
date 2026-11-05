@@ -20,7 +20,7 @@ jobs:
       BRIDGE_REGION: ${{ vars.DNS_POLLS_REGION }}
       BRIDGE_ORIGINS: ${{ vars.DNS_POLLS_ALLOWED_ORIGINS }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Validate release variables
         shell: bash
         run: |

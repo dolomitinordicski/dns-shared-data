@@ -27,7 +27,7 @@ jobs:
       DNS_POLLS_REGION: ${{ vars.DNS_POLLS_REGION }}
       FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Check deployment prerequisites (fail closed)
         shell: bash
         run: |
