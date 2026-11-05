@@ -520,7 +520,7 @@ service cloud.firestore {
         && data.salesPeriod in ['regular','presale']
         && data.unitPrice is number && data.unitPrice >= 0
         && data.settlementUnitPrice is number && data.settlementUnitPrice >= 0
-        && data.currency == 'EUR' && data.active == true
+        && data.currency == 'EUR' && data.active is bool
         && data.revision is int && data.revision >= 1
         && data.provenance.sourceSystem == 'manual-data-entry'
         && data.provenance.methodVersion == 1 && data.provenance.dataStatus == 'draft'
@@ -595,7 +595,7 @@ service cloud.firestore {
     match /ticketPricingConfigs/{document} {
       allow read: if readPricing(resource.data);
       allow get: if !exists(/databases/$(database)/documents/ticketPricingConfigs/$(document)) && activeUser();
-      allow create: if !historicalLocked(request.resource.data) && validPricing(request.resource.data) && managePricing(request.resource.data)
+      allow create: if !historicalLocked(request.resource.data) && request.resource.data.active == true && validPricing(request.resource.data) && managePricing(request.resource.data)
         && request.resource.data.id == document && request.resource.data.revision == 1;
       allow update: if !historicalLocked(request.resource.data) && validPricing(request.resource.data) && managePricing(resource.data)
         && request.resource.data.id == resource.data.id
@@ -604,6 +604,13 @@ service cloud.firestore {
         && request.resource.data.productCode == resource.data.productCode
         && request.resource.data.salesChannel == resource.data.salesChannel && request.resource.data.salesPeriod == resource.data.salesPeriod
         && resource.data.provenance.dataStatus == 'draft'
+        && (resource.data.active == true
+            || (resource.data.scopeType == 'organization' && request.resource.data.active == true))
+        && (request.resource.data.active == true
+            || (request.resource.data.active == false
+                && resource.data.scopeType == 'organization'
+                && request.resource.data.diff(resource.data).affectedKeys()
+                     .hasOnly(['active','revision','updatedBy','updatedAt'])))
         && request.resource.data.revision == resource.data.revision + 1 && archived('ticketPricingConfigs',document);
       allow delete: if false;
       match /revisions/{revision} {
