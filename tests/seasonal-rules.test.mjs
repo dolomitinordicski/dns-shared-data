@@ -432,6 +432,43 @@ try {
     updatedBy:'admin',
   }));
 
+  // One shared DNS general price list: readable across areas but editable only
+  // by DNS Admin. All other network Flyer drafts remain inaccessible to area.
+  const officialDnsId='current__network__dolomiti-nordicski__2026-27__dns_price_list';
+  const officialDnsFlyer={
+    ...flyerDraft,
+    id:officialDnsId,
+    title:'DNS Gesamtpreisliste',
+    scopeType:'network',
+    scopeId:'dolomiti-nordicski',
+    ownerUserId:'admin',
+    updatedBy:'admin',
+  };
+  await assertSucceeds(setDoc(doc(admin,'flyerDocuments',officialDnsId),{
+    ...officialDnsFlyer,
+    updatedAt:serverTimestamp(),
+  }));
+  await assertSucceeds(getDoc(doc(flyerOwner,'flyerDocuments',officialDnsId)));
+  await assertSucceeds(getDoc(doc(flyerRogue,'flyerDocuments',officialDnsId)));
+  // Even a non-admin holding a network flyer.write grant cannot modify
+  // the single DNS general document.
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(),'accessGrants','flyerRogue__network__dolomiti-nordicski'),{
+      active:true,permissions:['flyer.write'],
+    });
+  });
+  await assertFails(setDoc(doc(flyerRogue,'flyerDocuments',officialDnsId),{
+    ...officialDnsFlyer, ownerUserId:'flyerRogue', updatedBy:'flyerRogue', updatedAt:serverTimestamp(),
+  }));
+  await assertFails(setDoc(doc(flyerOwner,'flyerDocuments',officialDnsId),{
+    ...officialDnsFlyer, updatedBy:'flyerOwner', updatedAt:serverTimestamp(),
+  }));
+  await assertFails(deleteDoc(doc(flyerOwner,'flyerDocuments',officialDnsId)));
+  await assertSucceeds(setDoc(doc(admin,'flyerDocuments','dns-private-network-draft'),{
+    ...officialDnsFlyer, id:'dns-private-network-draft', updatedAt:serverTimestamp(),
+  }));
+  await assertFails(getDoc(doc(flyerOwner,'flyerDocuments','dns-private-network-draft')));
+
   // Template/asset updates must be authorized against their original scope.
   await env.withSecurityRulesDisabled(async context=>{
     const db=context.firestore();
