@@ -1393,7 +1393,10 @@ service cloud.firestore {
     }
 
     match /flyerAvailabilityPolicies/{policyId} {
-      allow get: if policyId == 'dns-global' && canReadFlyerDesignPolicy();
+      // Contains only global boolean template availability. Every active DNS
+      // account may read it; only DNS Admin may create/update it. Do not
+      // depend on the optional flyerPolicyReaders provisioning index.
+      allow get: if policyId == 'dns-global' && activeUser();
       allow list: if false;
       allow create, update: if policyId == 'dns-global'
         && isAdmin() && validFlyerAvailabilityPolicy(request.resource.data);
