@@ -10,8 +10,26 @@ export interface DNSPrintPreflightResult {
   svgCount: number;
 }
 
+/** Maximum time to wait for any individual print asset before failing safely. */
+export const DNS_PRINT_ASSET_TIMEOUT_MS = 8000;
+
+async function withinPrintTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve(promise),
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('print-asset-timeout')), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 export async function preflightDNSPrintAssets(
   sheet: HTMLElement | null,
+  timeoutMs = DNS_PRINT_ASSET_TIMEOUT_MS,
 ): Promise<DNSPrintPreflightResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -26,9 +44,9 @@ export async function preflightDNSPrintAssets(
   // Browser print can otherwise capture fallback fonts before web fonts settle.
   if (documentRoot.fonts?.ready) {
     try {
-      await documentRoot.fonts.ready;
+      await withinPrintTimeout(documentRoot.fonts.ready, timeoutMs);
     } catch {
-      warnings.push('print-fonts-unverified');
+      errors.push('print-fonts-not-ready');
     }
   }
 
@@ -37,16 +55,18 @@ export async function preflightDNSPrintAssets(
       errors.push('print-image-source-missing');
       continue;
     }
+    let decodeFailed = false;
     try {
       if (typeof image.decode === 'function') {
-        await image.decode();
+        await withinPrintTimeout(image.decode(), timeoutMs);
       } else if (!image.complete || image.naturalWidth === 0) {
         errors.push('print-image-not-ready');
       }
     } catch {
+      decodeFailed = true;
       errors.push('print-image-load-failed');
     }
-    if (image.naturalWidth === 0) errors.push('print-image-empty');
+    if (image.naturalWidth === 0 && !decodeFailed) errors.push('print-image-empty');
   }
 
   for (const svg of svgs) {
