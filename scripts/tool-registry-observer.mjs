@@ -121,6 +121,7 @@ export async function snapshotAt(read, repo, sha) {
     designSystem = null,
     sharedData = dependency.packageVersion;
   const errors = [];
+  if (!pkg) errors.push("PACKAGE_METADATA_UNAVAILABLE");
   if (repo === SHARED) {
     foundation = exportedVersion(
       await readFile(read, repo, "src/version.ts", sha),

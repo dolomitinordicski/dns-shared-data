@@ -15,6 +15,10 @@ import {
 const sha = "a".repeat(40),
   oldSha = "b".repeat(40),
   dep = "@dolomitinordicski/dns-shared-data";
+test('missing package metadata is an explicit failure, never a fresh valid version',async()=>{
+  const snapshot=await snapshotAt(async()=>null,'dolomitinordicski/analytics',sha);
+  assert.ok(snapshot.errors.includes('PACKAGE_METADATA_UNAVAILABLE'));
+});
 test("DNS Core service never inherits the Shared Data website deployment version", async () => {
   const service = {
     id: "dns-core",
