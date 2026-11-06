@@ -11,6 +11,7 @@ test('Toblach Area Admin is scoped to 3 Zinnen and cannot administer globally', 
   assert.deepEqual(result.user.globalRoles, []);
   assert.equal(result.grant.scopeId, 'drei-zinnen');
   assert.equal(result.grant.permissions.includes('flyer.write'), true);
+  assert.equal(result.grant.permissions.includes('flyer.publish'), true);
   assert.equal(result.grant.permissions.includes('ticketSales.write'), true);
   assert.equal(result.grant.permissions.includes('ticketSales.verify'), false);
   assert.equal(result.grant.permissions.includes('season.manage'), false);
