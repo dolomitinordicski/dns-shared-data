@@ -1,316 +1,111 @@
-import { applicationDefault, initializeApp } from 'firebase-admin/app';
-import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { applicationDefault, initializeApp } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import { DNS_TOOL_REGISTRY } from "../src/tool-registry.js";
 import {
-  DNS_TOOL_REGISTRY,
-  DNS_TOOL_REGISTRY_CANONICAL,
-  DNS_TOOL_REGISTRY_VERSION,
-} from '../src/tool-registry.js';
-
-const APPLY = process.argv.includes('--apply');
-const PROJECT_ID = 'dns-core';
-const COLLECTION = 'toolRegistryPublic';
-const META_DOC = '_meta';
-
-type ParsedSemver = { raw: string; major: number; minor: number; patch: number };
-type ProbeState = 'active' | 'pending' | 'offline' | 'na';
-type ProbeResult = { state: ProbeState; reason?: string; httpStatus?: number };
-type PackageJsonShape = {
-  version?: string;
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-};
-
-function parseSemver(value: unknown): ParsedSemver | null {
-  if (typeof value !== 'string') return null;
-  const match = value.match(/(\d+)\.(\d+)\.(\d+)/);
-  if (!match) return null;
-  return {
-    raw: `${match[1]}.${match[2]}.${match[3]}`,
-    major: Number(match[1]),
-    minor: Number(match[2]),
-    patch: Number(match[3]),
-  };
-}
-
-function compareSemver(a: ParsedSemver | null, b: ParsedSemver | null) {
-  if (!a || !b) return 0;
-  if (a.major !== b.major) return a.major - b.major;
-  if (a.minor !== b.minor) return a.minor - b.minor;
-  return a.patch - b.patch;
-}
-
-async function fetchText(url: string, timeoutMs = 8000) {
-  const response = await fetch(url, {
-    redirect: 'follow',
-    signal: AbortSignal.timeout(timeoutMs),
-    headers: { 'user-agent': 'dns-shared-data-tool-registry/1.0' },
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP_${response.status}`);
-  }
-  return response.text();
-}
-
-async function probeWeb(url: string | null): Promise<ProbeResult> {
-  if (!url) return { state: 'na', reason: 'no-public-url' };
+  availableRelease,
+  createGitHubReader,
+  observeTool,
+  projectTool,
+  persistTool,
+  validateSignal,
+} from "./tool-registry-observer.mjs";
+import { readFileSync, writeFileSync } from "node:fs";
+const APPLY = process.argv.includes("--apply");
+async function probe(url: string | null) {
+  if (!url) return { state: "na", reason: "no-public-url" };
   try {
-    const response = await fetch(url, {
-      method: 'GET',
-      redirect: 'follow',
+    const r = await fetch(url, {
       signal: AbortSignal.timeout(8000),
-      headers: { 'user-agent': 'dns-shared-data-health/1.0' },
+      redirect: "follow",
     });
-    return response.ok
-      ? { state: 'active', httpStatus: response.status }
-      : { state: 'offline', httpStatus: response.status, reason: 'http-error' };
-  } catch (error) {
     return {
-      state: 'offline',
-      reason: error instanceof Error ? error.message : String(error),
+      state: r.ok ? "active" : "offline",
+      httpStatus: r.status,
+      reason: "http-only-not-service-validation",
     };
-  }
-}
-
-async function readRepoPackage(repo: string | null): Promise<PackageJsonShape | null> {
-  if (!repo) return null;
-  try {
-    const raw = await fetchText(
-      `https://raw.githubusercontent.com/${repo}/main/package.json`,
-    );
-    return JSON.parse(raw);
   } catch {
-    return null;
+    return { state: "offline", reason: "web-probe-failed" };
   }
 }
-
-async function resolveFoundationVersions(packageJson: PackageJsonShape | null) {
-  const pin =
-    packageJson?.dependencies?.['@dolomitinordicski/dns-shared-data'] ??
-    packageJson?.devDependencies?.['@dolomitinordicski/dns-shared-data'] ??
-    null;
-
-  const foundation = parseSemver(pin);
-  let designSystem = null;
-
-  if (foundation) {
-    try {
-      const designSource = await fetchText(
-        `https://raw.githubusercontent.com/dolomitinordicski/dns-shared-data/foundation-v${foundation.raw}/src/design-system.ts`,
-      );
-      const match = designSource.match(
-        /DNS_DESIGN_SYSTEM_VERSION\s*=\s*['"]([^'"]+)['"]/,
-      );
-      designSystem = parseSemver(match?.[1] ?? null);
-    } catch {
-      designSystem = null;
-    }
-  }
-
-  return {
-    foundationPin: typeof pin === 'string' ? pin : null,
-    foundation: foundation?.raw ?? null,
-    designSystem: designSystem?.raw ?? null,
-    sharedData: foundation?.raw ?? null,
-  };
-}
-
-function versionState(current: string | null, canonical: string) {
-  const a = parseSemver(current);
-  const b = parseSemver(canonical);
-  if (!a || !b) return 'unknown';
-  const comparison = compareSemver(a, b);
-  if (comparison === 0) return 'up-to-date';
-  if (comparison < 0) return 'update-available';
-  return 'ahead';
-}
-
-function aggregateConnectivity(web: ProbeResult, firebase: ProbeResult): ProbeState {
-  if (web.state === 'offline' || firebase.state === 'offline') return 'offline';
-  if (web.state === 'pending' || firebase.state === 'pending') return 'pending';
-  if (web.state === 'active' && (firebase.state === 'active' || firebase.state === 'na')) {
-    return 'active';
-  }
-  if (web.state === 'na' && firebase.state === 'active') return 'active';
-  return 'pending';
-}
-
 async function main() {
-  initializeApp({ credential: applicationDefault(), projectId: PROJECT_ID });
-  const db = getFirestore();
-
-  let dnsCoreProbe: ProbeResult = { state: 'pending', reason: 'not-checked' };
-  try {
-    await db.collection('seasons').limit(1).get();
-    dnsCoreProbe = { state: 'active' };
-  } catch (error) {
-    dnsCoreProbe = {
-      state: 'offline',
-      reason: error instanceof Error ? error.message : String(error),
-    };
+  if (process.env.GITHUB_EVENT_NAME === "repository_dispatch") {
+    const event = JSON.parse(
+      readFileSync(process.env.GITHUB_EVENT_PATH!, "utf8"),
+    );
+    validateSignal(
+      event.client_payload,
+      DNS_TOOL_REGISTRY.flatMap((t) => (t.repo ? [t.repo] : [])),
+    );
   }
-
-  const checkedAt = new Date().toISOString();
-  const documents = [];
-
-  for (const tool of DNS_TOOL_REGISTRY) {
-    const packageJson = await readRepoPackage(tool.repo);
-    let versions = await resolveFoundationVersions(packageJson);
-
-    if (tool.id === 'hub' || tool.id === 'shared-data') {
-      versions = {
-        foundationPin:
-          tool.id === 'hub'
-            ? 'web-runtime:canonical'
-            : DNS_TOOL_REGISTRY_CANONICAL.foundation.ref,
-        foundation: DNS_TOOL_REGISTRY_CANONICAL.foundation.version,
-        designSystem: DNS_TOOL_REGISTRY_CANONICAL.designSystem.version,
-        sharedData: DNS_TOOL_REGISTRY_CANONICAL.sharedData.version,
-      };
-    }
-
-    if (tool.id === 'dns-core') {
-      versions = {
-        foundationPin: null,
-        foundation: null,
-        designSystem: null,
-        sharedData: null,
-      };
-    }
-
-    const web = await probeWeb(tool.url);
-
-    let firebase: ProbeResult;
-    switch (tool.backend.kind) {
-      case 'dns-core':
-        firebase = dnsCoreProbe;
-        break;
-      case 'none':
-        firebase = { state: 'na', reason: 'no-firebase' };
-        break;
-      case 'fair-modell':
-      case 'polls-private':
-      case 'app-specific':
-        firebase = {
-          state: 'pending',
-          reason: 'separate-backend-probe-not-configured',
-        };
-        break;
-      default:
-        firebase = { state: 'pending', reason: 'unknown-backend' };
-    }
-
-    const foundationState =
-      tool.id === 'dns-core'
-        ? 'na'
-        : tool.id === 'shared-data'
-          ? 'up-to-date'
-          : versionState(
-            versions.foundation,
-            DNS_TOOL_REGISTRY_CANONICAL.foundation.version,
-          );
-    const designSystemState =
-      tool.id === 'dns-core'
-        ? 'na'
-        : tool.id === 'shared-data'
-          ? 'up-to-date'
-          : versionState(
-            versions.designSystem,
-            DNS_TOOL_REGISTRY_CANONICAL.designSystem.version,
-          );
-    const sharedDataState =
-      tool.id === 'dns-core'
-        ? 'na'
-        : tool.id === 'shared-data'
-          ? 'up-to-date'
-          : versionState(
-            versions.sharedData,
-            DNS_TOOL_REGISTRY_CANONICAL.sharedData.version,
-          );
-
-    const updateRequired = [
-      foundationState,
-      designSystemState,
-      sharedDataState,
-    ].some((state) => state === 'update-available');
-
-    const doc = {
-      ...tool,
-      registryVersion: DNS_TOOL_REGISTRY_VERSION,
-      versions: {
-        app: packageJson?.version ?? null,
-        foundation: versions.foundation,
-        designSystem: versions.designSystem,
-        sharedData: versions.sharedData,
-        foundationPin: versions.foundationPin,
-        canonical: DNS_TOOL_REGISTRY_CANONICAL,
-        state: {
-          foundation: foundationState,
-          designSystem: designSystemState,
-          sharedData: sharedDataState,
-        },
-        updateRequired,
-      },
-      health: {
-        connectivity: aggregateConnectivity(web, firebase),
-        web,
-        firebase,
-        checkedAt,
-      },
-    };
-
-    documents.push(doc);
-  }
-
-  const summary = {
-    tools: documents.filter((tool) => tool.visible).length,
-    active: documents.filter((tool) => tool.health.connectivity === 'active').length,
-    pending: documents.filter((tool) => tool.health.connectivity === 'pending').length,
-    offline: documents.filter((tool) => tool.health.connectivity === 'offline').length,
-    updatesRequired: documents.filter((tool) => tool.versions.updateRequired).length,
-  };
-
-  console.log(JSON.stringify({
-    mode: APPLY ? 'APPLY' : 'DRY_RUN',
-    checkedAt,
-    canonical: DNS_TOOL_REGISTRY_CANONICAL,
-    summary,
-    tools: documents.map((tool) => ({
-      id: tool.id,
-      lifecycle: tool.lifecycle,
-      connectivity: tool.health.connectivity,
-      foundation: tool.versions.foundation,
-      designSystem: tool.versions.designSystem,
-      updateRequired: tool.versions.updateRequired,
-    })),
-  }, null, 2));
-
-  if (!APPLY) return;
-
-  const batch = db.batch();
-  for (const document of documents) {
-    batch.set(db.collection(COLLECTION).doc(document.id), {
-      ...document,
-      syncedAt: FieldValue.serverTimestamp(),
+  const read = createGitHubReader(process.env.GH_REGISTRY_TOKEN),
+    canonical = await availableRelease(read),
+    observedAt = new Date().toISOString(),
+    observations = [];
+  for (const tool of DNS_TOOL_REGISTRY)
+    observations.push({
+      tool,
+      value: await observeTool(tool, read, probe, observedAt),
     });
+  // Dry run never initializes Firebase and needs no production credentials.
+  if (!APPLY) {
+    const report = {
+      mode: "DRY_RUN",
+      observedAt,
+      canonical,
+      tools: observations.map(({ tool, value }) =>
+        projectTool(tool, value, null, canonical),
+      ),
+    };
+    const out = process.argv.indexOf("--output");
+    if (out >= 0)
+      writeFileSync(process.argv[out + 1], JSON.stringify(report, null, 2));
+    console.log(JSON.stringify(report, null, 2));
+    return;
   }
-  // Remove only explicitly retired registry IDs; never delete unrelated records.
-  const retiredIds = ['qr', 'strategy', 'ar360', 'portal-v2', 'smartslopes', 'partnerportal'];
-  for (const id of retiredIds) {
-    batch.delete(db.collection(COLLECTION).doc(id));
+  if (
+    process.env.GITHUB_REF !== "refs/heads/main" ||
+    process.env.REGISTRY_APPLY_ENABLED !== "true"
+  )
+    throw Error("REGISTRY_APPLY_NOT_AUTHORIZED");
+  initializeApp({ credential: applicationDefault(), projectId: "dns-core" });
+  const db = getFirestore(),
+    old = await db.collection("toolRegistryPublic").get(),
+    previous = new Map(old.docs.map((d) => [d.id, d.data()]));
+  let changed = 0;
+  for (const { tool, value } of observations) {
+    const doc = projectTool(tool, value, previous.get(tool.id), canonical);
+    if ((await persistTool(db, doc, observedAt)) === "changed") changed++;
+    previous.delete(tool.id);
   }
-  batch.set(db.collection(COLLECTION).doc(META_DOC), {
-    id: META_DOC,
-    registryVersion: DNS_TOOL_REGISTRY_VERSION,
-    canonical: DNS_TOOL_REGISTRY_CANONICAL,
-    summary,
-    checkedAt,
-    syncedAt: FieldValue.serverTimestamp(),
-  });
-  await batch.commit();
-
-  console.log(`✓ ${documents.length} tool registry documents synchronized to DNS Core.`);
+  for (const [id, value] of previous)
+    if (
+      id !== "_meta" &&
+      (value.recordType === "tool" || value.registryVersion)
+    )
+      await persistTool(
+        db,
+        { ...value, id, visible: false, retired: true, recordType: "tool" },
+        observedAt,
+      );
+  await db
+    .collection("toolRegistryPublic")
+    .doc("_meta")
+    .set({
+      id: "_meta",
+      registryVersion: "2.0.0",
+      canonical,
+      checkedAt: observedAt,
+      changed,
+    });
+  console.log(
+    JSON.stringify({
+      mode: "APPLY",
+      observedAt,
+      changed,
+      tools: observations.length,
+    }),
+  );
 }
-
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
