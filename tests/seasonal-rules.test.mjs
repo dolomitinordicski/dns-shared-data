@@ -450,6 +450,16 @@ try {
   }));
   await assertSucceeds(getDoc(doc(flyerOwner,'flyerDocuments',officialDnsId)));
   await assertSucceeds(getDoc(doc(flyerRogue,'flyerDocuments',officialDnsId)));
+  // Even a non-admin holding a network flyer.write grant cannot modify
+  // the single DNS general document.
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(),'accessGrants','flyerRogue__network__dolomiti-nordicski'),{
+      active:true,permissions:['flyer.write'],
+    });
+  });
+  await assertFails(setDoc(doc(flyerRogue,'flyerDocuments',officialDnsId),{
+    ...officialDnsFlyer, ownerUserId:'flyerRogue', updatedBy:'flyerRogue', updatedAt:serverTimestamp(),
+  }));
   await assertFails(setDoc(doc(flyerOwner,'flyerDocuments',officialDnsId),{
     ...officialDnsFlyer, updatedBy:'flyerOwner', updatedAt:serverTimestamp(),
   }));
