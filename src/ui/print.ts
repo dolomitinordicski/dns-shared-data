@@ -123,7 +123,7 @@ function ensurePrintStyles(documentRoot: Document, print: RuntimePrintShape, pro
 
   const p = print;
   const paperMm: Record<string, readonly [number, number]> = { A3: [297, 420], A4: [210, 297], A5: [148, 210] };
-  const dimensions = paperMm[p.pageSize] ?? paperMm.A4;
+  const dimensions = paperMm[p.pageSize] ?? [210, 297];
   const pageWidthMm = p.orientation === 'landscape' ? dimensions[1] : dimensions[0];
   const preflightWidthMm = Math.max(1, pageWidthMm - (p.marginMm * 2));
   style.textContent = `
