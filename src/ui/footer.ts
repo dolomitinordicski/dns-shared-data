@@ -99,9 +99,47 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
     documentRoot.head.appendChild(style);
   }
 
-  const labels: Record<string, { guide: string; support: string }> = {\n    it: { guide: 'Guida', support: 'Supporto' },\n    de: { guide: 'Anleitung', support: 'Support' },\n    en: { guide: 'Help', support: 'Support' },\n  };\n  const refresh = () => {
+  const labels: Record<string, { guide: string; support: string }> = {
+    it: { guide: 'Guida', support: 'Supporto' },
+    de: { guide: 'Anleitung', support: 'Support' },
+    en: { guide: 'Help', support: 'Support' },
+  };
+  const refresh = () => {
     for (const footer of documentRoot.querySelectorAll<HTMLElement>('[data-dns-tool-footer]')) {
-      const lang = (footer.dataset.dnsLang || documentRoot.documentElement.lang || 'it').slice(0, 2).toLowerCase();\n      const label = labels[lang] ?? labels.it;\n      let links = footer.querySelector<HTMLElement>('.dns-tool-footer-links');\n      if (!links) {\n        links = documentRoot.createElement('div');\n        links.className = 'dns-tool-footer-links';\n        links.dataset.dnsFoundationGenerated = 'true';\n        footer.querySelector('.dns-tool-footer-shell')?.appendChild(links);\n      }\n      if (links?.dataset.dnsFoundationGenerated === 'true') {\n        const tool = footer.dataset.dnsToolName || '';\n        const version = footer.dataset.dnsToolVersion || '';\n        const guideUrl = footer.dataset.dnsGuideUrl || '';\n        const guideEnabled = footer.dataset.dnsGuideEnabled === 'true';\n        const subject = `[DNS Support] ${tool || 'DNS Tool'}${version ? ` | v${version}` : ''} | Foundation v${DNS_FOUNDATION_RELEASE_VERSION}`;\n        const signature = JSON.stringify([lang, tool, version, guideUrl, guideEnabled, DNS_FOUNDATION_RELEASE_VERSION]);\n        if (links.dataset.dnsFooterSignature !== signature) {\n        links.dataset.dnsFooterSignature = signature;\n        links.replaceChildren();\n        if (guideEnabled && /^https:\\/\\//i.test(guideUrl)) {\n          const guide = documentRoot.createElement('a');\n          guide.href = guideUrl; guide.target = '_blank'; guide.rel = 'noopener noreferrer';\n          guide.textContent = label.guide; links.appendChild(guide);\n        }\n        const support = documentRoot.createElement('a');\n        support.href = `mailto:info@dolomitinordicski.com?subject=${encodeURIComponent(subject)}`;\n        support.textContent = label.support; links.appendChild(support);\n        const meta = documentRoot.createElement('span');\n        meta.className = 'dns-tool-footer-version';\n        meta.textContent = `${tool}${tool && version ? ' · ' : ''}${version ? `v${version} · ` : ''}Foundation v${DNS_FOUNDATION_RELEASE_VERSION}`;\n        links.appendChild(meta);\n        }\n      }\n      if (footer.querySelector('.dns-footer-graphic')) continue;
+      const lang = (footer.dataset.dnsLang || documentRoot.documentElement.lang || 'it').slice(0, 2).toLowerCase();
+      const label = labels[lang] ?? labels.it;
+      let links = footer.querySelector<HTMLElement>('.dns-tool-footer-links');
+      if (!links) {
+        links = documentRoot.createElement('div');
+        links.className = 'dns-tool-footer-links';
+        links.dataset.dnsFoundationGenerated = 'true';
+        footer.querySelector('.dns-tool-footer-shell')?.appendChild(links);
+      }
+      if (links?.dataset.dnsFoundationGenerated === 'true') {
+        const tool = footer.dataset.dnsToolName || '';
+        const version = footer.dataset.dnsToolVersion || '';
+        const guideUrl = footer.dataset.dnsGuideUrl || '';
+        const guideEnabled = footer.dataset.dnsGuideEnabled === 'true';
+        const subject = `[DNS Support] ${tool || 'DNS Tool'}${version ? ` | v${version}` : ''} | Foundation v${DNS_FOUNDATION_RELEASE_VERSION}`;
+        const signature = JSON.stringify([lang, tool, version, guideUrl, guideEnabled, DNS_FOUNDATION_RELEASE_VERSION]);
+        if (links.dataset.dnsFooterSignature !== signature) {
+        links.dataset.dnsFooterSignature = signature;
+        links.replaceChildren();
+        if (guideEnabled && /^https:\\/\\//i.test(guideUrl)) {
+          const guide = documentRoot.createElement('a');
+          guide.href = guideUrl; guide.target = '_blank'; guide.rel = 'noopener noreferrer';
+          guide.textContent = label.guide; links.appendChild(guide);
+        }
+        const support = documentRoot.createElement('a');
+        support.href = `mailto:info@dolomitinordicski.com?subject=${encodeURIComponent(subject)}`;
+        support.textContent = label.support; links.appendChild(support);
+        const meta = documentRoot.createElement('span');
+        meta.className = 'dns-tool-footer-version';
+        meta.textContent = `${tool}${tool && version ? ' · ' : ''}${version ? `v${version} · ` : ''}Foundation v${DNS_FOUNDATION_RELEASE_VERSION}`;
+        links.appendChild(meta);
+        }
+      }
+      if (footer.querySelector('.dns-footer-graphic')) continue;
       const image = documentRoot.createElement('img');
       image.src = DNS_FOOTER_GRAPHIC_URL;
       image.alt = '';
