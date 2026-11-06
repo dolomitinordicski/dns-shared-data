@@ -154,6 +154,16 @@ html.dns-a11y-relaxed-spacing :is(p, li, td, th, label) {
 table tbody tr:nth-child(even) > :is(td, th) {
   background: var(--dns-table-row-alt, rgba(170,208,209,.18));
 }
+@media (prefers-reduced-motion: reduce) {
+  html:not(.dns-a11y-allow-motion) *,
+  html:not(.dns-a11y-allow-motion) *::before,
+  html:not(.dns-a11y-allow-motion) *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
 html.dns-a11y-reduce-motion *,
 html.dns-a11y-reduce-motion *::before,
 html.dns-a11y-reduce-motion *::after {
@@ -519,19 +529,17 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
         if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); return; }
       }
     }
+    if (event.altKey && event.key.toLowerCase() === 'a') {
+      event.preventDefault();
+      togglePanel();
+      return;
+    }
     if (
       target instanceof HTMLInputElement ||
       target instanceof HTMLTextAreaElement ||
       target instanceof HTMLSelectElement
     ) return;
 
-    if (event.altKey && event.key.toLowerCase() === 'a') {
-      event.preventDefault();
-      togglePanel();
-    } else if (event.key === 'Escape' && overlay) {
-      event.preventDefault();
-      closePanel();
-    }
   };
 
   trigger.addEventListener('click', togglePanel);
