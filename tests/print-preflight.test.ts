@@ -28,3 +28,29 @@ test('missing image source blocks print', async () => {
   assert.equal(result.ready, false);
   assert.ok(result.errors.includes('print-image-source-missing'));
 });
+
+
+test('unresolved font readiness fails closed within timeout', async () => {
+  const sheet = {
+    ownerDocument: { fonts: { ready: new Promise<void>(() => {}) } },
+    querySelectorAll: () => [],
+  } as unknown as HTMLElement;
+  const result = await preflightDNSPrintAssets(sheet, 5);
+  assert.equal(result.ready, false);
+  assert.ok(result.errors.includes('print-fonts-not-ready'));
+});
+
+test('unresolved image decode fails closed within timeout', async () => {
+  const img = {
+    getAttribute: () => 'https://example.test/logo.png',
+    decode: () => new Promise<void>(() => {}),
+    naturalWidth: 0,
+  };
+  const sheet = {
+    ownerDocument: {},
+    querySelectorAll: (selector: string) => selector === 'img' ? [img] : [],
+  } as unknown as HTMLElement;
+  const result = await preflightDNSPrintAssets(sheet, 5);
+  assert.equal(result.ready, false);
+  assert.ok(result.errors.includes('print-image-load-failed'));
+});
