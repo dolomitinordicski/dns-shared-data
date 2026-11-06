@@ -339,7 +339,9 @@ export function projectTool(tool, o, previous, canonical) {
   versions.state = Object.fromEntries(
     ["foundation", "designSystem", "sharedData"].map((k) => [
       k,
-      o.applicable === false ? "na" : versionState(versions[k], canonical?.[k]?.version),
+      o.applicable === false
+        ? "na"
+        : versionState(versions[k], canonical?.[k]?.version),
     ]),
   );
   versions.updateRequired = Object.values(versions.state).includes(
@@ -365,7 +367,12 @@ export function projectTool(tool, o, previous, canonical) {
         errors.length || preserved.length
           ? (previous?.observations?.lastSuccessAt ?? null)
           : o.observedAt,
-      quality: o.applicable === false ? "service" : errors.length || preserved.length ? "stale" : "verified",
+      quality:
+        o.applicable === false
+          ? "service"
+          : errors.length || preserved.length
+            ? "stale"
+            : "verified",
       preserved,
       errors,
       sourceDiffersFromProduction:

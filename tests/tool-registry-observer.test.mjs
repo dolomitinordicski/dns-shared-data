@@ -15,11 +15,28 @@ import {
 const sha = "a".repeat(40),
   oldSha = "b".repeat(40),
   dep = "@dolomitinordicski/dns-shared-data";
-test('DNS Core service never inherits the Shared Data website deployment version', async () => {
-  const service={id:'dns-core',repo:'dolomitinordicski/dns-shared-data',backend:{kind:'dns-core'}};
-  const o=await observeTool(service,async()=>{throw Error('GitHub should not be queried for a service version');},async()=>({state:'na'}));
-  const p=projectTool(service,o,{observations:{production:{foundation:'1.3.0'}}},{});
-  assert.equal(p.versions.foundation,null);assert.equal(p.versions.state.foundation,'na');assert.equal(p.observations.quality,'service');
+test("DNS Core service never inherits the Shared Data website deployment version", async () => {
+  const service = {
+    id: "dns-core",
+    repo: "dolomitinordicski/dns-shared-data",
+    backend: { kind: "dns-core" },
+  };
+  const o = await observeTool(
+    service,
+    async () => {
+      throw Error("GitHub should not be queried for a service version");
+    },
+    async () => ({ state: "na" }),
+  );
+  const p = projectTool(
+    service,
+    o,
+    { observations: { production: { foundation: "1.3.0" } } },
+    {},
+  );
+  assert.equal(p.versions.foundation, null);
+  assert.equal(p.versions.state.foundation, "na");
+  assert.equal(p.observations.quality, "service");
 });
 const tool = {
   id: "analytics",
