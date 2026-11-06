@@ -1,3 +1,4 @@
+import { preflightDNSPrintAssets, type DNSPrintPreflightResult } from './print-preflight.js';
 import { DNS_DESIGN_SYSTEM } from '../design-system.js';
 import { getDNSPrintProfile, type DNSPrintProfile, type DNSPrintProfileId } from '../print-profiles.js';
 
@@ -21,12 +22,17 @@ export interface DNSPrintRuntimeOptions {
    * Legacy token override kept only for migration compatibility.
    */
   print?: DNSPrintTokens;
+  /** Optional per-document paper override; defaults to the canonical profile. */
+  paper?: 'A3' | 'A4' | 'A5';
+  /** Optional orientation override; defaults to the canonical profile. */
+  orientation?: 'portrait' | 'landscape';
 }
 
 export interface DNSPrintRuntimeHandle {
   getProfile(): DNSPrintProfileId | 'legacy';
   setProfile(profile: DNSPrintProfileId): void;
   printNow(profile?: DNSPrintProfileId): void;
+  printWhenReady(profile?: DNSPrintProfileId): Promise<DNSPrintPreflightResult>;
   disconnect(): void;
 }
 
@@ -116,7 +122,9 @@ function ensurePrintStyles(documentRoot: Document, print: RuntimePrintShape, pro
   }
 
   const p = print;
-  const pageWidthMm = p.orientation === 'landscape' ? 297 : 210;
+  const paperMm: Record<string, readonly [number, number]> = { A3: [297, 420], A4: [210, 297], A5: [148, 210] };
+  const dimensions = paperMm[p.pageSize] ?? [210, 297];
+  const pageWidthMm = p.orientation === 'landscape' ? dimensions[1] : dimensions[0];
   const preflightWidthMm = Math.max(1, pageWidthMm - (p.marginMm * 2));
   style.textContent = `
 .dns-print-sheet {
@@ -319,6 +327,10 @@ export function initDNSPrintRuntime(
       getProfile: () => profileId,
       setProfile(profile) { profileId = profile; },
       printNow(profile) { if (profile) profileId = profile; },
+      async printWhenReady(profile) {
+        if (profile) profileId = profile;
+        return { ready: false, errors: ['print-document-unavailable'], warnings: [], imageCount: 0, svgCount: 0 };
+      },
       disconnect() {},
     };
   }
@@ -332,6 +344,8 @@ export function initDNSPrintRuntime(
       profileId === 'legacy'
         ? fromLegacy(options.print ?? DNS_DESIGN_SYSTEM.print)
         : fromProfile(getDNSPrintProfile(profileId));
+    if (options.paper) print.pageSize = options.paper;
+    if (options.orientation) print.orientation = options.orientation;
     ensurePrintStyles(documentRoot, print, profileId);
     documentRoot.documentElement.dataset.dnsPrintProfile = profileId;
   };
@@ -346,6 +360,13 @@ export function initDNSPrintRuntime(
     printNow(profile) {
       if (profile) applyProfile(profile);
       window.print();
+    },
+    async printWhenReady(profile) {
+      if (profile) applyProfile(profile);
+      const sheet = documentRoot.querySelector<HTMLElement>('.dns-print-sheet');
+      const result = await preflightDNSPrintAssets(sheet);
+      if (result.ready) window.print();
+      return result;
     },
     disconnect() {
       documentRoot.getElementById(STYLE_ID)?.remove();
