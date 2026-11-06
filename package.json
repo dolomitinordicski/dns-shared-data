@@ -242,6 +242,10 @@
     "./tool-icons": {
       "types": "./dist/tool-icons.d.ts",
       "import": "./dist/tool-icons.js"
+    },
+    "./ui/print-preflight": {
+      "types": "./dist/ui/print-preflight.d.ts",
+      "import": "./dist/ui/print-preflight.js"
     }
   }
 }
