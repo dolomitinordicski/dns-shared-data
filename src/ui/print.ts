@@ -260,8 +260,28 @@ function ensurePrintStyles(documentRoot: Document, print: RuntimePrintShape, pro
   }
 
   .dns-print-section {
-    break-inside: avoid-page;
+    /* Long sections must paginate rather than overflow or generate blank pages. */
+    break-inside: auto;
+    page-break-inside: auto;
     margin: 0 0 6mm;
+  }
+
+  .dns-print-section-title {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  .dns-print-table thead,
+  .dns-print-table tfoot {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .dns-print-table tr,
+  .dns-print-document-header,
+  .dns-print-signature-area {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   .dns-print-section-title {
