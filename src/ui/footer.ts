@@ -24,6 +24,7 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
   overflow: hidden;
   isolation: isolate;
   min-height: 64px;
+  border-top: 1px solid var(--dns-footer-border, rgba(255,255,255,.14));
   background: var(--dns-footer-bg, #0D4D5E);
   color: var(--dns-footer-text, #FFFFFF);
 }
@@ -37,6 +38,7 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
   width: 100%;
   max-width: var(--dns-shell-max-width, 1440px);
   min-height: 64px;
+  min-width: 0;
   margin-inline: auto;
   align-items: center;
   justify-content: space-between;
@@ -44,14 +46,16 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
   padding: 1rem var(--dns-shell-padding-x, 32px);
 }
 .dns-tool-footer-primary {
-  color: rgba(255,255,255,.82);
+  min-width: 0;
+  color: rgba(255,255,255,.90);
   font: 600 11px/1.35 var(--font-display,"Be Vietnam Pro",sans-serif);
   letter-spacing: .05em;
   text-transform: uppercase;
 }
 .dns-tool-footer-meta {
-  max-width: calc(100% - 210px);
-  color: rgba(255,255,255,.62);
+  min-width: 0;
+  max-width: min(65%, 680px);
+  color: rgba(255,255,255,.78);
   font: 400 10px/1.45 var(--font-alt,Roboto,sans-serif);
   letter-spacing: .04em;
   text-transform: uppercase;
@@ -76,7 +80,7 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
     padding-inline: var(--dns-shell-padding-x-mobile, 16px);
   }
   .dns-tool-footer-meta {
-    max-width: calc(100% - 96px);
+    max-width: 100%;
     text-align: left;
   }
   .dns-footer-graphic {
@@ -84,6 +88,9 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
     top: 50%;
     width: 165px;
   }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dns-tool-footer-shell { scroll-behavior: auto; }
 }
 @media print {
   .dns-footer-graphic { display: none !important; }
