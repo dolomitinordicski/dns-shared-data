@@ -1,3 +1,4 @@
+import { preflightDNSPrintAssets, type DNSPrintPreflightResult } from './print-preflight.js';
 import { DNS_DESIGN_SYSTEM } from '../design-system.js';
 import { getDNSPrintProfile, type DNSPrintProfile, type DNSPrintProfileId } from '../print-profiles.js';
 
@@ -27,6 +28,7 @@ export interface DNSPrintRuntimeHandle {
   getProfile(): DNSPrintProfileId | 'legacy';
   setProfile(profile: DNSPrintProfileId): void;
   printNow(profile?: DNSPrintProfileId): void;
+  printWhenReady(profile?: DNSPrintProfileId): Promise<DNSPrintPreflightResult>;
   disconnect(): void;
 }
 
@@ -319,6 +321,10 @@ export function initDNSPrintRuntime(
       getProfile: () => profileId,
       setProfile(profile) { profileId = profile; },
       printNow(profile) { if (profile) profileId = profile; },
+      async printWhenReady(profile) {
+        if (profile) profileId = profile;
+        return { ready: false, errors: ['print-document-unavailable'], warnings: [], imageCount: 0, svgCount: 0 };
+      },
       disconnect() {},
     };
   }
@@ -346,6 +352,13 @@ export function initDNSPrintRuntime(
     printNow(profile) {
       if (profile) applyProfile(profile);
       window.print();
+    },
+    async printWhenReady(profile) {
+      if (profile) applyProfile(profile);
+      const sheet = documentRoot.querySelector<HTMLElement>('.dns-print-sheet');
+      const result = await preflightDNSPrintAssets(sheet);
+      if (result.ready) window.print();
+      return result;
     },
     disconnect() {
       documentRoot.getElementById(STYLE_ID)?.remove();
