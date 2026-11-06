@@ -12,7 +12,7 @@ export const AREA_ADMIN_ACCESS_PERMISSIONS = [
   'ticketOrders.read', 'ticketOrders.write',
   'ticketSales.read', 'ticketSales.write',
   'kp.read', 'kp.write', 'pricing.read',
-  'flyer.read', 'flyer.write',
+  'flyer.read', 'flyer.write', 'flyer.publish',
 ] as const satisfies readonly DNSPermission[];
 
 export type AreaAdminProvisioningInput = {
