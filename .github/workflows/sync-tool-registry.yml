@@ -2,46 +2,91 @@ name: Sync DNS Hub tool registry
 
 on:
   workflow_dispatch:
+  repository_dispatch:
+    types: [dns-tool-registry-changed]
+  release:
+    types: [published]
+  workflow_run:
+    workflows: ["Propagate DNS Foundation release"]
+    types: [completed]
   schedule:
-    - cron: '17 * * * *'
+    - cron: "7,22,37,52 * * * *"
+  pull_request:
+    paths:
+      [
+        "src/tool-registry.ts",
+        "scripts/*tool-registry*",
+        "tests/tool-registry*",
+        ".github/workflows/sync-tool-registry.yml",
+      ]
   push:
     branches: [main]
     paths:
-      - 'src/tool-registry.ts'
-      - 'src/release.ts'
-      - 'src/version.ts'
-      - 'src/design-system.ts'
-      - 'scripts/sync-tool-registry.ts'
-      - '.github/workflows/sync-tool-registry.yml'
+      [
+        "src/tool-registry.ts",
+        "src/release.ts",
+        "src/version.ts",
+        "src/design-system.ts",
+        "scripts/*tool-registry*",
+        "tests/tool-registry*",
+        ".github/workflows/sync-tool-registry.yml",
+      ]
 
 permissions:
   contents: read
-  id-token: write
+
+concurrency:
+  group: dns-hub-tool-registry-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
+  cancel-in-progress: false
 
 jobs:
-  sync:
-    environment: dns-production-auto
+  test:
     runs-on: ubuntu-latest
-    env:
-      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
     steps:
       - uses: actions/checkout@v7
-      - name: Check Firebase credentials
-        shell: bash
-        run: |
-          if [ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]; then
-            echo "::error::Missing FIREBASE_SERVICE_ACCOUNT_DNS_CORE repository secret."
-            exit 1
-          fi
-      - uses: google-github-actions/auth@v3
         with:
-          credentials_json: ${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - run: npm install
+      - run: node --test tests/tool-registry-observer.test.mjs tests/tool-registry-event-forwarder.test.mjs
+
+  sync:
+    # Activation is an explicit production step after PR approval; no auto-apply on PRs.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.DNS_TOOL_REGISTRY_V2_ENABLED == 'true'
+    needs: test
+    environment: dns-production-auto
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
       - run: npm run typecheck
-      - name: Synchronize public DNS tool registry
+      - name: Restrict token to registered repositories
+        id: scope
+        run: |
+          node node_modules/tsx/dist/cli.mjs --eval 'import {DNS_TOOL_REGISTRY} from "./src/tool-registry.ts"; import {appendFileSync} from "node:fs"; const repositories=[...new Set(DNS_TOOL_REGISTRY.flatMap(t=>t.repo?[t.repo.split("/")[1]]:[]))]; if(!repositories.length||repositories.some(r=>!/^[-A-Za-z0-9_.]+$/.test(r))) throw Error("Invalid repository scope"); appendFileSync(process.env.GITHUB_OUTPUT,"repositories="+repositories.join(",")+"\n");'
+      - uses: actions/create-github-app-token@v1
+        id: reader
+        with:
+          app-id: ${{ secrets.DNS_FOUNDATION_PROPAGATION_APP_ID }}
+          private-key: ${{ secrets.DNS_FOUNDATION_PROPAGATION_APP_PRIVATE_KEY }}
+          owner: dolomitinordicski
+          repositories: ${{ steps.scope.outputs.repositories }}
+          permission-contents: read
+          permission-deployments: read
+      - uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+      - name: Reconcile observed source and production state
         run: npm run sync:tool-registry:apply
         env:
+          GH_REGISTRY_TOKEN: ${{ steps.reader.outputs.token }}
+          REGISTRY_APPLY_ENABLED: "true"
           GOOGLE_CLOUD_PROJECT: dns-core
