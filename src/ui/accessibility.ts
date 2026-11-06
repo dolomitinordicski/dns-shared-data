@@ -15,6 +15,7 @@ export interface DNSAccessibilitySettings {
   strongFocus: boolean;
   comfortableDensity: boolean;
   grid: boolean;
+  strongFieldBorders: boolean;
   largeReadingText: boolean;
 }
 
@@ -34,6 +35,7 @@ export const DNS_ACCESSIBILITY_DEFAULTS: DNSAccessibilitySettings = {
   strongFocus: false,
   comfortableDensity: false,
   grid: false,
+  strongFieldBorders: false,
   largeReadingText: false,
 };
 
@@ -57,6 +59,7 @@ function getAccessibilityCopy(language: DNSAccessibilityLanguage) {
     strongFocus: translateDNSFoundation('accessibility.strongFocus', language),
     comfortableDensity: translateDNSFoundation('accessibility.comfortableDensity', language),
     grid: translateDNSFoundation('accessibility.grid', language),
+    strongFieldBorders: language === 'it' ? 'Bordi dei campi più visibili' : 'Deutlichere Feldumrandungen',
     largeReadingText: translateDNSFoundation('accessibility.largeReadingText', language),
     reset: translateDNSFoundation('accessibility.reset', language),
     close: translateDNSFoundation('accessibility.close', language),
@@ -164,6 +167,14 @@ html.dns-a11y-strong-focus :is(button, a[href], input, select, textarea, [tabind
 }
 html.dns-a11y-comfort-density :is(button, input, select, textarea) { min-height: 44px; }
 html.dns-a11y-comfort-density :is(th, td) { padding-top: .75rem !important; padding-bottom: .75rem !important; }
+html.dns-a11y-strong-field-borders :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea):not(:disabled):not([readonly]) {
+  border: 1.5px solid var(--dns-a11y-field-border, #64748B) !important;
+}
+html.dns-a11y-strong-field-borders[data-dns-theme="dark"] { --dns-a11y-field-border: #B1CDD0; }
+html.dns-a11y-strong-field-borders :is(input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-dns-mid, #417483) !important;
+  outline-offset: 2px;
+}
 html.dns-a11y-grid table { border-collapse: collapse !important; }
 html.dns-a11y-grid :is(table, th, td) { border-color: var(--dns-table-grid-strong, rgba(65,116,131,.42)) !important; }
 html.dns-a11y-grid :is(th, td) { border-width: 1px !important; border-style: solid !important; }
@@ -318,6 +329,7 @@ function applySettings(settings: DNSAccessibilitySettings) {
   root.classList.toggle('dns-a11y-strong-focus', settings.strongFocus);
   root.classList.toggle('dns-a11y-comfort-density', settings.comfortableDensity);
   root.classList.toggle('dns-a11y-grid', settings.grid);
+  root.classList.toggle('dns-a11y-strong-field-borders', settings.strongFieldBorders);
   root.classList.toggle('dns-a11y-large-reading-text', settings.largeReadingText);
   root.dataset.dnsA11yTextScale = String(settings.textScale);
 }
@@ -400,6 +412,7 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
             ['strongFocus', c.strongFocus],
             ['comfortableDensity', c.comfortableDensity],
             ['grid', c.grid],
+            ['strongFieldBorders', c.strongFieldBorders],
             ['largeReadingText', c.largeReadingText],
           ].map(([key, label]) => `
             <label class="dns-a11y-toggle">
