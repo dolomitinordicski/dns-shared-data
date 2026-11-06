@@ -22,6 +22,10 @@ export interface DNSPrintRuntimeOptions {
    * Legacy token override kept only for migration compatibility.
    */
   print?: DNSPrintTokens;
+  /** Optional per-document paper override; defaults to the canonical profile. */
+  paper?: 'A3' | 'A4' | 'A5';
+  /** Optional orientation override; defaults to the canonical profile. */
+  orientation?: 'portrait' | 'landscape';
 }
 
 export interface DNSPrintRuntimeHandle {
@@ -118,7 +122,9 @@ function ensurePrintStyles(documentRoot: Document, print: RuntimePrintShape, pro
   }
 
   const p = print;
-  const pageWidthMm = p.orientation === 'landscape' ? 297 : 210;
+  const paperMm: Record<string, readonly [number, number]> = { A3: [297, 420], A4: [210, 297], A5: [148, 210] };
+  const dimensions = paperMm[p.pageSize] ?? paperMm.A4;
+  const pageWidthMm = p.orientation === 'landscape' ? dimensions[1] : dimensions[0];
   const preflightWidthMm = Math.max(1, pageWidthMm - (p.marginMm * 2));
   style.textContent = `
 .dns-print-sheet {
@@ -338,6 +344,8 @@ export function initDNSPrintRuntime(
       profileId === 'legacy'
         ? fromLegacy(options.print ?? DNS_DESIGN_SYSTEM.print)
         : fromProfile(getDNSPrintProfile(profileId));
+    if (options.paper) print.pageSize = options.paper;
+    if (options.orientation) print.orientation = options.orientation;
     ensurePrintStyles(documentRoot, print, profileId);
     documentRoot.documentElement.dataset.dnsPrintProfile = profileId;
   };
