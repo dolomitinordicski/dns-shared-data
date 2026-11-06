@@ -7,7 +7,7 @@ export const DNS_ACCESSIBILITY_RUNTIME_VERSION = '1.3.0' as const;
 export type DNSAccessibilityLanguage = 'de' | 'it';
 
 export interface DNSAccessibilitySettings {
-  theme: 'light' | 'dark';
+  theme: 'system' | 'light' | 'dark';
   textScale: 100 | 115 | 130;
   highContrast: boolean;
   relaxedSpacing: boolean;
@@ -27,7 +27,7 @@ export interface DNSAccessibilityRuntimeOptions {
 }
 
 export const DNS_ACCESSIBILITY_DEFAULTS: DNSAccessibilitySettings = {
-  theme: 'light',
+  theme: 'system',
   textScale: 100,
   highContrast: false,
   relaxedSpacing: false,
@@ -47,6 +47,8 @@ function getAccessibilityCopy(language: DNSAccessibilityLanguage) {
     title: translateDNSFoundation('accessibility.title', language),
     kicker: translateDNSFoundation('accessibility.kicker', language),
     theme: language === 'it' ? 'Aspetto' : 'Darstellung',
+    system: language === 'it' ? 'Sistema' : 'System',
+    advanced: language === 'it' ? 'Opzioni avanzate' : 'Erweiterte Optionen',
     light: language === 'it' ? 'Chiaro' : 'Hell',
     dark: language === 'it' ? 'Scuro' : 'Dunkel',
     textSize: translateDNSFoundation('accessibility.textSize', language),
@@ -73,14 +75,14 @@ function normalizeSettings(input: Partial<DNSAccessibilitySettings> = {}): DNSAc
     ...DNS_ACCESSIBILITY_DEFAULTS,
     ...input,
     textScale: scale,
-    theme: input.theme === 'dark' ? 'dark' : 'light',
+    theme: input.theme === 'dark' || input.theme === 'light' ? input.theme : 'system',
   };
 }
 
 function readStoredSettings(storageKey: string): DNSAccessibilitySettings {
   try {
     const raw = window.localStorage.getItem(storageKey);
-    if (!raw) return { ...DNS_ACCESSIBILITY_DEFAULTS, theme: window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light' };
+    if (!raw) return { ...DNS_ACCESSIBILITY_DEFAULTS };
     return normalizeSettings(JSON.parse(raw) as Partial<DNSAccessibilitySettings>);
   } catch {
     return DNS_ACCESSIBILITY_DEFAULTS;
@@ -320,13 +322,13 @@ html.dns-a11y-large-reading-text :is(.dns-readable-copy, .dns-insight-body, .dns
 
 function applySettings(settings: DNSAccessibilitySettings) {
   const root = document.documentElement;
-  root.dataset.dnsTheme = settings.theme;
+  root.dataset.dnsTheme = settings.theme === 'system' ? (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : settings.theme;
   root.style.setProperty('--dns-a11y-text-scale', String(settings.textScale / 100));
   root.classList.toggle('dns-a11y-text-scale', settings.textScale !== 100);
   root.classList.toggle('dns-a11y-high-contrast', settings.highContrast);
   root.classList.toggle('dns-a11y-relaxed-spacing', settings.relaxedSpacing);
   root.classList.toggle('dns-a11y-reduce-motion', settings.reduceMotion);
-  root.classList.toggle('dns-a11y-strong-focus', settings.strongFocus);
+  root.classList.toggle('dns-a11y-strong-focus', true);
   root.classList.toggle('dns-a11y-comfort-density', settings.comfortableDensity);
   root.classList.toggle('dns-a11y-grid', settings.grid);
   root.classList.toggle('dns-a11y-strong-field-borders', settings.strongFieldBorders);
@@ -357,6 +359,10 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
   });
   let overlay: HTMLDivElement | null = null;
   let lastFocused: HTMLElement | null = null;
+  let advancedOpen = false;
+  const systemTheme = window.matchMedia?.('(prefers-color-scheme: dark)');
+  const onSystemThemeChange = () => { if (settings.theme === 'system') applySettings(settings); };
+  systemTheme?.addEventListener?.('change', onSystemThemeChange);
 
   const trigger = document.createElement('button');
   trigger.type = 'button';
@@ -391,7 +397,8 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
       <div class="dns-a11y-body">
         <section class="dns-a11y-section">
           <div class="dns-a11y-label">${c.theme}</div>
-          <div class="dns-a11y-scale" style="grid-template-columns:repeat(2,1fr)">
+          <div class="dns-a11y-scale" style="grid-template-columns:repeat(3,1fr)">
+            <button type="button" data-theme="system" aria-pressed="${settings.theme === 'system'}">${c.system}</button>
             <button type="button" data-theme="light" aria-pressed="${settings.theme === 'light'}">☀ ${c.light}</button>
             <button type="button" data-theme="dark" aria-pressed="${settings.theme === 'dark'}">☾ ${c.dark}</button>
           </div>
@@ -407,13 +414,9 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
         <section class="dns-a11y-section">
           ${[
             ['highContrast', c.highContrast],
-            ['relaxedSpacing', c.relaxedSpacing],
             ['reduceMotion', c.reduceMotion],
-            ['strongFocus', c.strongFocus],
-            ['comfortableDensity', c.comfortableDensity],
             ['grid', c.grid],
             ['strongFieldBorders', c.strongFieldBorders],
-            ['largeReadingText', c.largeReadingText],
           ].map(([key, label]) => `
             <label class="dns-a11y-toggle">
               <span>${label}</span>
@@ -421,12 +424,19 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
             </label>
           `).join('')}
         </section>
+        <button type="button" class="dns-a11y-advanced" aria-expanded="${advancedOpen}">${c.advanced} ${advancedOpen ? '▴' : '▾'}</button>
+        ${advancedOpen ? `<section class="dns-a11y-section">${[
+          ['relaxedSpacing', c.relaxedSpacing],
+          ['comfortableDensity', c.comfortableDensity],
+          ['largeReadingText', c.largeReadingText],
+        ].map(([key, label]) => `<label class="dns-a11y-toggle"><span>${label}</span><input type="checkbox" data-setting="${key}" ${settings[key as keyof DNSAccessibilitySettings] ? 'checked' : ''}></label>`).join('')}</section>` : ''}
         <button type="button" class="dns-a11y-reset">${c.reset}</button>
         <div class="dns-a11y-local">${c.local}<br>Alt + A · Esc</div>
       </div>
     `;
 
     panel.querySelector('.dns-a11y-close')?.addEventListener('click', closePanel);
+    panel.querySelector('.dns-a11y-advanced')?.addEventListener('click', () => { advancedOpen = !advancedOpen; updatePanel(); panel.querySelector<HTMLElement>('.dns-a11y-advanced')?.focus(); });
     panel.querySelector('.dns-a11y-reset')?.addEventListener('click', () => {
       settings = { ...DNS_ACCESSIBILITY_DEFAULTS };
       sync();
@@ -434,7 +444,7 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
     });
     panel.querySelectorAll<HTMLButtonElement>('[data-theme]').forEach((button) => {
       button.addEventListener('click', () => {
-        settings = { ...settings, theme: button.dataset.theme === 'dark' ? 'dark' : 'light' };
+        settings = { ...settings, theme: button.dataset.theme === 'dark' ? 'dark' : button.dataset.theme === 'light' ? 'light' : 'system' };
         sync();
         updatePanel();
       });
@@ -487,6 +497,16 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
 
   const handleKeyDown = (event: KeyboardEvent) => {
     const target = event.target;
+    if (overlay && event.key === 'Escape') { event.preventDefault(); closePanel(); return; }
+    if (overlay && event.key === 'Tab') {
+      const focusable = Array.from(overlay.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), [tabindex="0"]')).filter(el => el.getClientRects().length > 0);
+      if (focusable.length) {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === overlay.querySelector('.dns-a11y-panel'))) { event.preventDefault(); last.focus(); return; }
+        if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); return; }
+      }
+    }
     if (
       target instanceof HTMLInputElement ||
       target instanceof HTMLTextAreaElement ||
@@ -523,6 +543,7 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
       closePanel();
       trigger.removeEventListener('click', togglePanel);
       window.removeEventListener('keydown', handleKeyDown);
+      systemTheme?.removeEventListener?.('change', onSystemThemeChange);
       trigger.remove();
     },
   };
