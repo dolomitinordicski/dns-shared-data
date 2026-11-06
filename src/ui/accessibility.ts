@@ -120,7 +120,7 @@ html[data-dns-theme="dark"] {
 html[data-dns-theme="dark"] body { background: #101C24; color: #EAF1F2; }
 html[data-dns-theme="dark"] :is(input, textarea, select) { color-scheme: dark; }
 html.dns-a11y-text-scale { font-size: calc(100% * var(--dns-a11y-text-scale)); }
-html.dns-a11y-high-contrast {
+html.dns-a11y-high-contrast:not([data-dns-theme="dark"]) {
   --color-dns-deep: #000000;
   --color-dns-mid: #000000;
   --color-dns-muted: #000000;
@@ -128,7 +128,16 @@ html.dns-a11y-high-contrast {
   --color-dns-border: rgba(0,0,0,.58);
   --color-dns-subtle-border: rgba(0,0,0,.30);
 }
-html.dns-a11y-high-contrast body { background: #fff; }
+html.dns-a11y-high-contrast:not([data-dns-theme="dark"]) body { background: #fff; }
+html.dns-a11y-high-contrast[data-dns-theme="dark"] {
+  --color-dns-deep: #FFFFFF;
+  --color-dns-mid: #FFFFFF;
+  --color-dns-muted: #F1F7F8;
+  --color-dns-dark-text: #FFFFFF;
+  --color-dns-border: rgba(255,255,255,.75);
+  --color-dns-subtle-border: rgba(255,255,255,.48);
+}
+html.dns-a11y-high-contrast[data-dns-theme="dark"] body { background: #101C24; color: #FFFFFF; }
 html.dns-a11y-high-contrast :is(.dns-card, input, select, textarea, button) {
   border-color: rgba(13,77,94,.48) !important;
 }
