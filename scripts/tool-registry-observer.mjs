@@ -262,6 +262,9 @@ export async function observeTool(
       release: null,
       errors,
     };
+  if (tool.id === "dns-core") {
+    return { ...o, applicable: false, web: await probe(null) };
+  }
   if (tool.repo) {
     try {
       const r = await read(`/repos/${tool.repo}`);
@@ -309,6 +312,7 @@ export async function observeTool(
   return o;
 }
 export function projectTool(tool, o, previous, canonical) {
+  if (o.applicable === false) previous = null;
   const preserved = [];
   const keep = (k, v) => {
     if (
@@ -335,7 +339,7 @@ export function projectTool(tool, o, previous, canonical) {
   versions.state = Object.fromEntries(
     ["foundation", "designSystem", "sharedData"].map((k) => [
       k,
-      versionState(versions[k], canonical?.[k]?.version),
+      o.applicable === false ? "na" : versionState(versions[k], canonical?.[k]?.version),
     ]),
   );
   versions.updateRequired = Object.values(versions.state).includes(
@@ -361,7 +365,7 @@ export function projectTool(tool, o, previous, canonical) {
         errors.length || preserved.length
           ? (previous?.observations?.lastSuccessAt ?? null)
           : o.observedAt,
-      quality: errors.length || preserved.length ? "stale" : "verified",
+      quality: o.applicable === false ? "service" : errors.length || preserved.length ? "stale" : "verified",
       preserved,
       errors,
       sourceDiffersFromProduction:

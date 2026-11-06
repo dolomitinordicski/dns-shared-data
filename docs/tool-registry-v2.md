@@ -8,6 +8,10 @@ There is already a central `sync-tool-registry.yml` schedule, plus manual/source
 
 ## Data contract
 
+DNS Core is a Firebase service, not the Shared Data website: app/Foundation versions are marked not applicable, never inferred from the website's Pages deployment. The registry covers all 11 currently registered entries; deliberately retired repositories are not silently reintroduced.
+
+The full unauthenticated local dry run exercised all entries and exposed GitHub 403 rate limits after the first repositories. These are reported as stale/unknown, not converted into versions. Workspace has no usable npm lock entry and FAIR has a tag/lock mismatch in the observed source; neither is silently changed. Production activation requires the read-only App token and a review of every resulting error. Alternative lockfile formats/build manifests remain unknown until adapters are implemented.
+
 `toolRegistryPublic/{id}` keeps compatible `versions` and `health` fields, adding `observations`:
 
 - `main`: immutable default-branch SHA and the package/lockfile at that SHA.
