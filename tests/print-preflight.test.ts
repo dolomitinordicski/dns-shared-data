@@ -99,3 +99,14 @@ test('failed image does not suppress empty-image error on another image', async 
   assert.ok(result.errors.includes('print-image-load-failed'));
   assert.ok(result.errors.includes('print-image-empty'));
 });
+
+
+test('invalid timeout override falls back to the safe default', async () => {
+  const sheet = {
+    ownerDocument: { fonts: { ready: Promise.resolve() } },
+    querySelectorAll: () => [],
+  } as unknown as HTMLElement;
+  const result = await preflightDNSPrintAssets(sheet, Number.NaN);
+  assert.equal(result.ready, true);
+  assert.deepEqual(result.errors, []);
+});
