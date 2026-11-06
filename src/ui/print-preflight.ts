@@ -55,6 +55,7 @@ export async function preflightDNSPrintAssets(
       errors.push('print-image-source-missing');
       continue;
     }
+    let decodeFailed = false;
     try {
       if (typeof image.decode === 'function') {
         await withinPrintTimeout(image.decode(), timeoutMs);
@@ -62,9 +63,10 @@ export async function preflightDNSPrintAssets(
         errors.push('print-image-not-ready');
       }
     } catch {
+      decodeFailed = true;
       errors.push('print-image-load-failed');
     }
-    if (image.naturalWidth === 0 && !errors.includes('print-image-load-failed')) errors.push('print-image-empty');
+    if (image.naturalWidth === 0 && !decodeFailed) errors.push('print-image-empty');
   }
 
   for (const svg of svgs) {
