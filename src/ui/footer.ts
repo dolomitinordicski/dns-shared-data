@@ -1,6 +1,6 @@
 import { DNS_FOUNDATION_RELEASE_VERSION } from '../version.js';
 
-export const DNS_FOOTER_RUNTIME_VERSION = '1.2.0' as const;
+export const DNS_FOOTER_RUNTIME_VERSION = '1.3.0' as const;
 export const DNS_FOOTER_GRAPHIC_URL =
   `https://raw.githubusercontent.com/dolomitinordicski/dns-shared-data/foundation-v${DNS_FOUNDATION_RELEASE_VERSION}/graphics/swoosh.svg` as const;
 
@@ -25,10 +25,10 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
   isolation: isolate;
   min-height: 64px;
   border-top: 1px solid var(--dns-footer-border, rgba(255,255,255,.14));
-  background: var(--dns-footer-bg, #0D4D5E);
+  background: linear-gradient(115deg, #0A2934 0%, #123D4B 55%, #235365 100%);
   color: var(--dns-footer-text, #FFFFFF);
 }
-[data-dns-tool-footer] > :not(.dns-footer-graphic) {
+[data-dns-tool-footer]::before {\n  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;\n  background: linear-gradient(125deg, transparent 64%, rgba(190,225,228,.07) 64%, rgba(190,225,228,.07) 77%, transparent 77%);\n}\n[data-dns-tool-footer] > :not(.dns-footer-graphic) {
   position: relative;
   z-index: 1;
 }
@@ -65,7 +65,7 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
   position: absolute;
   right: -18px;
   top: 50%;
-  width: min(190px, 38vw);
+  width: min(230px, 42vw);\n  opacity: .23;
   height: auto;
   z-index: 0;
   transform: translateY(-50%);
@@ -99,9 +99,9 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
     documentRoot.head.appendChild(style);
   }
 
-  const refresh = () => {
+  const labels: Record<string, { guide: string; support: string }> = {\n    it: { guide: 'Guida', support: 'Supporto' },\n    de: { guide: 'Anleitung', support: 'Support' },\n    en: { guide: 'Help', support: 'Support' },\n  };\n  const refresh = () => {
     for (const footer of documentRoot.querySelectorAll<HTMLElement>('[data-dns-tool-footer]')) {
-      if (footer.querySelector('.dns-footer-graphic')) continue;
+      const lang = (footer.dataset.dnsLang || documentRoot.documentElement.lang || 'it').slice(0, 2).toLowerCase();\n      const label = labels[lang] ?? labels.it;\n      let links = footer.querySelector<HTMLElement>('.dns-tool-footer-links');\n      if (!links) {\n        links = documentRoot.createElement('div');\n        links.className = 'dns-tool-footer-links';\n        links.dataset.dnsFoundationGenerated = 'true';\n        footer.querySelector('.dns-tool-footer-shell')?.appendChild(links);\n      }\n      if (links?.dataset.dnsFoundationGenerated === 'true') {\n        const tool = footer.dataset.dnsToolName || '';\n        const version = footer.dataset.dnsToolVersion || '';\n        const guideUrl = footer.dataset.dnsGuideUrl || '';\n        const guideEnabled = footer.dataset.dnsGuideEnabled === 'true';\n        const subject = `[DNS Support] ${tool || 'DNS Tool'}${version ? ` | v${version}` : ''} | Foundation v${DNS_FOUNDATION_RELEASE_VERSION}`;\n        links.replaceChildren();\n        if (guideEnabled && /^https:\\/\\//i.test(guideUrl)) {\n          const guide = documentRoot.createElement('a');\n          guide.href = guideUrl; guide.target = '_blank'; guide.rel = 'noopener noreferrer';\n          guide.textContent = label.guide; links.appendChild(guide);\n        }\n        const support = documentRoot.createElement('a');\n        support.href = `mailto:info@dolomitinordicski.com?subject=${encodeURIComponent(subject)}`;\n        support.textContent = label.support; links.appendChild(support);\n        const meta = documentRoot.createElement('span');\n        meta.className = 'dns-tool-footer-version';\n        meta.textContent = `${tool}${tool && version ? ' · ' : ''}${version ? `v${version} · ` : ''}Foundation v${DNS_FOUNDATION_RELEASE_VERSION}`;\n        links.appendChild(meta);\n      }\n      if (footer.querySelector('.dns-footer-graphic')) continue;
       const image = documentRoot.createElement('img');
       image.src = DNS_FOOTER_GRAPHIC_URL;
       image.alt = '';
