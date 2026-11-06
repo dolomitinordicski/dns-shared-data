@@ -21,6 +21,13 @@ function ensureShellStyles(documentRoot: Document) {
   --dns-shell-padding-x-mobile: 16px;
 }
 
+/* Opt-in embedded presentation: the host Workspace owns corporate chrome.
+   Tool navigation and editing controls remain visible. Standalone is unchanged. */
+html[data-dns-embed-mode="embedded"] [data-dns-tool-header],
+html[data-dns-embed-mode="embedded"] [data-dns-tool-footer] {
+  display: none !important;
+}
+
 [data-dns-shell-main] {
   box-sizing: border-box;
   width: 100%;
