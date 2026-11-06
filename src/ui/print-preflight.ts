@@ -31,6 +31,7 @@ export async function preflightDNSPrintAssets(
   sheet: HTMLElement | null,
   timeoutMs = DNS_PRINT_ASSET_TIMEOUT_MS,
 ): Promise<DNSPrintPreflightResult> {
+  const effectiveTimeoutMs = Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : DNS_PRINT_ASSET_TIMEOUT_MS;
   const errors: string[] = [];
   const warnings: string[] = [];
   if (!sheet) {
@@ -44,7 +45,7 @@ export async function preflightDNSPrintAssets(
   // Browser print can otherwise capture fallback fonts before web fonts settle.
   if (documentRoot.fonts?.ready) {
     try {
-      await withinPrintTimeout(documentRoot.fonts.ready, timeoutMs);
+      await withinPrintTimeout(documentRoot.fonts.ready, effectiveTimeoutMs);
     } catch {
       errors.push('print-fonts-not-ready');
     }
@@ -58,7 +59,7 @@ export async function preflightDNSPrintAssets(
     let decodeFailed = false;
     try {
       if (typeof image.decode === 'function') {
-        await withinPrintTimeout(image.decode(), timeoutMs);
+        await withinPrintTimeout(image.decode(), effectiveTimeoutMs);
       } else if (!image.complete || image.naturalWidth === 0) {
         errors.push('print-image-not-ready');
       }
