@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   observeTool,
+  availableRelease,
   lockDependency,
   versionState,
   projectTool,
@@ -15,6 +16,20 @@ import {
 const sha = "a".repeat(40),
   oldSha = "b".repeat(40),
   dep = "@dolomitinordicski/dns-shared-data";
+test('independent Shared Data release does not change available Foundation',async()=>{
+  const file=content=>({encoding:'base64',content:Buffer.from(content).toString('base64')});
+  const read=async p=>{
+    if(p.includes('/releases?'))return [{tag_name:'foundation-v1.3.0'},{tag_name:'shared-data-v2.0.0'},{tag_name:'shared-data-v3.0.0',prerelease:true}];
+    if(p.includes('/git/ref/'))return {object:{type:'commit',sha:p.includes('shared-data-v')?oldSha:sha}};
+    if(p.includes('/package-lock.json'))return null;
+    if(p.includes('/package.json'))return file(JSON.stringify({version:p.endsWith(oldSha)?'2.0.0':'1.3.0'}));
+    if(p.includes('/version.ts'))return file("export const DNS_FOUNDATION_RELEASE_VERSION = '1.3.0';");
+    if(p.includes('/design-system.ts'))return file("export const DNS_DESIGN_SYSTEM_VERSION = '1.25.0';");
+    throw Error('Unexpected request');
+  };
+  const available=await availableRelease(read);
+  assert.equal(available.foundation.version,'1.3.0');assert.equal(available.sharedData.version,'2.0.0');assert.equal(available.designSystem.version,'1.25.0');
+});
 test('missing package metadata is an explicit failure, never a fresh valid version',async()=>{
   const snapshot=await snapshotAt(async()=>null,'dolomitinordicski/analytics',sha);
   assert.ok(snapshot.errors.includes('PACKAGE_METADATA_UNAVAILABLE'));

@@ -63,22 +63,27 @@ jobs:
         with:
           ref: main
           persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+      - name: Restrict token to registered repositories
+        id: scope
+        run: |
+          node node_modules/tsx/dist/cli.mjs --eval 'import {DNS_TOOL_REGISTRY} from "./src/tool-registry.ts"; import {appendFileSync} from "node:fs"; const repositories=[...new Set(DNS_TOOL_REGISTRY.flatMap(t=>t.repo?[t.repo.split("/")[1]]:[]))]; if(!repositories.length||repositories.some(r=>!/^[-A-Za-z0-9_.]+$/.test(r))) throw Error("Invalid repository scope"); appendFileSync(process.env.GITHUB_OUTPUT,"repositories="+repositories.join(",")+"\n");'
       - uses: actions/create-github-app-token@v1
         id: reader
         with:
           app-id: ${{ secrets.DNS_FOUNDATION_PROPAGATION_APP_ID }}
           private-key: ${{ secrets.DNS_FOUNDATION_PROPAGATION_APP_PRIVATE_KEY }}
           owner: dolomitinordicski
+          repositories: ${{ steps.scope.outputs.repositories }}
           permission-contents: read
           permission-deployments: read
       - uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-      - run: npm install --no-audit --no-fund
-      - run: npm run typecheck
       - name: Reconcile observed source and production state
         run: npm run sync:tool-registry:apply
         env:

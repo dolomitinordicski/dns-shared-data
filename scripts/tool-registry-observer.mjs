@@ -190,7 +190,7 @@ export async function availableRelease(read) {
     s.foundation !== r.tag_name.slice(12)
   )
     throw Error("CANONICAL_COMPONENT_EVIDENCE_MISSING");
-  return {
+  const canonical = {
     foundation: { version: s.foundation, ref: r.tag_name },
     designSystem: { version: s.designSystem },
     sharedData: { version: s.sharedData },
@@ -201,6 +201,24 @@ export async function availableRelease(read) {
       url: r.html_url,
     },
   };
+  // Standalone component releases are independent streams, never aliases for Foundation.
+  for (const [key, pattern] of [
+    ['sharedData', /^(?:dns-shared-data-v|shared-data-v|v)(\d+\.\d+\.\d+)$/],
+    ['designSystem', /^design-system-v(\d+\.\d+\.\d+)$/],
+  ]) {
+    const candidates = releases.filter(x => !x.draft && !x.prerelease && pattern.test(x.tag_name));
+    candidates.sort((a,b) => compareVersions(b.tag_name.match(pattern)[1],a.tag_name.match(pattern)[1]) ?? 0);
+    const latest = candidates[0];
+    if (!latest) continue;
+    const componentSha = await tagCommit(read, SHARED, latest.tag_name);
+    if (!componentSha) throw Error('COMPONENT_RELEASE_SHA_UNAVAILABLE');
+    const component = await snapshotAt(read, SHARED, componentSha);
+    if (component[key] !== latest.tag_name.match(pattern)[1]) throw Error('COMPONENT_RELEASE_VERSION_MISMATCH');
+    if (compareVersions(component[key],canonical[key].version)>0) canonical[key] = {
+      version:component[key],ref:latest.tag_name,sha:componentSha,publishedAt:latest.published_at,
+    };
+  }
+  return canonical;
 }
 // Successful CI is not deployment evidence. Only production deployment statuses are used.
 export async function deploymentEvidence(

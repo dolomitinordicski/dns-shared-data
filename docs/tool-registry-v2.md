@@ -22,7 +22,7 @@ The full unauthenticated local dry run exercised all entries and exposed GitHub 
 - `installationVerified:false`, `runtimeUsage:'unknown'`: a lockfile at a deployed commit is evidence of the locked source, **not an attestation of npm's installed tree or use of that component in the live bundle**. Current tools do not publish a uniform signed build manifest. Hub labels this limitation instead of claiming it away. Adding build/runtime attestations to consumers is a separate rollout, without changing their operational versions in this PR.
 - `quality`, `errors`, `preserved`, `lastSuccessAt`, `lastObservedAt`: preserve provenance and distinguish incomplete/old/unavailable data. Web HTTP 200 proves reachability only; per-tool Firebase operation remains pending until a dedicated read-only probe exists.
 
-Canonical available versions come only from a published stable Foundation release and its exact tag SHA; package and component versions are read independently. Discovery failure fails closed before any write. No fallback source is presented as verified.
+Canonical available versions start with a published stable Foundation release and its exact tag SHA; package and component versions are read independently. Standalone Shared Data releases (`shared-data-vX.Y.Z`, `dns-shared-data-vX.Y.Z` or `vX.Y.Z`) and Design System releases (`design-system-vX.Y.Z`) are tracked independently, requiring the exported/package version at the resolved tag SHA to match the release name. They never upgrade the Foundation field by assumption. Discovery failure fails closed before any write. No fallback source is presented as verified.
 
 ## Triggering and central ownership
 
