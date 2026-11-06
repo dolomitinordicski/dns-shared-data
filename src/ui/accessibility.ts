@@ -361,6 +361,18 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
   let lastFocused: HTMLElement | null = null;
   let advancedOpen = false;
   const systemTheme = window.matchMedia?.('(prefers-color-scheme: dark)');
+  const onStoredSettingsChange = (event: StorageEvent) => {
+    if (event.key !== storageKey || !event.newValue) return;
+    try {
+      const incoming = normalizeSettings(JSON.parse(event.newValue) as Partial<DNSAccessibilitySettings>);
+      settings = incoming;
+      applySettings(settings);
+      updatePanel();
+    } catch {
+      // Ignore malformed updates from other tabs or tools.
+    }
+  };
+  window.addEventListener('storage', onStoredSettingsChange);
   const onSystemThemeChange = () => { if (settings.theme === 'system') applySettings(settings); };
   systemTheme?.addEventListener?.('change', onSystemThemeChange);
 
@@ -480,7 +492,7 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
     trigger.setAttribute('aria-expanded', 'true');
     overlay.querySelector('.dns-a11y-backdrop')?.addEventListener('click', closePanel);
     updatePanel();
-    overlay.querySelector<HTMLElement>('.dns-a11y-panel')?.focus();
+    overlay.querySelector<HTMLElement>('.dns-a11y-close')?.focus();
   }
 
   function closePanel() {
@@ -544,6 +556,7 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
       trigger.removeEventListener('click', togglePanel);
       window.removeEventListener('keydown', handleKeyDown);
       systemTheme?.removeEventListener?.('change', onSystemThemeChange);
+      window.removeEventListener('storage', onStoredSettingsChange);
       trigger.remove();
     },
   };
