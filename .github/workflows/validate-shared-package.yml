@@ -8,6 +8,7 @@ on:
       - 'assets/tool-icons/**'
       - 'tests/tool-icons.test.mjs'
       - 'tests/trail-status.test.mjs'
+      - 'tests/print-preflight.test.ts'
       - 'scripts/partner-activation-policy.mjs'
       - 'scripts/partner-provisioning-service.mjs'
       - 'tests/partner-activation-policy.test.mjs'
@@ -44,6 +45,7 @@ on:
       - 'assets/tool-icons/**'
       - 'tests/tool-icons.test.mjs'
       - 'tests/trail-status.test.mjs'
+      - 'tests/print-preflight.test.ts'
       - 'scripts/partner-activation-policy.mjs'
       - 'scripts/partner-provisioning-service.mjs'
       - 'tests/partner-activation-policy.test.mjs'
@@ -139,6 +141,9 @@ jobs:
 
       - name: Verify shell profile contract
         run: node scripts/check-shell-profiles.mjs
+
+      - name: Test Foundation print preflight
+        run: npm run test:print:preflight
 
       - name: Verify print profile contract
         run: node scripts/check-print-profiles.mjs

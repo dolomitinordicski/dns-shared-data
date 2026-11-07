@@ -97,6 +97,9 @@ function ensureNavigationStyles(
 
   style.textContent = `
 .dns-foundation-header {
+  background: linear-gradient(115deg, #164657, #447C8D 62%, #719BA7);
+  isolation: isolate;
+  overflow: clip;
   position: sticky;
   top: 0;
   z-index: 30;
@@ -104,6 +107,16 @@ function ensureNavigationStyles(
   transition: transform var(--dns-header-reveal-duration, 220ms) var(--dns-header-reveal-easing, ease);
   will-change: transform;
 }
+.dns-foundation-header::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: linear-gradient(125deg, transparent 52%, rgba(210,233,233,.10) 52%, rgba(210,233,233,.10) 68%, transparent 68%);
+}
+.dns-foundation-header::after {
+  content: ''; position: absolute; right: -30px; top: -110%; height: 300%; width: min(270px, 40vw);
+  background: url('https://raw.githubusercontent.com/dolomitinordicski/dns-shared-data/foundation-v1.3.0/graphics/swoosh.svg') center/contain no-repeat;
+  opacity: .16; pointer-events: none; z-index: 0; transform: rotate(-13deg);
+}
+.dns-foundation-header > * { position: relative; z-index: 1; }
 .dns-foundation-header[data-dns-scroll-state="hidden"] {
   transform: translateY(calc(var(--dns-header-hide-percent, -100) * 1%));
 }
