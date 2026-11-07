@@ -125,7 +125,7 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
         if (links.dataset.dnsFooterSignature !== signature) {
         links.dataset.dnsFooterSignature = signature;
         links.replaceChildren();
-        if (guideEnabled && /^https:\\/\\//i.test(guideUrl)) {
+        if (guideEnabled && guideUrl.startsWith('https://')) {
           const guide = documentRoot.createElement('a');
           guide.href = guideUrl; guide.target = '_blank'; guide.rel = 'noopener noreferrer';
           guide.textContent = label.guide; links.appendChild(guide);
