@@ -136,6 +136,19 @@ export function initDNSShellRuntime(
   ensureShellStyles(documentRoot);
 
   const root = documentRoot.documentElement;
+  // Only the Workspace iframe presentation hides corporate chrome.
+  // The query parameter alone must not change standalone presentation.
+  let embedded = false;
+  if (typeof window !== 'undefined') {
+    try {
+      embedded = window.self !== window.top &&
+        new URL(window.location.href).searchParams.get('embedded') === '1';
+    } catch {
+      embedded = false;
+    }
+  }
+  if (embedded) root.dataset.dnsEmbedMode = 'embedded';
+  else delete root.dataset.dnsEmbedMode;
   root.dataset.dnsShellProfile = profile.id;
   root.dataset.dnsShellRuntime = DNS_SHELL_RUNTIME_VERSION;
 
@@ -162,6 +175,7 @@ export function initDNSShellRuntime(
     profile,
     refresh,
     disconnect() {
+      delete root.dataset.dnsEmbedMode;
       delete root.dataset.dnsShellProfile;
       delete root.dataset.dnsShellRuntime;
       if (documentRoot.body) delete documentRoot.body.dataset.dnsShellProfile;

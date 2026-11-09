@@ -45,6 +45,26 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
   gap: .75rem 1.5rem;
   padding: 1rem var(--dns-shell-padding-x, 32px);
 }
+.dns-tool-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .5rem 1rem;
+  min-width: 0;
+  color: rgba(255,255,255,.86);
+  font: 500 11px/1.4 var(--font-alt,Roboto,sans-serif);
+}
+.dns-tool-footer-links a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dns-tool-footer-links a:focus-visible {
+  outline: 2px solid #AAD0D1;
+  outline-offset: 3px;
+}
+.dns-tool-footer-version { opacity: .78; white-space: nowrap; }
 .dns-tool-footer-primary {
   min-width: 0;
   color: rgba(255,255,255,.90);
@@ -79,6 +99,7 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
     justify-content: center;
     padding-inline: var(--dns-shell-padding-x-mobile, 16px);
   }
+  .dns-tool-footer-links { justify-content: flex-start; }
   .dns-tool-footer-meta {
     max-width: 100%;
     text-align: left;
