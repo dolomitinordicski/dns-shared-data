@@ -24,6 +24,8 @@ export interface DNSAccessibilityRuntimeOptions {
   language?: DNSAccessibilityLanguage;
   storageKey?: string;
   settings?: Partial<DNSAccessibilitySettings>;
+  /** Opt-in only for embedded DNS tools; never enables cross-origin auth. */
+  themeParentOrigin?: string;
 }
 
 export const DNS_ACCESSIBILITY_DEFAULTS: DNSAccessibilitySettings = {
@@ -429,6 +431,21 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
     }
   };
   window.addEventListener('storage', onStoredSettingsChange);
+  const onParentThemeMessage = (event: MessageEvent) => {
+    if (!options.themeParentOrigin || window.parent === window) return;
+    if (event.source !== window.parent || event.origin !== options.themeParentOrigin) return;
+    const data: unknown = event.data;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return;
+    const message = data as Record<string, unknown>;
+    if (message.type !== 'dns:theme:v1') return;
+    const theme = message.preference;
+    if (theme !== 'system' && theme !== 'light' && theme !== 'dark') return;
+    // Update only the theme field; preserve every existing accessibility setting.
+    settings = { ...settings, theme };
+    applySettings(settings);
+    updatePanel();
+  };
+  if (options.themeParentOrigin) window.addEventListener('message', onParentThemeMessage);
   const onSystemThemeChange = () => { if (settings.theme === 'system') applySettings(settings); };
   systemTheme?.addEventListener?.('change', onSystemThemeChange);
 
@@ -610,6 +627,7 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
       trigger.removeEventListener('click', togglePanel);
       window.removeEventListener('keydown', handleKeyDown);
       systemTheme?.removeEventListener?.('change', onSystemThemeChange);
+      window.removeEventListener('message', onParentThemeMessage);
       window.removeEventListener('storage', onStoredSettingsChange);
       trigger.remove();
     },
