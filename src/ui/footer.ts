@@ -5,6 +5,7 @@ export const DNS_FOOTER_GRAPHIC_URL =
   `https://raw.githubusercontent.com/dolomitinordicski/dns-shared-data/foundation-v${DNS_FOUNDATION_RELEASE_VERSION}/graphics/swoosh.svg` as const;
 
 const STYLE_ID = 'dns-footer-runtime-style';
+const DNS_WIKI_URL = 'https://dolomitinordicski.github.io/dns-wiki/';
 
 export interface DNSFooterRuntimeHandle {
   refresh(): void;
@@ -139,8 +140,8 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
       if (links?.dataset.dnsFoundationGenerated === 'true') {
         const tool = footer.dataset.dnsToolName || '';
         const version = footer.dataset.dnsToolVersion || '';
-        const guideUrl = footer.dataset.dnsGuideUrl || '';
-        const guideEnabled = footer.dataset.dnsGuideEnabled === 'true';
+        const guideUrl = footer.dataset.dnsGuideUrl || DNS_WIKI_URL;
+        const guideEnabled = footer.dataset.dnsGuideEnabled !== 'false';
         const subject = `[DNS Support] ${tool || 'DNS Tool'}${version ? ` | v${version}` : ''} | Foundation v${DNS_FOUNDATION_RELEASE_VERSION}`;
         const signature = JSON.stringify([lang, tool, version, guideUrl, guideEnabled, DNS_FOUNDATION_RELEASE_VERSION]);
         if (links.dataset.dnsFooterSignature !== signature) {
@@ -177,6 +178,9 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
   if (typeof MutationObserver !== 'undefined') {
     observer = new MutationObserver(() => refresh());
     observer.observe(documentRoot.documentElement, { childList: true, subtree: true });
+    // Foundation updates <html lang> without changing the DOM tree.
+    // Observe language changes separately so footer labels stay in sync.
+    observer.observe(documentRoot.documentElement, { attributes: true, attributeFilter: ['lang'] });
   }
 
   return {
