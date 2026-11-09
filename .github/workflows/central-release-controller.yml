@@ -1,0 +1,61 @@
+name: Central privileged release preparation
+on:
+  pull_request:
+    paths: ['scripts/central-release/**', 'tests/central-release-policy.test.mjs', '.github/workflows/central-release-controller.yml']
+  workflow_dispatch:
+    inputs:
+      target:
+        type: choice
+        options: [faktura, polls]
+        required: true
+      source_sha:
+        description: 'Full reviewed source main merge SHA'
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  policy-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - run: node --test tests/central-release-policy.test.mjs
+  source-evidence:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: policy-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Verify immutable source and release provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TARGET: ${{ inputs.target }}
+          RELEASE_SHA: ${{ inputs.source_sha }}
+        run: node scripts/central-release/verify.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-central-release-plan
+          path: central-release-plan.json
+          retention-days: 7
+  production-gate:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: source-evidence
+    environment: dns-release-approval
+    runs-on: ubuntu-latest
+    steps:
+      - name: Production activation intentionally blocked
+        run: |
+          echo '::error::Preparation only: dedicated central identities and a reviewed deployment executor are required before activation.'
+          exit 1
