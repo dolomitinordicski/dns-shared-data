@@ -178,6 +178,9 @@ export function initDNSFooterRuntime(root?: Document): DNSFooterRuntimeHandle {
   if (typeof MutationObserver !== 'undefined') {
     observer = new MutationObserver(() => refresh());
     observer.observe(documentRoot.documentElement, { childList: true, subtree: true });
+    // Foundation updates <html lang> without changing the DOM tree.
+    // Observe language changes separately so footer labels stay in sync.
+    observer.observe(documentRoot.documentElement, { attributes: true, attributeFilter: ['lang'] });
   }
 
   return {
