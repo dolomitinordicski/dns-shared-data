@@ -40,6 +40,8 @@ export interface DNSFoundationAccessibilityOptions {
   mountSelector?: string;
   settings?: Partial<DNSAccessibilitySettings>;
   storageKey?: string;
+  /** Opt-in trusted parent origin for theme-only messages in embedded tools. */
+  themeParentOrigin?: string;
 }
 
 export interface DNSFoundationRuntimeOptions {
@@ -279,6 +281,7 @@ function initDeferredAccessibility(
       language: currentLanguage,
       storageKey: options.storageKey,
       settings: options.settings,
+      themeParentOrigin: options.themeParentOrigin,
     });
     mountedTarget = mountTarget;
   };
