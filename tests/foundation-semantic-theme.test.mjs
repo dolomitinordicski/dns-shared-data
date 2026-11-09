@@ -57,3 +57,8 @@ test('Foundation forwards opt-in parent origin to deferred accessibility runtime
   assert.match(foundation, /interface DNSFoundationAccessibilityOptions[\\s\\S]*?themeParentOrigin\\?: string/);
   assert.match(foundation, /initDNSAccessibilityRuntime\\(\\{[\\s\\S]*?themeParentOrigin: options\\.themeParentOrigin/);
 });
+
+test('selected preference is distinct from the resolved visual theme', () => {
+  assert.match(source, /root\.dataset\.dnsThemeChoice = settings\.theme/);
+  assert.match(source, /root\.dataset\.dnsTheme = settings\.theme === 'system'/);
+});
