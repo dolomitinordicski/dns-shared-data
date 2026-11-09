@@ -51,3 +51,9 @@ test('embedded theme receiver is opt-in and validates parent source and origin',
   assert.match(source, /settings = \{ \.\.\.settings, theme \}/);
   assert.match(source, /removeEventListener\('message', onParentThemeMessage\)/);
 });
+
+test('Foundation forwards opt-in parent origin to deferred accessibility runtime', () => {
+  const foundation = readFileSync(new URL('../src/foundation.ts', import.meta.url), 'utf8');
+  assert.match(foundation, /interface DNSFoundationAccessibilityOptions[\\s\\S]*?themeParentOrigin\\?: string/);
+  assert.match(foundation, /initDNSAccessibilityRuntime\\(\\{[\\s\\S]*?themeParentOrigin: options\\.themeParentOrigin/);
+});
