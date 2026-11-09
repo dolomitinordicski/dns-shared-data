@@ -41,3 +41,13 @@ test('theme settings remain persisted under the existing storage contract', () =
   assert.match(source, /window\.localStorage\.setItem\(storageKey,/);
   assert.match(source, /window\.addEventListener\('storage', onStoredSettingsChange\)/);
 });
+
+test('embedded theme receiver is opt-in and validates parent source and origin', () => {
+  assert.match(source, /themeParentOrigin\?: string/);
+  assert.match(source, /event\.source !== window\.parent/);
+  assert.match(source, /event\.origin !== options\.themeParentOrigin/);
+  assert.match(source, /message\.type !== 'dns:theme:v1'/);
+  assert.match(source, /theme !== 'system' && theme !== 'light' && theme !== 'dark'/);
+  assert.match(source, /settings = \{ \.\.\.settings, theme \}/);
+  assert.match(source, /removeEventListener\('message', onParentThemeMessage\)/);
+});
