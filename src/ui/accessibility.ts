@@ -380,6 +380,7 @@ html.dns-a11y-large-reading-text :is(.dns-readable-copy, .dns-insight-body, .dns
 
 function applySettings(settings: DNSAccessibilitySettings) {
   const root = document.documentElement;
+  root.dataset.dnsThemeChoice = settings.theme;
   root.dataset.dnsTheme = settings.theme === 'system' ? (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : settings.theme;
   root.style.setProperty('--dns-a11y-text-scale', String(settings.textScale / 100));
   root.classList.toggle('dns-a11y-text-scale', settings.textScale !== 100);
