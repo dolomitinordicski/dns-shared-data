@@ -118,11 +118,38 @@ html[data-dns-theme="dark"] {
   --color-dns-muted: #A3BCC1;
   --color-dns-border: rgba(185,213,216,.28);
   --color-dns-subtle-border: rgba(185,213,216,.16);
+  --dns-card-bg: #1B2B35;
+  --dns-nav-surface-bg: #1B2B35;
+  --dns-tab-bg: #1B2B35;
+  --dns-tab-text: #C7D9DC;
+  --dns-tab-active: #FFFFFF;
+  --dns-tab-hover: #FFFFFF;
+  --dns-control-secondary-bg: #243B46;
+  --dns-control-secondary-text: #EAF1F2;
+  --dns-context-selected-bg: #284551;
+  --dns-context-selected-text: #FFFFFF;
+  --dns-context-selected-border: #8EB8BD;
+  --dns-context-hover-bg: #233A45;
+  --dns-context-hover-border: #638D97;
   --dns-table-row-alt: rgba(170,208,209,.07);
   --dns-table-grid-strong: rgba(185,213,216,.3);
   background: #101C24;
 }
 html[data-dns-theme="dark"] body { background: #101C24; color: #EAF1F2; }
+html[data-dns-theme="dark"] :is(.dns-card, .dns-a11y-panel) {
+  background-color: var(--color-dns-surface);
+  color: var(--color-dns-dark-text);
+}
+html[data-dns-theme="dark"] :is(input, textarea, select) {
+  background-color: var(--color-dns-surface);
+  color: var(--color-dns-dark-text);
+  border-color: var(--color-dns-border);
+}
+html[data-dns-theme="dark"] :is(.dns-a11y-scale button, .dns-a11y-reset) {
+  background-color: var(--color-dns-surface);
+  color: var(--color-dns-dark-text);
+}
+
 html[data-dns-theme="dark"] :is(input, textarea, select) { color-scheme: dark; }
 html.dns-a11y-text-scale { font-size: calc(100% * var(--dns-a11y-text-scale)); }
 html.dns-a11y-high-contrast:not([data-dns-theme="dark"]) {
