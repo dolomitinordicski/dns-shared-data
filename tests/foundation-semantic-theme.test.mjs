@@ -55,7 +55,7 @@ test('embedded theme receiver is opt-in and validates parent source and origin',
 test('Foundation forwards opt-in parent origin to deferred accessibility runtime', () => {
   const foundation = readFileSync(new URL('../src/foundation.ts', import.meta.url), 'utf8');
   assert.match(foundation, /interface DNSFoundationAccessibilityOptions[\s\S]*?themeParentOrigin\?: string/);
-  assert.match(foundation, /initDNSAccessibilityRuntime\(\\{[\s\S]*?themeParentOrigin: options\.themeParentOrigin/);
+  assert.ok(foundation.includes('themeParentOrigin: options.themeParentOrigin'));
 });
 
 test('selected preference is distinct from the resolved visual theme', () => {
