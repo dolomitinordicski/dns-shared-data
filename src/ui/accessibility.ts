@@ -106,6 +106,25 @@ function ensureStyles() {
   --dns-a11y-text-scale: 1;
   --dns-a11y-focus-width: var(--dns-focus-width, 2px);
   --dns-a11y-focus-offset: var(--dns-focus-offset, 2px);
+  /* Semantic theme contract: components consume roles, never palette shades. */
+  --dns-theme-bg: #F4F8F9;
+  --dns-theme-surface: #FFFFFF;
+  --dns-theme-text: #0D4D5E;
+  --dns-theme-text-muted: #5A7F8A;
+  --dns-theme-border: rgba(65,116,131,.20);
+  --dns-theme-surface-alt: #E8F2F2;
+  --dns-theme-control-bg: #FFFFFF;
+  --dns-theme-control-text: #0D4D5E;
+}
+html[data-dns-theme="dark"] {
+  --dns-theme-bg: #101C24;
+  --dns-theme-surface: #1B2B35;
+  --dns-theme-text: #EAF1F2;
+  --dns-theme-text-muted: #A3BCC1;
+  --dns-theme-border: rgba(185,213,216,.28);
+  --dns-theme-surface-alt: #243B46;
+  --dns-theme-control-bg: #243B46;
+  --dns-theme-control-text: #EAF1F2;
 }
 html[data-dns-theme="dark"] {
   color-scheme: dark;
