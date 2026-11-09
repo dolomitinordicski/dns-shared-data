@@ -24,6 +24,8 @@ export interface DNSAccessibilityRuntimeOptions {
   language?: DNSAccessibilityLanguage;
   storageKey?: string;
   settings?: Partial<DNSAccessibilitySettings>;
+  /** Opt-in only for embedded DNS tools; never enables cross-origin auth. */
+  themeParentOrigin?: string;
 }
 
 export const DNS_ACCESSIBILITY_DEFAULTS: DNSAccessibilitySettings = {
@@ -106,6 +108,25 @@ function ensureStyles() {
   --dns-a11y-text-scale: 1;
   --dns-a11y-focus-width: var(--dns-focus-width, 2px);
   --dns-a11y-focus-offset: var(--dns-focus-offset, 2px);
+  /* Semantic theme contract: components consume roles, never palette shades. */
+  --dns-theme-bg: #F4F8F9;
+  --dns-theme-surface: #FFFFFF;
+  --dns-theme-text: #0D4D5E;
+  --dns-theme-text-muted: #5A7F8A;
+  --dns-theme-border: rgba(65,116,131,.20);
+  --dns-theme-surface-alt: #E8F2F2;
+  --dns-theme-control-bg: #FFFFFF;
+  --dns-theme-control-text: #0D4D5E;
+}
+html[data-dns-theme="dark"] {
+  --dns-theme-bg: #101C24;
+  --dns-theme-surface: #1B2B35;
+  --dns-theme-text: #EAF1F2;
+  --dns-theme-text-muted: #A3BCC1;
+  --dns-theme-border: rgba(185,213,216,.28);
+  --dns-theme-surface-alt: #243B46;
+  --dns-theme-control-bg: #243B46;
+  --dns-theme-control-text: #EAF1F2;
 }
 html[data-dns-theme="dark"] {
   color-scheme: dark;
@@ -359,6 +380,7 @@ html.dns-a11y-large-reading-text :is(.dns-readable-copy, .dns-insight-body, .dns
 
 function applySettings(settings: DNSAccessibilitySettings) {
   const root = document.documentElement;
+  root.dataset.dnsThemeChoice = settings.theme;
   root.dataset.dnsTheme = settings.theme === 'system' ? (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : settings.theme;
   root.style.setProperty('--dns-a11y-text-scale', String(settings.textScale / 100));
   root.classList.toggle('dns-a11y-text-scale', settings.textScale !== 100);
@@ -410,6 +432,21 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
     }
   };
   window.addEventListener('storage', onStoredSettingsChange);
+  const onParentThemeMessage = (event: MessageEvent) => {
+    if (!options.themeParentOrigin || window.parent === window) return;
+    if (event.source !== window.parent || event.origin !== options.themeParentOrigin) return;
+    const data: unknown = event.data;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return;
+    const message = data as Record<string, unknown>;
+    if (message.type !== 'dns:theme:v1') return;
+    const theme = message.preference;
+    if (theme !== 'system' && theme !== 'light' && theme !== 'dark') return;
+    // Update only the theme field; preserve every existing accessibility setting.
+    settings = { ...settings, theme };
+    applySettings(settings);
+    updatePanel();
+  };
+  if (options.themeParentOrigin) window.addEventListener('message', onParentThemeMessage);
   const onSystemThemeChange = () => { if (settings.theme === 'system') applySettings(settings); };
   systemTheme?.addEventListener?.('change', onSystemThemeChange);
 
@@ -591,6 +628,7 @@ export function initDNSAccessibilityRuntime(options: DNSAccessibilityRuntimeOpti
       trigger.removeEventListener('click', togglePanel);
       window.removeEventListener('keydown', handleKeyDown);
       systemTheme?.removeEventListener?.('change', onSystemThemeChange);
+      window.removeEventListener('message', onParentThemeMessage);
       window.removeEventListener('storage', onStoredSettingsChange);
       trigger.remove();
     },
