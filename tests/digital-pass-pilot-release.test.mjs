@@ -36,3 +36,18 @@ test('manual workflow targets only digitalPassApi and cannot run from a PR or pu
  assert.match(flow,/functions:digital-pass:digitalPassApi/);assert.match(flow,/refs\/heads\/main/);
  assert.match(flow,/dns-digital-pass-pilot/);assert.doesNotMatch(flow,/secrets versions access/);
 });
+
+test('preflight is local-only and never enters deploy job or requests runtime secrets',()=>{
+ const flow=readFileSync('.github/workflows/deploy-digital-pass-pilot.yml','utf8');
+ const preflight=flow.split('  preflight:\n')[1]?.split('\n  deploy:\n')[0];
+ assert.ok(preflight,'preflight job exists');
+ assert.match(preflight,/inputs.phase == 'preflight'/);
+ assert.match(preflight,/node --test tests\/digital-pass-pilot-release.test.mjs/);
+ assert.doesNotMatch(preflight,/environment:|secrets\.|google-github-actions|firebase.js deploy|gcloud /);
+ assert.match(flow,/inputs.phase != 'preflight'/);
+ assert.match(flow,/options: \[preflight, verify, activate, stop\]/);
+});
+test('release errors identify which approval flag is missing',()=>{
+ assert.throws(()=>pilotReleaseConfig({...env,DNS_PASS_DEPLOY_APPROVED:''},now),/DNS_PASS_DEPLOY_APPROVED/);
+ assert.throws(()=>pilotReleaseConfig({...env,DNS_PASS_PRIVACY_REVIEWED:''},now),/DNS_PASS_PRIVACY_REVIEWED/);
+});
