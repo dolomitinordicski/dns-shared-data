@@ -5,18 +5,23 @@ import {fileURLToPath} from 'node:url';
 import {controlledPilotSettings} from '../server/digital-pass-controlled-pilot.mjs';
 import {dataEntryNumberingStart} from '../server/digital-pass-data-entry-inventory.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
-const bad=()=>{throw Error('PILOT_RELEASE_CONFIGURATION_REQUIRED')};
+const bad=(name='PILOT_RELEASE_CONFIGURATION_REQUIRED')=>{throw Error('PILOT_RELEASE_CONFIGURATION_REQUIRED: '+name)};
 export function pilotReleaseConfig(env,now=Date.now()) {
  const phase=env.DNS_PASS_RELEASE_PHASE;
- if(!['verify','activate','stop'].includes(phase)||env.DNS_PASS_DEPLOY_APPROVED!=='true'||env.DNS_PASS_PRIVACY_REVIEWED!=='true')bad();
+ if(!['verify','activate','stop'].includes(phase))bad('DNS_PASS_RELEASE_PHASE');
+ if(env.DNS_PASS_DEPLOY_APPROVED!=='true')bad('DNS_PASS_DEPLOY_APPROVED');
+ if(env.DNS_PASS_PRIVACY_REVIEWED!=='true')bad('DNS_PASS_PRIVACY_REVIEWED');
+ for(const name of ['DNS_PASS_PILOT_ORGANIZATION_ID','DNS_PASS_PILOT_PASS_NUMBER','DNS_PASS_PILOT_OPERATOR_UID','DNS_PASS_PILOT_UNTIL','DNS_PASS_DATA_ENTRY_START_NUMBER','DNS_PASS_INVENTORY_REVISION','DNS_PASS_PRIVACY_NOTICE_VERSION','DNS_PASS_PRIVACY_URL']){
+  if(typeof env[name]!=='string'||!env[name].trim())bad(name);
+ }
  const pilot=controlledPilotSettings({enabled:'true',organizationId:env.DNS_PASS_PILOT_ORGANIZATION_ID,
   passNumber:env.DNS_PASS_PILOT_PASS_NUMBER,operatorUid:env.DNS_PASS_PILOT_OPERATOR_UID,until:env.DNS_PASS_PILOT_UNTIL},now);
- if(phase!=='stop' && pilot.until<=now+5*60000)bad();
- dataEntryNumberingStart(env.DNS_PASS_DATA_ENTRY_START_NUMBER);
+ if(phase!=='stop' && pilot.until<=now+5*60000)bad('DNS_PASS_PILOT_UNTIL');
+ try{dataEntryNumberingStart(env.DNS_PASS_DATA_ENTRY_START_NUMBER)}catch{bad('DNS_PASS_DATA_ENTRY_START_NUMBER')}
  if(!/^data-entry-2026-27-[a-f0-9]{64}$/.test(env.DNS_PASS_INVENTORY_REVISION||'') ||
-    !/^dns-digital-pass-2026-27-[a-z0-9-]+$/.test(env.DNS_PASS_PRIVACY_NOTICE_VERSION||''))bad();
- let privacy;try{privacy=new URL(env.DNS_PASS_PRIVACY_URL)}catch{bad()}
- if(privacy.protocol!=='https:'||privacy.username||privacy.password||privacy.search||privacy.hash)bad();
+    !/^dns-digital-pass-2026-27-[a-z0-9-]+$/.test(env.DNS_PASS_PRIVACY_NOTICE_VERSION||''))bad('DNS_PASS_INVENTORY_REVISION or DNS_PASS_PRIVACY_NOTICE_VERSION');
+ let privacy;try{privacy=new URL(env.DNS_PASS_PRIVACY_URL)}catch{bad('DNS_PASS_PRIVACY_URL')}
+ if(privacy.protocol!=='https:'||privacy.username||privacy.password||privacy.search||privacy.hash)bad('DNS_PASS_PRIVACY_URL');
  const enabled=phase==='activate'?'true':'false';
  return {
   DNS_PASS_REGION:'europe-west8',DNS_PASS_ALLOWED_ORIGINS:'https://dolomitinordicski.github.io',

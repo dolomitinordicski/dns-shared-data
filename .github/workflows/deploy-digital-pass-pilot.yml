@@ -3,15 +3,15 @@ on:
   workflow_dispatch:
     inputs:
       confirm_target:
-        description: 'Type dns-core/digitalPassApi after the explicit release approval'
+        description: 'For preflight enter preflight; for a separately authorized cloud deploy enter dns-core/digitalPassApi'
         required: true
         type: string
       phase:
-        description: 'verify keeps claim/registration off; activate opens the bounded pilot; stop disables both'
+        description: 'preflight checks local code only (no cloud); verify deploys closed; activate opens bounded pilot; stop disables both'
         required: true
         type: choice
-        options: [verify, activate, stop]
-        default: verify
+        options: [preflight, verify, activate, stop]
+        default: preflight
 permissions:
   contents: read
   checks: read
@@ -20,8 +20,22 @@ concurrency:
   group: dns-digital-pass-real-pilot
   cancel-in-progress: false
 jobs:
+  preflight:
+    if: github.ref == 'refs/heads/main' && inputs.phase == 'preflight' && inputs.confirm_target == 'preflight'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Validate pilot release safeguards without credentials or cloud access
+        run: node --test tests/digital-pass-pilot-release.test.mjs
+      - name: Report scope
+        run: echo 'Preflight only; no environment secrets, Firebase authentication, IAM checks or deployment.'
   deploy:
-    if: github.ref == 'refs/heads/main' && inputs.confirm_target == 'dns-core/digitalPassApi'
+    if: github.ref == 'refs/heads/main' && inputs.phase != 'preflight' && inputs.confirm_target == 'dns-core/digitalPassApi'
     environment: dns-digital-pass-pilot
     runs-on: ubuntu-latest
     timeout-minutes: 20
