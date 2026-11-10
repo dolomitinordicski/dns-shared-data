@@ -44,7 +44,7 @@ test('metadata-only verification does not issue tokens, deploy, change IAM or ca
  const f=fixture(),r=await verifyClosed({...f,mode:'metadata'});
  assert.equal(r.authenticatedSmoke,false);assert.equal(r.cardAssociations,0);
  assert.equal(f.calls.length,1);assert.equal(f.calls[0].method,'GET');
- assert.equal(f.commands.length,3);
+ assert.equal(f.commands.length,4);
  assert.ok(f.commands.every(a=>!a.includes('deploy')&&!a.includes('set-iam-policy')));
 });
 test('rejects drift to active flags, secret bindings, other runtime or untrusted endpoint before HTTP',async()=>{
@@ -63,6 +63,11 @@ test('unknown or missing build identities stop before any HTTP probe',async()=>{
   const value=fn();value.buildConfig=buildConfig;const f=fixture({functionData:value});
   await assert.rejects(verifyClosed(f),/BUILD_IDENTITY/);assert.equal(f.calls.length,0);
  }
+});
+test('public project bindings cannot be hidden by an empty service policy',async()=>{
+ const f=fixture(),original=f.read;
+ f.read=args=>args[0]==='projects'?JSON.stringify({bindings:[{role:'roles/run.invoker',members:['allAuthenticatedUsers']}]}):original(args);
+ await assert.rejects(verifyClosed(f),/PROJECT_PUBLIC_BINDING_REVIEW_REQUIRED/);assert.equal(f.calls.length,0);
 });
 test('closed authenticated smoke uses the separate verifier and sends no real card or holder data',async()=>{
  const f=fixture(),r=await verifyClosed({...f,mode:'smoke'});

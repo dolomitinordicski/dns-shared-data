@@ -56,6 +56,8 @@ export async function verifyClosed({mode='metadata',read=gcloud,request=http}={}
  const run=JSON.parse(read(['run','services','describe',target.service,'--region='+REGION,'--format=json']));
  const policy=JSON.parse(read(['run','services','get-iam-policy',target.service,'--region='+REGION,'--format=json']));
  validatePrivateService(run,policy);
+ const projectPolicy=JSON.parse(read(['projects','get-iam-policy',PROJECT,'--format=json']));
+ if((projectPolicy.bindings||[]).some(b=>(b.members||[]).some(m=>['allUsers','allAuthenticatedUsers'].includes(m))))fail('PROJECT_PUBLIC_BINDING_REVIEW_REQUIRED');
  const anonymous=await request(target.uri,{method:'GET'});
  if(![401,403].includes(anonymous.status))fail('ANONYMOUS_ACCESS_NOT_REJECTED');
  const result={mode,project:PROJECT,region:REGION,function:'digitalPassApi',service:target.service,runtime:RUNTIME,buildServiceAccount:target.buildServiceAccount,closed:true,anonymousRejected:true,authenticatedSmoke:false,cardAssociations:0};
