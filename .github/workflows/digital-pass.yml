@@ -157,5 +157,6 @@ jobs:
       - run: npm ci --prefix .digital-pass-real-pilot/server --ignore-scripts
       - name: Confirm single export without credentials or Firebase initialization
         run: |
-          node --input-type=module -e "const m=await import('./.digital-pass-real-pilot/server/firebase-entry.mjs');if(JSON.stringify(Object.keys(m))!==JSON.stringify(['digitalPassApi']))throw Error('UNEXPECTED_FUNCTION_EXPORT')"
+          node --input-type=module -e "const m=await import('./.digital-pass-real-pilot/server/firebase-entry.mjs');if(JSON.stringify(Object.keys(m))!==JSON.stringify(['digitalPassApi']))throw Error('UNEXPECTED_FUNCTION_EXPORT');const e=m.digitalPassApi.__endpoint;if(e.secretEnvironmentVariables?.length||e.httpsTrigger.invoker?.includes('public'))throw Error('VERIFY_MUST_BE_PRIVATE_WITHOUT_SECRETS')"
       - run: python3 -m py_compile scripts/check-digital-pass-runtime-iam.py
+

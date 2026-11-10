@@ -56,6 +56,12 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
+      - name: Require explicit release approval before build or cloud authentication
+        run: |
+          if [ "$DNS_PASS_DEPLOY_APPROVED" != true ]; then
+            echo '::error::Set DNS_PASS_DEPLOY_APPROVED=true in dns-digital-pass-pilot only after explicit release authorization. No cloud calls were made.'
+            exit 1
+          fi
       - name: Require passing synthetic checks on this exact commit
         env:
           GH_TOKEN: ${{ github.token }}
@@ -113,13 +119,23 @@ jobs:
           set -euo pipefail
           ACTUAL_SA="$(gcloud functions describe digitalPassApi --gen2 --region=europe-west8 --project=dns-core --format='value(serviceConfig.serviceAccountEmail)')"
           test "$ACTUAL_SA" = dns-digital-pass-runtime@dns-core.iam.gserviceaccount.com
-          API='https://europe-west8-dns-core.cloudfunctions.net/digitalPassApi'
-          WRONG="$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' -X POST "$API/v1/pass-activations/prepare" -H 'Origin: https://unapproved.example' -H 'Content-Type: application/json' --data '{}')"
+          SERVICE_URL="$(gcloud functions describe digitalPassApi --gen2 --region=europe-west8 --project=dns-core --format='value(serviceConfig.uri)')"
+          API="$SERVICE_URL"
+          AUTH=()
+          if [ "$DNS_PASS_RELEASE_PHASE" != activate ]; then
+            PUBLIC="$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' "$API")"
+            case "$PUBLIC" in 401|403) ;; *) echo '::error::Closed service is publicly invokable'; exit 1;; esac
+            TOKEN="$(gcloud auth print-identity-token --audiences="$SERVICE_URL")"
+            echo "::add-mask::$TOKEN"
+            AUTH=(-H "Authorization: Bearer $TOKEN")
+          fi
+          WRONG="$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' "${AUTH[@]}" -X POST "$API/v1/pass-activations/prepare" -H 'Origin: https://unapproved.example' -H 'Content-Type: application/json' --data '{}')"
           test "$WRONG" = 403
           CLOSED=503
           if [ "$DNS_PASS_RELEASE_PHASE" = activate ]; then CLOSED=401; fi
           for ROUTE in /v1/pass-activations/claim /v1/pass-registrations/complete; do
-            CODE="$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' -X POST "$API$ROUTE" -H 'Origin: https://dolomitinordicski.github.io' -H 'Content-Type: application/json' --data '{}')"
+            CODE="$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' "${AUTH[@]}" -X POST "$API$ROUTE" -H 'Origin: https://dolomitinordicski.github.io' -H 'Content-Type: application/json' --data '{}')"
             test "$CODE" = "$CLOSED"
           done
           echo 'Only infrastructure/auth smoke checks passed. Real operator and smartphone acceptance are still required.'
+
