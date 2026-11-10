@@ -10,6 +10,12 @@ export function pilotReleaseConfig(env,now=Date.now()) {
  const phase=env.DNS_PASS_RELEASE_PHASE;
  if(!['verify','activate','stop'].includes(phase))bad('DNS_PASS_RELEASE_PHASE');
  if(env.DNS_PASS_DEPLOY_APPROVED!=='true')bad('DNS_PASS_DEPLOY_APPROVED');
+ if(phase==='verify')return {
+  DNS_PASS_REGION:'europe-west8',DNS_PASS_ALLOWED_ORIGINS:'https://dolomitinordicski.github.io',
+  DNS_PASS_API_CLOSED:'true',DNS_PASS_PILOT_ENABLED:'false',
+  DNS_PASS_SALE_CLAIM_ENABLED:'false',DNS_PASS_REGISTRATION_ENABLED:'false',
+  DNS_GOOGLE_WALLET_ISSUER_ID:'',
+ };
  if(env.DNS_PASS_PRIVACY_REVIEWED!=='true')bad('DNS_PASS_PRIVACY_REVIEWED');
  for(const name of ['DNS_PASS_PILOT_ORGANIZATION_ID','DNS_PASS_PILOT_PASS_NUMBER','DNS_PASS_PILOT_OPERATOR_UID','DNS_PASS_PILOT_UNTIL','DNS_PASS_DATA_ENTRY_START_NUMBER','DNS_PASS_INVENTORY_REVISION','DNS_PASS_PRIVACY_NOTICE_VERSION','DNS_PASS_PRIVACY_URL']){
   if(typeof env[name]!=='string'||!env[name].trim())bad(name);
@@ -25,7 +31,7 @@ export function pilotReleaseConfig(env,now=Date.now()) {
  const enabled=phase==='activate'?'true':'false';
  return {
   DNS_PASS_REGION:'europe-west8',DNS_PASS_ALLOWED_ORIGINS:'https://dolomitinordicski.github.io',
-  DNS_PASS_INVENTORY_SOURCE:'data-entry',DNS_PASS_DATA_ENTRY_START_NUMBER:env.DNS_PASS_DATA_ENTRY_START_NUMBER,
+  DNS_PASS_API_CLOSED:'false',DNS_PASS_INVENTORY_SOURCE:'data-entry',DNS_PASS_DATA_ENTRY_START_NUMBER:env.DNS_PASS_DATA_ENTRY_START_NUMBER,
   DNS_PASS_INVENTORY_REVISION:env.DNS_PASS_INVENTORY_REVISION,
   DNS_PASS_VALID_FROM:'2026-11-15T00:00:00+01:00',DNS_PASS_VALID_UNTIL:'2027-05-01T00:00:00+02:00',
   DNS_PASS_PRIVACY_NOTICE_VERSION:env.DNS_PASS_PRIVACY_NOTICE_VERSION,
