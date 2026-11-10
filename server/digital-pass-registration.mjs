@@ -44,7 +44,7 @@ export async function registerDigitalPass({ db, identity, assignment, code, give
     if (!challenge.exists || typeof code !== 'string' || !/^[A-HJ-NP-Z2-9]{6}$/.test(code)) throw deny();
     const record = challenge.data();
     const verifier = hashActivationCode(code, id, hmacSecret);
-    if (record.status !== 'ENABLED' || record.expiresAt <= now || (record.claimedByUid && record.claimedByUid !== identity.uid) || record.organizationId !== assignment.organizationId || record.sourceRevision !== assignment.sourceRevision ||
+    if (record.status !== 'ENABLED' || record.possessionStatus !== 'POSSESSION_CONFIRMED' || !Number.isFinite(record.possessionConfirmedAt) || record.expiresAt <= now || (record.claimedByUid && record.claimedByUid !== identity.uid) || record.organizationId !== assignment.organizationId || record.sourceRevision !== assignment.sourceRevision ||
       typeof record.codeVerifier !== 'string' || record.codeVerifier.length !== 64 ||
       !timingSafeEqual(Buffer.from(record.codeVerifier), Buffer.from(verifier))) throw deny();
     tx.create(registrationRef, { physicalPassId: id, holderUid: identity.uid, status: 'ACTIVE',

@@ -135,3 +135,9 @@ test('HTTP dynamic presentation is holder-owned and public lookup expires withou
  await createDigitalPassHandler(f.opts)({method:'GET',path:'/p/'+res.value.qrPayload.split(':')[2]},page);
  assert.match(html,/VALIDO/);assert.doesNotMatch(html,/Synthetic Holder|synthetic@example|synthetic-holder/);
 });
+
+test('legacy enabled sale records cannot authorize a new physical-card association',async()=>{
+ const f=await fixture();const record=f.db.values.get('passActivationChallenges/'+f.assignment.physicalPassId);
+ delete record.possessionStatus;delete record.possessionConfirmedAt;record.saleStatus='SOLD_ATTESTED';record.saleAttestedAt=Date.now();
+ const r=await f.register();assert.equal(r.code,400);assert.equal(count(f.db,'digitalCredentials'),0);
+});
