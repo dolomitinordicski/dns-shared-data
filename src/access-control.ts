@@ -23,7 +23,7 @@ export type DNSMembershipRole =
 
 export type DNSPermission =
   | 'passActivation.issue'
-  | 'passSale.attest'
+  | 'passPossession.attest'
   | 'passValidation.check'
   | 'passCredential.revoke'
   | 'season.read'
@@ -161,7 +161,7 @@ export const DNS_ROLE_DEFAULT_PERMISSIONS = {
 
 export const DNS_ADMIN_PERMISSIONS = [
   'passActivation.issue',
-  'passSale.attest',
+  'passPossession.attest',
   'passValidation.check',
   'passCredential.revoke',
   'season.read',
@@ -230,3 +230,4 @@ export function buildAccessGrantId(
 ) {
   return `${userId}__${scopeType}__${scopeId}`;
 }
+

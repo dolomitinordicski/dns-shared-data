@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { prepareActivation, validateSale } from '../server/digital-pass-activation.mjs';
+import { prepareActivation, confirmPossession } from '../server/digital-pass-activation.mjs';
 import { registerDigitalPass, getDigitalPass, checkDigitalCredential, revokeDigitalCredential } from '../server/digital-pass-registration.mjs';
 import { verifyPublicPass } from '../server/digital-pass-public-verify.mjs';
 
@@ -13,13 +13,13 @@ test('Firestore emulator serializes racing preparation, Validate and two holders
   try {
     const physicalPassId='concurrency-'+Date.now();
     const assignment={physicalPassId,organizationId:'tv-toblach',seasonId:'2026-27',productCode:'sk-dns',printedNumber:'000123',sourceRevision:'emulator',eligibleForDnsSeasonPilot:true};
-    const actor={uid:'seller',grants:[{organizationId:'tv-toblach',permissions:['passActivation.issue','passSale.attest']}]};
+    const actor={uid:'seller',grants:[{organizationId:'tv-toblach',permissions:['passActivation.issue','passPossession.attest']}]};
     const hmacSecret='emulator-only-cryptographic-key-never-production';
     const input={db,actor,passNumber:'123',seasonId:'2026-27',productCode:'sk-dns',resolveAssignment:async()=>assignment,hmacSecret};
     const results=await Promise.allSettled([prepareActivation(input),prepareActivation(input)]);
     assert.equal(results.filter(r=>r.status==='fulfilled').length,1);
     const prepared=results.find(r=>r.status==='fulfilled').value;
-    const validations=await Promise.all([validateSale({db,actor,...prepared}),validateSale({db,actor,...prepared})]);
+    const validations=await Promise.all([confirmPossession({db,actor,...prepared}),confirmPossession({db,actor,...prepared})]);
     assert.equal(validations.filter(r=>r.alreadyValidated===false).length,1);
     const claim=uid=>registerDigitalPass({db,identity:{uid,email:uid+'@example.test',email_verified:true},assignment,
       code:prepared.code,givenName:'Test',familyName:'Holder',noticeVersion:'emulator-notice',hmacSecret,validFrom:0,validUntil:Date.now()+60000});
@@ -38,7 +38,7 @@ test('Firestore rules deny all direct browser access to private pass collections
   const environment = await initializeTestEnvironment({projectId:'demo-dns-core',firestore:{rules:readFileSync(new URL('../firestore.rules',import.meta.url),'utf8')}});
   try {
     await environment.withSecurityRulesDisabled(async context=>{await setDoc(doc(context.firestore(),'users','browser-admin'),{active:true,globalRoles:['dns-admin']});});
-    const collections=['passActivationChallenges','passRegistrations','passHolders','digitalCredentials','passCredentialPayloads','passAuditEvents','passInventorySnapshots','passRateLimits','consentEvents','passMarketingConsents','passMarketingOutbox','consentEvidence'];
+    const collections=['passActivationChallenges','passRegistrations','passHolders','digitalCredentials','passCredentialPayloads','passAuditEvents','passInventorySnapshots','passRateLimits','consentEvents','passMarketingConsents','passQrPresentations','passMarketingOutbox','consentEvidence'];
     const clients=[environment.unauthenticatedContext(),environment.authenticatedContext('holder'),environment.authenticatedContext('browser-admin')];
     for(const context of clients) for(const name of collections) {
       const client=context.firestore(); await assertFails(getDoc(doc(client,name,'private')));
@@ -56,14 +56,14 @@ test('Firestore emulator end-to-end: ownership, one-time code and public QR revo
     const physicalPassId='e2e-'+Date.now();
     const assignment={physicalPassId,organizationId:'tv-toblach',seasonId:'2026-27',
       productCode:'sk-dns',printedNumber:'000124',sourceRevision:'test-revision',eligibleForDnsSeasonPilot:true};
-    const seller={uid:'seller',grants:[{organizationId:'tv-toblach',permissions:['passActivation.issue','passSale.attest','passValidation.check']}]};
+    const seller={uid:'seller',grants:[{organizationId:'tv-toblach',permissions:['passActivation.issue','passPossession.attest','passValidation.check']}]};
     const admin={uid:'dns-admin',isDnsAdmin:true};
     const key='emulator-only-secret-never-use-this-in-production';
     const now=Date.now();
     const args={db,actor:seller,passNumber:'124',seasonId:'2026-27',productCode:'sk-dns',
       resolveAssignment:async()=>assignment,hmacSecret:key,now};
     const prepared=await prepareActivation(args);
-    await validateSale({db,actor:seller,...prepared,now:now+1});
+    await confirmPossession({db,actor:seller,...prepared,now:now+1});
     const alice={uid:'emulator-alice',email:'alice@example.test',email_verified:true};
     const bob={uid:'emulator-bob',email:'bob@example.test',email_verified:true};
     const claim=identity=>registerDigitalPass({db,identity,assignment,code:prepared.code,
@@ -120,3 +120,4 @@ test('Firestore marketing is atomic, optional and withdrawal survives an in-flig
   assert.equal((await db.collection('passMarketingConsents').doc(holderUid).get()).data().needsBrevoUnsubscribe,true);
  } finally {await deleteApp(app)}
 });
+

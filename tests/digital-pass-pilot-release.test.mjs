@@ -11,8 +11,8 @@ const env={DNS_PASS_RELEASE_PHASE:'verify',DNS_PASS_DEPLOY_APPROVED:'true',DNS_P
 test('activate/stop preserve operational boundaries and official dates',()=>{
  for(const phase of ['activate']){
   const c=pilotReleaseConfig({...env,DNS_PASS_RELEASE_PHASE:phase},now);
-  assert.equal(c.DNS_PASS_PILOT_ENABLED,'true');assert.equal(c.DNS_PASS_SALE_CLAIM_ENABLED,phase==='activate'?'true':'false');
-  assert.equal(c.DNS_PASS_REGISTRATION_ENABLED,c.DNS_PASS_SALE_CLAIM_ENABLED);
+  assert.equal(c.DNS_PASS_PILOT_ENABLED,'true');assert.equal(c.DNS_PASS_POSSESSION_CLAIM_ENABLED,phase==='activate'?'true':'false');
+  assert.equal(c.DNS_PASS_REGISTRATION_ENABLED,c.DNS_PASS_POSSESSION_CLAIM_ENABLED);
   assert.equal(c.DNS_PASS_ALLOWED_ORIGINS,'https://dolomitinordicski.github.io');
   assert.equal(c.DNS_PASS_VALID_FROM,'2026-11-15T00:00:00+01:00');assert.equal(c.DNS_GOOGLE_WALLET_ISSUER_ID,'');
   assert.equal(c.DNS_PASS_INVENTORY_SOURCE,'data-entry');
@@ -56,7 +56,7 @@ test('verify requires deployment approval but no real pass, privacy approval, re
  const config=pilotReleaseConfig({DNS_PASS_RELEASE_PHASE:'verify',DNS_PASS_DEPLOY_APPROVED:'true'},now);
  assert.equal(config.DNS_PASS_API_CLOSED,'true');
  assert.equal(config.DNS_PASS_PILOT_ENABLED,'false');
- assert.equal(config.DNS_PASS_SALE_CLAIM_ENABLED,'false');
+ assert.equal(config.DNS_PASS_POSSESSION_CLAIM_ENABLED,'false');
  assert.equal(config.DNS_PASS_REGISTRATION_ENABLED,'false');
  for(const name of ['DNS_PASS_PILOT_PASS_NUMBER','DNS_PASS_PILOT_ORGANIZATION_ID','DNS_PASS_PILOT_OPERATOR_UID','DNS_PASS_INVENTORY_REVISION','DNS_PASS_PRIVACY_NOTICE_VERSION'])assert.equal(Object.hasOwn(config,name),false,name);
  assert.throws(()=>pilotReleaseConfig({DNS_PASS_RELEASE_PHASE:'verify'},now),/DNS_PASS_DEPLOY_APPROVED/);

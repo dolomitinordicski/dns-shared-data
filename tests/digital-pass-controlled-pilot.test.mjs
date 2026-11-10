@@ -30,7 +30,7 @@ function fixture(options = {}) {
  }};
  return { db, handler:createDigitalPassHandler({db,auth,hmacSecret,allowedOrigins:['https://pilot.example.test'],
    inventoryRevision:snapshot.revision,validFrom:now-1000,validUntil:now+86400000,
-   noticeVersion:'synthetic-privacy-v1',registrationEnabled:false,saleClaimEnabled:true,pilot,...options}) };
+   noticeVersion:'synthetic-privacy-v1',registrationEnabled:false,possessionClaimEnabled:true,pilot,...options}) };
 }
 async function call(handler,path,token,body={}) {
  const res = { headers:{}, set(k,v){this.headers[k]=v;return this;},
@@ -59,8 +59,8 @@ test('verified QR claim confirms sale while optional registration and marketing 
  const body={passNumber:'1',code:prep.body.code};
  assert.equal((await call(handler,'/v1/pass-activations/claim','unverified',body)).statusCode,401);
  const claim=await call(handler,'/v1/pass-activations/claim','holder',body);
- assert.equal(claim.statusCode,200);assert.equal(claim.body.status,'SOLD_ATTESTED');
- assert.equal((await call(handler,'/v1/pass-activations/status','operator-a',query)).body.status,'SOLD_ATTESTED');
+ assert.equal(claim.statusCode,200);assert.equal(claim.body.status,'POSSESSION_CONFIRMED');
+ assert.equal((await call(handler,'/v1/pass-activations/status','operator-a',query)).body.status,'POSSESSION_CONFIRMED');
  assert.equal((await call(handler,'/v1/pass-activations/claim','holder',body)).body.alreadyClaimed,true);
  assert.equal((await call(handler,'/v1/pass-activations/claim','other',body)).statusCode,400);
  assert.equal((await call(handler,'/v1/pass-registrations/complete','holder',body)).body.error,'REGISTRATION_DISABLED');
@@ -104,7 +104,8 @@ test('registration can be enabled only for the selected card; claim does not imp
 });
 test('sale claim kill switch rejects requests without touching Auth/Firestore',async()=>{
  let touched=0;
- const {handler}=fixture({saleClaimEnabled:false,db:{collection(){touched++;throw Error('NO_DB');}},auth:{verifyIdToken(){touched++;throw Error('NO_AUTH');}}});
+ const {handler}=fixture({possessionClaimEnabled:false,db:{collection(){touched++;throw Error('NO_DB');}},auth:{verifyIdToken(){touched++;throw Error('NO_AUTH');}}});
  const res=await call(handler,'/v1/pass-activations/claim','holder',{passNumber:'1',code:'ABCDEF'});
- assert.equal(res.statusCode,503);assert.equal(res.body.error,'SALE_CLAIM_DISABLED');assert.equal(touched,0);
+ assert.equal(res.statusCode,503);assert.equal(res.body.error,'POSSESSION_CLAIM_DISABLED');assert.equal(touched,0);
 });
+

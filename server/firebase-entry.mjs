@@ -25,7 +25,7 @@ const notice = defineString('DNS_PASS_PRIVACY_NOTICE_VERSION', { default:'' });
 const registrationEnabled = defineString('DNS_PASS_REGISTRATION_ENABLED', { default: 'false' });
 // Empty claim flag preserves the reviewed legacy gate; explicit true permits
 // verified sale confirmation while optional pass registration remains false.
-const saleClaimEnabled = defineString('DNS_PASS_SALE_CLAIM_ENABLED', { default: '' });
+const possessionClaimEnabled = defineString('DNS_PASS_POSSESSION_CLAIM_ENABLED', { default: '' });
 const pilotEnabled = defineString('DNS_PASS_PILOT_ENABLED', { default: 'false' });
 const pilotOrganization = defineString('DNS_PASS_PILOT_ORGANIZATION_ID', { default: '' });
 const pilotScope = defineString('DNS_PASS_PILOT_SCOPE', { default: 'single-card' });
@@ -51,14 +51,14 @@ export const digitalPassApi = onRequest({ region, serviceAccount: DIGITAL_PASS_R
     const pilot = controlledPilotSettings({ enabled: pilotEnabled.value(),
       organizationId: pilotOrganization.value(), scope: pilotScope.value(), passNumber: pilotNumber.value(),
       operatorUid: pilotOperator.value(), until: pilotUntil.value() });
-    if (!['', 'true', 'false'].includes(saleClaimEnabled.value())) throw Error('INVALID_SALE_CLAIM_FLAG');
+    if (!['', 'true', 'false'].includes(possessionClaimEnabled.value())) throw Error('INVALID_POSSESSION_CLAIM_FLAG');
     const app = getApps()[0] ?? initializeApp();
     const handler = createDigitalPassHandler({ db: getFirestore(app), auth: getAuth(app), hmacSecret: key.value(),
       allowedOrigins: origins.value().split(',').map(v => v.trim()).filter(Boolean), inventoryRevision: revision.value(),
       inventorySource: inventorySource.value(),
       dataEntryStartNumber: inventorySource.value() === 'data-entry' ? dataEntryNumberingStart(numberingStart.value()) : undefined,
       registrationEnabled: registrationEnabled.value() === 'true',
-      saleClaimEnabled: saleClaimEnabled.value() === '' ? registrationEnabled.value() === 'true' : saleClaimEnabled.value() === 'true',
+      possessionClaimEnabled: possessionClaimEnabled.value() === '' ? registrationEnabled.value() === 'true' : possessionClaimEnabled.value() === 'true',
       pilot,
       validFrom: Date.parse(start.value()), validUntil: Date.parse(end.value()), noticeVersion: notice.value(),
       walletIssuerId: googleWalletIssuer.value(), walletSigningJson: '', verificationBase: verificationBase.value(),
