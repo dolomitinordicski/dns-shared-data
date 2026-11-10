@@ -3,15 +3,18 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {createRequire} from 'node:module';
+import { buildDataEntryInventory } from '../server/digital-pass-data-entry-inventory.mjs';
+import { syntheticDataEntryMatrix } from './helpers/digital-pass-data-entry-fixture.mjs';
+const dataEntry=process.env.DNS_PASS_E2E_INVENTORY_SOURCE==='data-entry';
 const mode=process.env.DNS_PASS_E2E_MODE;
 const staging=process.env.DNS_PASS_E2E_STAGING==='true';
 const project=staging?'demo-dns-pass-staging-c1':'demo-dns-core';
-const inventoryRevision=staging?'synthetic-staging-v1':'synthetic-http-e2e';
+const inventoryRevision=dataEntry?buildDataEntryInventory(syntheticDataEntryMatrix()).revision:staging?'synthetic-staging-v1':'synthetic-http-e2e';
 const origin='http://127.0.0.1:5179';
 const functionBase='http://127.0.0.1:5101/'+project+'/europe-west8/digitalPassApi';
 const records=[];
 const output=resolve(process.env.DNS_PASS_E2E_OUTPUT_DIR || '.digital-pass-e2e/results');
-const save=async()=>{await mkdir(output,{recursive:true});await writeFile(resolve(output,'http-e2e-'+mode+'.json'),JSON.stringify({project,mode,realEmailsSent:0,productionAccess:false,scenarios:records},null,2));};
+const save=async()=>{await mkdir(output,{recursive:true});await writeFile(resolve(output,'http-e2e-'+mode+(dataEntry?'-data-entry':'')+'.json'),JSON.stringify({project,mode,inventorySource:dataEntry?'data-entry':'snapshot',realEmailsSent:0,productionAccess:false,scenarios:records},null,2));};
 async function scenario(id,name,fn){
  try{const result=await fn();records.push({id,name,status:'PASS',evidence:result??{}});await save();return result}
  catch(error){records.push({id,name,status:'FAIL',error:error.message});await save();throw error}
@@ -25,6 +28,7 @@ async function call(path,token,body={}){
 
 test('real HTTP journey through Auth, Functions and Firestore Emulators only',{skip:!mode,timeout:180000},async()=>{
  assert.ok(['enabled','disabled'].includes(mode));
+ assert.ok(!staging || !dataEntry,'Staging stays synthetic snapshot-only');
  assert.equal(process.env.GCLOUD_PROJECT,project);
  assert.match(process.env.FIRESTORE_EMULATOR_HOST||'',/^(127\.0\.0\.1|localhost):8188$/);
  assert.match(process.env.FIREBASE_AUTH_EMULATOR_HOST||'',/^(127\.0\.0\.1|localhost):9199$/);
@@ -77,7 +81,13 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
     await db.collection('accessGrants').doc(uid+'-grant').set({userId:uid,scopeType:'organization',scopeId:org,permissions,active:true});
    }
    await db.collection('users').doc('test-admin').set({active:true,globalRoles:['dns-admin']});
-   await db.collection('passInventorySnapshots').doc(inventoryRevision).set({...staging?{schema:'dns.digital-pass-inventory.v1',synthetic:true}:{},approved:true,revision:inventoryRevision,seasonId:'2026-27',rows:[
+   if(dataEntry){
+    const data=syntheticDataEntryMatrix();
+    await db.collection('orderFormConfigs').doc('2026-27-ticket').set(data.form);
+    for(const [collection,rows] of [['orderCatalogItems',data.items],['organizations',data.organizations],['ticketOrders',data.orders],['ticketOrderLines',data.lines]])
+     for(const {id,...row} of rows)await db.collection(collection).doc(id).set(row);
+    assert.equal((await db.collection('passInventorySnapshots').get()).size,0);
+   } else await db.collection('passInventorySnapshots').doc(inventoryRevision).set({...staging?{schema:'dns.digital-pass-inventory.v1',synthetic:true}:{},approved:true,revision:inventoryRevision,seasonId:'2026-27',rows:[
     {itemCode:'sk-dns',organizationId:'synthetic-org-a',from:1,to:20},
     {itemCode:'sk-dns',organizationId:'synthetic-org-b',from:21,to:30},
    ]});
@@ -192,6 +202,14 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
    const check=await call('/v1/pass-validations/check',token('operator-a'),{qrPayload:pass.qrPayload});assert.equal(check.body.status,'REVOKED');
    const html=await fetch(functionBase+'/v/'+pass.qrPayload.slice('dns-pass:v1:'.length)).then(r=>r.text());assert.match(html,/UNGÜLTIG · NON VALIDO · INVALID/);
    return {regularOperatorRevocation:403,adminRevocation:200,nextOperatorStatus:'REVOKED',nextPublicQrStatus:'INVALID'};
+  });
+  if(dataEntry)await scenario('11-data-entry','Changed order quantities cannot silently renumber printed cards',async()=>{
+   const line=db.collection('ticketOrderLines').doc('2026-27__ticket__synthetic-org-a__synthetic-season');
+   await line.update({quantity:19});
+   const changed=await call('/v1/pass-activations/prepare',token('operator-a'),{passNumber:'7'});
+   assert.equal(changed.status,400);
+   assert.equal((await db.collection('passInventorySnapshots').get()).size,0);
+   return {changedSourceRejected:400,copiedInventoryDocuments:0,project,syntheticOnly:true};
   });
   for(const app of apps)await sdk.deleteApp(app);apps.length=0;await deleteApp(adminApp);adminApp=null;
  } finally {
