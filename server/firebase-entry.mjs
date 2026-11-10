@@ -3,6 +3,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { onRequest } from 'firebase-functions/v2/https';
 import { defineSecret, defineString } from 'firebase-functions/params';
+import { dataEntryNumberingStart } from './digital-pass-data-entry-inventory.mjs';
 import { controlledPilotSettings } from './digital-pass-controlled-pilot.mjs';
 import { createDigitalPassHandler } from './digital-pass-http.mjs';
 // Dedicated runtime identity; never inherit the default Functions/Compute service account.
@@ -10,6 +11,9 @@ const DIGITAL_PASS_RUNTIME_SA = 'dns-digital-pass-runtime@dns-core.iam.gservicea
 const key = defineSecret('DNS_PASS_HMAC_KEY');
 const origins = defineString('DNS_PASS_ALLOWED_ORIGINS');
 const revision = defineString('DNS_PASS_INVENTORY_REVISION');
+// Explicit opt-in keeps existing snapshot/emulator deployments compatible.
+const inventorySource = defineString('DNS_PASS_INVENTORY_SOURCE', { default:'snapshot' });
+const numberingStart = defineString('DNS_PASS_DATA_ENTRY_START_NUMBER', { default:'' });
 const start = defineString('DNS_PASS_VALID_FROM', { default: '2026-11-15T00:00:00+01:00' });
 const end = defineString('DNS_PASS_VALID_UNTIL', { default: '2027-05-01T00:00:00+02:00' });
 const googleWalletIssuer = defineString('DNS_GOOGLE_WALLET_ISSUER_ID', { default: '' });
@@ -36,6 +40,8 @@ export const digitalPassApi = onRequest({ region, serviceAccount: DIGITAL_PASS_R
     const app = getApps()[0] ?? initializeApp();
     const handler = createDigitalPassHandler({ db: getFirestore(app), auth: getAuth(app), hmacSecret: key.value(),
       allowedOrigins: origins.value().split(',').map(v => v.trim()).filter(Boolean), inventoryRevision: revision.value(),
+      inventorySource: inventorySource.value(),
+      dataEntryStartNumber: inventorySource.value() === 'data-entry' ? dataEntryNumberingStart(numberingStart.value()) : undefined,
       registrationEnabled: registrationEnabled.value() === 'true',
       saleClaimEnabled: saleClaimEnabled.value() === '' ? registrationEnabled.value() === 'true' : saleClaimEnabled.value() === 'true',
       pilot,
