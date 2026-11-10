@@ -58,9 +58,8 @@ export async function prepareActivation({
   const assignment = await resolveAssignment({ passNumber, seasonId, productCode });
   requireAssignment(assignment);
   assertOperator(actor, assignment, 'passActivation.issue');
-  // Creating a customer-scannable QR also delegates an attestable sale intent.
-  // Require both operator permissions at preparation time.
-  assertOperator(actor, assignment, 'passSale.attest');
+  // Separate authorization confirms physical possession; no commercial attestation.
+  assertOperator(actor, assignment, 'passPossession.attest');
   const code = generateActivationCode();
   const id = assignment.physicalPassId;
   const nonce = randomUUID();
@@ -76,9 +75,9 @@ export async function prepareActivation({
       if (value.status === 'PREPARED' && value.expiresAt > now) {
         throw new Error('PREPARATION_ALREADY_EXISTS');
       }
-      // A fresh prepare cannot overwrite any recorded sale, even when
+      // A fresh prepare cannot overwrite any recorded possession confirmation, even when
       // a previously enabled code has expired.
-      if (value.saleAttestedAt != null) throw new Error('SALE_ALREADY_ATTESTED');
+      if (value.possessionConfirmedAt != null) throw new Error('POSSESSION_ALREADY_CONFIRMED');
     }
     tx.set(ref, {
       physicalPassId: id,
@@ -101,9 +100,9 @@ export async function prepareActivation({
   return { physicalPassId: id, preparationId: nonce, code, expiresAt: now + 10 * 60 * 1000 };
 }
 
-/** Validate is operator's physical-sale attestation, not guest code redemption.
- * Transaction serializes concurrent validation and prevents two sales. */
-export async function validateSale({
+/** Validate is operator's physical-card possession confirmation, not guest code redemption.
+ * Transaction serializes concurrent validation and prevents duplicate associations. */
+export async function confirmPossession({
   db, actor, physicalPassId, preparationId, now = Date.now(),
 }) {
   const ref = db.collection('passActivationChallenges').doc(physicalPassId);
@@ -112,27 +111,27 @@ export async function validateSale({
     const snap = await tx.get(ref);
     if (!snap.exists) throw new Error('NO_PREPARATION');
     const record = snap.data();
-    assertOperator(actor, record, 'passSale.attest');
+    assertOperator(actor, record, 'passPossession.attest');
     if (!preparationId || record.nonce !== preparationId) throw new Error('STALE_PREPARATION');
-    if (record.saleAttestedAt != null && record.operatorUid === actor.uid)
-      return { status: 'SOLD_ATTESTED', alreadyValidated: true };
+    if (record.possessionConfirmedAt != null && record.operatorUid === actor.uid)
+      return { status: 'POSSESSION_CONFIRMED', alreadyValidated: true };
     if (record.status !== 'PREPARED' || record.expiresAt <= now)
       throw new Error('INVALID_PREPARATION');
     if (record.operatorUid !== actor.uid) throw new Error('PREPARED_BY_OTHER_OPERATOR');
     tx.update(ref, {
       status: 'ENABLED',
-      saleStatus: 'SOLD_ATTESTED',
-      saleAttestedAt: now,
+      possessionStatus: 'POSSESSION_CONFIRMED',
+      possessionConfirmedAt: now,
       expiresAt: now + CODE_TTL_MS,
     });
-    tx.create(auditRef, { action: 'PASS_SALE_ATTESTED', targetId: physicalPassId,
+    tx.create(auditRef, { action: 'PASS_POSSESSION_CONFIRMED', targetId: physicalPassId,
       actorId: actor.uid, organizationId: record.organizationId, at: now });
-    return { status: 'SOLD_ATTESTED', alreadyValidated: false };
+    return { status: 'POSSESSION_CONFIRMED', alreadyValidated: false };
   });
 }
 
 /** DNS administrator recovery for an expired/unusable enabled code. The existing
- * physical sale is preserved; registered cards can never be reissued here. */
+ * possession verification is preserved; registered cards can never be reissued here. */
 export async function reissueActivation({ db, actor, physicalPassId, idempotencyKey, reason, hmacSecret, now = Date.now() }) {
   if (!actor?.uid || actor.isDnsAdmin !== true) throw new Error('FORBIDDEN');
   if (typeof idempotencyKey !== 'string' || !/^[A-Za-z0-9-]{16,128}$/.test(idempotencyKey) ||
@@ -148,7 +147,7 @@ export async function reissueActivation({ db, actor, physicalPassId, idempotency
     if (!snap.exists) throw new Error('NO_PREPARATION');
     const record = snap.data();
     if (record.lastReissueKey === idempotencyKey) return { physicalPassId, alreadyReissued: true, status: record.status };
-    if (record.saleAttestedAt == null || registration.exists || record.seasonId !== '2026-27' || record.productCode !== 'sk-dns' ||
+    if (record.possessionConfirmedAt == null || registration.exists || record.seasonId !== '2026-27' || record.productCode !== 'sk-dns' ||
         !['ENABLED','EXPIRED'].includes(record.status)) throw new Error('CANNOT_REISSUE');
     while (verifier === record.codeVerifier) { code = generateActivationCode(); verifier = hashActivationCode(code, physicalPassId, hmacSecret); }
     tx.update(ref, { codeVerifier: verifier, status: 'ENABLED', nonce, expiresAt: now + CODE_TTL_MS,
@@ -161,11 +160,11 @@ export async function reissueActivation({ db, actor, physicalPassId, idempotency
 
 /**
  * Customer QR claim: email-verified holder proves possession of the one-time
- * challenge issued by an authorized selling operator.
+ * challenge issued by an authorized authorized operator.
  * The transaction is the only place that changes PREPARED -> ENABLED.
- * Mere QR GET/rendering can never attest a sale.
+ * Mere QR GET/rendering can never confirm possession.
  */
-export async function claimPreparedSale({
+export async function claimPreparedPossession({
   db, identity, assignment, code, hmacSecret, now = Date.now(),
 }) {
   if (!identity?.uid || identity.email_verified !== true) throw new Error('UNAUTHORIZED');
@@ -191,35 +190,36 @@ export async function claimPreparedSale({
     const right = Buffer.from(expected, 'hex');
     if (left.length !== right.length || !timingSafeEqual(left, right))
       throw new Error('INVALID_OR_EXPIRED');
-    if (record.saleAttestedAt != null) {
+    if (record.possessionConfirmedAt != null) {
       if (record.claimedByUid !== identity.uid) throw new Error('INVALID_OR_EXPIRED');
-      return { status: 'SOLD_ATTESTED', alreadyClaimed: true };
+      return { status: 'POSSESSION_CONFIRMED', alreadyClaimed: true };
     }
     if (record.status !== 'PREPARED' || record.expiresAt <= now ||
         !record.operatorUid || !record.nonce) throw new Error('INVALID_OR_EXPIRED');
     tx.update(recordRef, {
-      status: 'ENABLED', saleStatus: 'SOLD_ATTESTED',
-      saleAttestedAt: now, expiresAt: now + CODE_TTL_MS,
-      claimedByUid: identity.uid, saleAttestationMethod: 'CUSTOMER_QR_CLAIM',
+      status: 'ENABLED', possessionStatus: 'POSSESSION_CONFIRMED',
+      possessionConfirmedAt: now, expiresAt: now + CODE_TTL_MS,
+      claimedByUid: identity.uid, possessionMethod: 'CUSTOMER_QR_CLAIM',
     });
-    tx.create(auditRef, { action: 'PASS_SALE_ATTESTED', targetId: id,
+    tx.create(auditRef, { action: 'PASS_POSSESSION_CONFIRMED', targetId: id,
       actorId: record.operatorUid, customerUid: identity.uid, organizationId: record.organizationId,
       preparationId: record.nonce, method: 'CUSTOMER_QR_CLAIM', at: now });
-    return { status: 'SOLD_ATTESTED', alreadyClaimed: false };
+    return { status: 'POSSESSION_CONFIRMED', alreadyClaimed: false };
   });
 }
 
 /** Staff-only, scoped status for the exact preparation generation. */
-export async function getPreparedSaleStatus({ db, actor, physicalPassId, preparationId, now = Date.now() }) {
+export async function getPreparedPossessionStatus({ db, actor, physicalPassId, preparationId, now = Date.now() }) {
   if (typeof physicalPassId !== 'string' || typeof preparationId !== 'string' ||
       !physicalPassId || !preparationId) throw new Error('INVALID_PREPARATION');
   const snap = await db.collection('passActivationChallenges').doc(physicalPassId).get();
   if (!snap.exists) throw new Error('NO_PREPARATION');
   const record = snap.data();
-  assertOperator(actor, record, 'passSale.attest');
+  assertOperator(actor, record, 'passPossession.attest');
   if (record.nonce !== preparationId || record.operatorUid !== actor.uid && actor.isDnsAdmin !== true)
     throw new Error('STALE_PREPARATION');
-  if (record.saleAttestedAt != null) return { status: 'SOLD_ATTESTED' };
+  if (record.possessionConfirmedAt != null) return { status: 'POSSESSION_CONFIRMED' };
   if (record.status === 'PREPARED' && record.expiresAt > now) return { status: 'PENDING' };
   return { status: 'EXPIRED' };
 }
+

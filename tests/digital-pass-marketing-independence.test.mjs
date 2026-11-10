@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {MemoryDb} from './helpers/digital-pass-memory-db.mjs';
 import {createDigitalPassHandler} from '../server/digital-pass-http.mjs';
-import {prepareActivation,validateSale} from '../server/digital-pass-activation.mjs';
+import {prepareActivation,confirmPossession} from '../server/digital-pass-activation.mjs';
 import {resolveSeasonPassAssignment} from '../server/digital-pass-inventory-resolver.mjs';
 import {getDigitalPass,checkDigitalCredential} from '../server/digital-pass-registration.mjs';
 import {requestMarketingOptIn,withdrawMarketing} from '../server/digital-pass-marketing.mjs';
 import {dispatchDoiJob} from '../server/digital-pass-brevo-dispatch.mjs';
 import {enqueueDoi,quarantineExpiredLease} from '../server/digital-pass-brevo-outbox.mjs';
 const identity={uid:'synthetic-holder',email:'synthetic@example.test',email_verified:true};
-const actor={uid:'synthetic-operator',grants:[{organizationId:'synthetic-org',permissions:['passActivation.issue','passSale.attest','passValidation.check']}]};
+const actor={uid:'synthetic-operator',grants:[{organizationId:'synthetic-org',permissions:['passActivation.issue','passPossession.attest','passValidation.check']}]};
 const secret='synthetic-HMAC-key-never-production-123456789';
 const snapshot={approved:true,revision:'synthetic-only',seasonId:'2026-27',rows:[{itemCode:'sk-dns',organizationId:'synthetic-org',from:1,to:2}]};
 const inventory={passNumber:'1',seasonId:'2026-27',productCode:'sk-dns',snapshot};
@@ -19,7 +19,7 @@ async function fixture(){
  const db=new MemoryDb();const assignment=resolveSeasonPassAssignment(inventory);
  db.values.set('passInventorySnapshots/synthetic-only',snapshot);
  const prepared=await prepareActivation({db,actor,...inventory,resolveAssignment:async()=>assignment,hmacSecret:secret});
- await validateSale({db,actor,...prepared});
+ await confirmPossession({db,actor,...prepared});
  const auth={verifyIdToken:async(_token,checkRevoked)=>{assert.equal(checkRevoked,true);return identity}};
  const opts={db,auth,hmacSecret:secret,allowedOrigins:['https://example.test'],inventoryRevision:'synthetic-only',validFrom:0,validUntil:Date.now()+600000,noticeVersion:'test-only-v1',registrationEnabled:true};
  const body={passNumber:'1',code:prepared.code,givenName:'Synthetic',familyName:'Holder',language:'it'};
@@ -124,4 +124,14 @@ test('a stalled Brevo contact response body is bounded and never blocks use of t
  const f=await fixture();await f.register();await optIn(f);
  const result=await dispatchDoiJob({...dispatch(f),timeoutMs:10,fetchImpl:async()=>({ok:true,status:200,json:()=>new Promise(()=>{})})});
  assert.equal(result.status,'RECONCILIATION_REQUIRED');await assertPassUsable(f);
+});
+
+
+test('HTTP dynamic presentation is holder-owned and public lookup expires without exposing holder data',async()=>{
+ const f=await fixture();await f.register();
+ const res=response();await createDigitalPassHandler(f.opts)(f.req('/v1/me/digital-pass/presentation',{physicalPassId:f.assignment.physicalPassId}),res);
+ assert.equal(res.code,200);assert.match(res.value.qrPayload,/^dns-pass:v2:[A-Za-z0-9_-]{43}$/);assert.ok(res.value.qrExpiresAt>Date.now());
+ let html;const page={set(){return this},status(){return this},type(){return this},send(v){html=v;return this}};
+ await createDigitalPassHandler(f.opts)({method:'GET',path:'/p/'+res.value.qrPayload.split(':')[2]},page);
+ assert.match(html,/VALIDO/);assert.doesNotMatch(html,/Synthetic Holder|synthetic@example|synthetic-holder/);
 });

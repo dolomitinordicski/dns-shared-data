@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveSeasonPassAssignment } from '../server/digital-pass-inventory-resolver.mjs';
-import { prepareActivation, validateSale, reissueActivation, claimPreparedSale, getPreparedSaleStatus } from '../server/digital-pass-activation.mjs';
+import { prepareActivation, confirmPossession, reissueActivation, claimPreparedPossession, getPreparedPossessionStatus } from '../server/digital-pass-activation.mjs';
 import { registerDigitalPass, getDigitalPass, checkDigitalCredential, revokeDigitalCredential, limitAttempts } from '../server/digital-pass-registration.mjs';
 import { loadDigitalPassActor } from '../server/digital-pass-auth.mjs';
 
@@ -29,12 +29,12 @@ class MemoryDb {
 const snapshot={ approved:true, revision:'approved-1', seasonId:'2026-27', rows:[{ itemCode:'sk-dns', organizationId:'tv-toblach', from:100, to:200 }] };
 const input={ passNumber:'000123', seasonId:'2026-27', productCode:'sk-dns', snapshot };
 const assignment=resolveSeasonPassAssignment(input);
-const actor={ uid:'seller', grants:[{ organizationId:'tv-toblach', permissions:['passActivation.issue','passSale.attest','passValidation.check'] }] };
+const actor={ uid:'seller', grants:[{ organizationId:'tv-toblach', permissions:['passActivation.issue','passPossession.attest','passValidation.check'] }] };
 const identity={ uid:'holder', email:'holder@example.test', email_verified:true };
 const hmacSecret='test-only-key-not-for-use-in-production-12345';
 async function sale() {
   const db=new MemoryDb(); const prepared=await prepareActivation({db,actor,...input,resolveAssignment:async()=>assignment,hmacSecret,now:1000});
-  await validateSale({db,actor,...prepared,now:1100}); return {db,prepared};
+  await confirmPossession({db,actor,...prepared,now:1100}); return {db,prepared};
 }
 const registration=({db,prepared}, extra={})=>registerDigitalPass({db,identity,assignment,code:prepared.code,givenName:'Anna',familyName:'Test',noticeVersion:'test-notice-v1',hmacSecret,validFrom:0,validUntil:999999999,now:1200,...extra});
 
@@ -48,7 +48,7 @@ test('actual Data Entry itemCode, opaque stable ID, pilot restriction and ambigu
 });
 test('Validate rejects stale generation even for same seller',async()=>{
   const {db,prepared}=await sale();
-  await assert.rejects(validateSale({db,actor,...prepared,preparationId:'old',now:1300}),/STALE_PREPARATION/);
+  await assert.rejects(confirmPossession({db,actor,...prepared,preparationId:'old',now:1300}),/STALE_PREPARATION/);
 });
 test('email verification, wrong code, expiry and pre-Validate all fail closed',async()=>{
   const state=await sale();
@@ -64,8 +64,8 @@ test('one concurrent holder wins; replay by same holder is idempotent',async()=>
   const results=await Promise.allSettled([registration(state),registration(state,{identity:{...identity,uid:'other'}})]);
   assert.equal(results.filter(r=>r.status==='fulfilled').length,1);
   assert.equal((await registration(state)).alreadyRegistered,true);
-  assert.equal((await validateSale({db:state.db,actor,...state.prepared,now:1500})).alreadyValidated,true);
-  assert.equal(state.db.values.get('passActivationChallenges/'+assignment.physicalPassId).saleStatus,'SOLD_ATTESTED');
+  assert.equal((await confirmPossession({db:state.db,actor,...state.prepared,now:1500})).alreadyValidated,true);
+  assert.equal(state.db.values.get('passActivationChallenges/'+assignment.physicalPassId).possessionStatus,'POSSESSION_CONFIRMED');
   assert.equal([...state.db.values.keys()].filter(k=>k.startsWith('digitalCredentials/')).length,1);
 });
 test('holder retrieval, restricted scan, expiry and immediate digital-only revocation',async()=>{
@@ -133,7 +133,7 @@ test('admin reissue invalidates old code, preserves the physical sale and reject
   await assert.rejects(reissueActivation({...args,actor}),/FORBIDDEN/);
   const replacement=await reissueActivation(args);
   const retry=await reissueActivation(args);assert.equal(retry.alreadyReissued,true);assert.equal(retry.code,undefined);
-  assert.equal(state.db.values.get('passActivationChallenges/'+assignment.physicalPassId).saleAttestedAt,1100);
+  assert.equal(state.db.values.get('passActivationChallenges/'+assignment.physicalPassId).possessionConfirmedAt,1100);
   await assert.rejects(registration(state),/INVALID_OR_EXPIRED/);
   await registration(state,{code:replacement.code,now:2100});
   await assert.rejects(reissueActivation({...args,idempotencyKey:'reissue-request-0002',now:2200}),/CANNOT_REISSUE/);
@@ -143,24 +143,25 @@ test('QR claim requires verified customer, binds owner and confirms sale atomica
  const db=new MemoryDb();
  const prepared=await prepareActivation({db,actor,...input,resolveAssignment:async()=>assignment,hmacSecret,now:1000});
  const statusArgs={db,actor,physicalPassId:prepared.physicalPassId,preparationId:prepared.preparationId,now:1100};
- assert.equal((await getPreparedSaleStatus(statusArgs)).status,'PENDING');
+ assert.equal((await getPreparedPossessionStatus(statusArgs)).status,'PENDING');
  const claim={db,identity,assignment,code:prepared.code,hmacSecret,now:1100};
- await assert.rejects(claimPreparedSale({...claim,identity:{...identity,email_verified:false}}),/UNAUTHORIZED/);
- await assert.rejects(claimPreparedSale({...claim,code:'AAAAAA'}),/INVALID_OR_EXPIRED/);
- assert.equal((await claimPreparedSale(claim)).status,'SOLD_ATTESTED');
- assert.equal((await claimPreparedSale(claim)).alreadyClaimed,true);
- assert.equal((await getPreparedSaleStatus(statusArgs)).status,'SOLD_ATTESTED');
- await assert.rejects(claimPreparedSale({...claim,identity:{...identity,uid:'other'}}),/INVALID_OR_EXPIRED/);
+ await assert.rejects(claimPreparedPossession({...claim,identity:{...identity,email_verified:false}}),/UNAUTHORIZED/);
+ await assert.rejects(claimPreparedPossession({...claim,code:'AAAAAA'}),/INVALID_OR_EXPIRED/);
+ assert.equal((await claimPreparedPossession(claim)).status,'POSSESSION_CONFIRMED');
+ assert.equal((await claimPreparedPossession(claim)).alreadyClaimed,true);
+ assert.equal((await getPreparedPossessionStatus(statusArgs)).status,'POSSESSION_CONFIRMED');
+ await assert.rejects(claimPreparedPossession({...claim,identity:{...identity,uid:'other'}}),/INVALID_OR_EXPIRED/);
  await assert.rejects(registration({db,prepared},{identity:{...identity,uid:'other'}}),/INVALID_OR_EXPIRED/);
  const registered=await registration({db,prepared});assert.ok(registered.registrationId);
- assert.equal(db.values.get('passActivationChallenges/'+assignment.physicalPassId).saleAttestationMethod,'CUSTOMER_QR_CLAIM');
+ assert.equal(db.values.get('passActivationChallenges/'+assignment.physicalPassId).possessionMethod,'CUSTOMER_QR_CLAIM');
 });
 
 test('QR claim expires and cannot be prepared by issue-only operator',async()=>{
  const db=new MemoryDb();
  await assert.rejects(prepareActivation({db,actor:{uid:'limited',grants:[{organizationId:'tv-toblach',permissions:['passActivation.issue']}]},...input,resolveAssignment:async()=>assignment,hmacSecret,now:1000}),/FORBIDDEN/);
  const prepared=await prepareActivation({db,actor,...input,resolveAssignment:async()=>assignment,hmacSecret,now:1000});
- await assert.rejects(claimPreparedSale({db,identity,assignment,code:prepared.code,hmacSecret,now:601001}),/INVALID_OR_EXPIRED/);
- assert.equal((await getPreparedSaleStatus({db,actor,physicalPassId:prepared.physicalPassId,preparationId:prepared.preparationId,now:601001})).status,'EXPIRED');
- await assert.rejects(getPreparedSaleStatus({db,actor:{uid:'outsider'},physicalPassId:prepared.physicalPassId,preparationId:prepared.preparationId}),/FORBIDDEN/);
+ await assert.rejects(claimPreparedPossession({db,identity,assignment,code:prepared.code,hmacSecret,now:601001}),/INVALID_OR_EXPIRED/);
+ assert.equal((await getPreparedPossessionStatus({db,actor,physicalPassId:prepared.physicalPassId,preparationId:prepared.preparationId,now:601001})).status,'EXPIRED');
+ await assert.rejects(getPreparedPossessionStatus({db,actor:{uid:'outsider'},physicalPassId:prepared.physicalPassId,preparationId:prepared.preparationId}),/FORBIDDEN/);
 });
+
