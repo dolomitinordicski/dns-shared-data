@@ -14,3 +14,6 @@ firebase-adminsdk*.json
 
 # Materialized staging proposal, never a production source
 .digital-pass-staging/
+
+# Private materialized single-function release; never commit pilot identifiers
+.digital-pass-real-pilot/
