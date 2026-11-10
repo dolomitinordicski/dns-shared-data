@@ -8,7 +8,7 @@ const run=()=>({metadata:{annotations:{}},spec:{template:{spec:{serviceAccountNa
 test('deployment preflight reports project, runtime and builder permission gaps in one read-only pass',async()=>{
  const calls=[];
  const read=args=>args[0]==='builds'?JSON.stringify({serviceAccountEmail:'387653285986-compute@developer.gserviceaccount.com'}):'synthetic-access-token';
- const request=async(url,options)=>{calls.push({url,options});return {status:200,body:{permissions:[]}}};
+ const request=async(url,options)=>{calls.push({url,options});return {status:200,body:{}}};
  await assert.rejects(inspectDeployAccess({read,request}),error=>{
   assert.equal(error.message,'DEPLOY_PERMISSION_PREFLIGHT_FAILED');
   assert.ok(error.missingPermissions.includes('project:cloudfunctions.functions.generateUploadUrl'));

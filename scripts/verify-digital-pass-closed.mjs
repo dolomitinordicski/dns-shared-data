@@ -92,8 +92,8 @@ export async function inspectDeployAccess({read=gcloud,request=http}={}){
  const projectPermissions=['cloudfunctions.functions.get','cloudfunctions.functions.list','cloudfunctions.functions.create','cloudfunctions.functions.update','cloudfunctions.functions.generateUploadUrl','cloudfunctions.functions.sourceCodeSet','cloudfunctions.functions.setIamPolicy','cloudfunctions.operations.get'];
  const check=async(url,permissions,label)=>{
   const r=await request(url,{method:'POST',headers,body:JSON.stringify({permissions})});
-  if(r.status!==200||!Array.isArray(r.body?.permissions))fail('PERMISSION_INSPECTION_UNAVAILABLE');
-  return permissions.filter(p=>!r.body.permissions.includes(p)).map(p=>label+':'+p);
+  if(r.status!==200||(r.body?.permissions!==undefined&&!Array.isArray(r.body.permissions)))fail('PERMISSION_INSPECTION_UNAVAILABLE');
+  return permissions.filter(p=>!(r.body?.permissions||[]).includes(p)).map(p=>label+':'+p);
  };
  const missing=await check('https://cloudresourcemanager.googleapis.com/v1/projects/dns-core:testIamPermissions',projectPermissions,'project');
  missing.push(...await check('https://iam.googleapis.com/v1/projects/dns-core/serviceAccounts/'+RUNTIME+':testIamPermissions',['iam.serviceAccounts.actAs'],'runtime'));
