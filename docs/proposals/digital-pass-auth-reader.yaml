@@ -1,0 +1,5 @@
+title: DNS Digital Pass Auth Reader
+description: Only read Firebase Auth user state for verified and non-revoked ID tokens.
+stage: GA
+includedPermissions:
+  - firebaseauth.users.get
