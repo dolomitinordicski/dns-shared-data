@@ -37,6 +37,8 @@ const config=(enabled,source)=>[
  'DNS_GOOGLE_WALLET_ISSUER_ID=synthetic-disabled-wallet',
  'DNS_PASS_VERIFICATION_BASE=http://127.0.0.1:5101/'+project+'/europe-west8/digitalPassApi',
  'DNS_PASS_REGISTRATION_ENABLED='+enabled,
+ // Synthetic emulator acceptance must exercise the active HTTP handler; production verify remains closed by default.
+ ...(!staging?['DNS_PASS_API_CLOSED=false']:[]),
  'DNS_PASS_REGION=europe-west8',
  ...(!staging?['DNS_POLLS_REGION=europe-west8','DNS_POLLS_ALLOWED_ORIGINS=http://127.0.0.1:5179','DNS_POLLS_BRIDGE_SERVICE_ACCOUNT=synthetic@demo-dns-core.iam.gserviceaccount.com']:[]),
 ].join('\n')+'\n';
