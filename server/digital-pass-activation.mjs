@@ -58,6 +58,9 @@ export async function prepareActivation({
   const assignment = await resolveAssignment({ passNumber, seasonId, productCode });
   requireAssignment(assignment);
   assertOperator(actor, assignment, 'passActivation.issue');
+  // Creating a customer-scannable QR also delegates an attestable sale intent.
+  // Require both operator permissions at preparation time.
+  assertOperator(actor, assignment, 'passSale.attest');
   const code = generateActivationCode();
   const id = assignment.physicalPassId;
   const nonce = randomUUID();
@@ -87,6 +90,7 @@ export async function prepareActivation({
       createdAt: now,
       expiresAt: now + 10 * 60 * 1000,
       operatorUid: actor.uid,
+      qrClaimEnabled: true,
       nonce,
       sourceRevision: assignment.sourceRevision,
       printedNumber: assignment.printedNumber,
@@ -153,4 +157,69 @@ export async function reissueActivation({ db, actor, physicalPassId, idempotency
       actorId: actor.uid, organizationId: record.organizationId, reason: reason.trim(), at: now });
     return { physicalPassId, preparationId: nonce, code, expiresAt: now + CODE_TTL_MS, alreadyReissued: false };
   });
+}
+
+/**
+ * Customer QR claim: email-verified holder proves possession of the one-time
+ * challenge issued by an authorized selling operator.
+ * The transaction is the only place that changes PREPARED -> ENABLED.
+ * Mere QR GET/rendering can never attest a sale.
+ */
+export async function claimPreparedSale({
+  db, identity, assignment, code, hmacSecret, now = Date.now(),
+}) {
+  if (!identity?.uid || identity.email_verified !== true) throw new Error('UNAUTHORIZED');
+  requireAssignment(assignment);
+  if (typeof code !== 'string' || !/^[A-HJ-NP-Z2-9]{6}$/.test(code))
+    throw new Error('INVALID_OR_EXPIRED');
+  const id = assignment.physicalPassId;
+  const recordRef = db.collection('passActivationChallenges').doc(id);
+  const auditRef = db.collection('passAuditEvents').doc(randomUUID());
+  return db.runTransaction(async tx => {
+    const snap = await tx.get(recordRef);
+    if (!snap.exists) throw new Error('INVALID_OR_EXPIRED');
+    const record = snap.data();
+    if (record.qrClaimEnabled !== true || record.organizationId !== assignment.organizationId ||
+        record.sourceRevision !== assignment.sourceRevision ||
+        record.seasonId !== assignment.seasonId || record.productCode !== assignment.productCode ||
+        typeof record.codeVerifier !== 'string' || record.codeVerifier.length !== 64)
+      throw new Error('INVALID_OR_EXPIRED');
+    const expected = hashActivationCode(code, id, hmacSecret);
+    // Constant-time verifier comparison, including correctly sized malformed values.
+    const { timingSafeEqual } = await import('node:crypto');
+    const left = Buffer.from(record.codeVerifier, 'hex');
+    const right = Buffer.from(expected, 'hex');
+    if (left.length !== right.length || !timingSafeEqual(left, right))
+      throw new Error('INVALID_OR_EXPIRED');
+    if (record.saleAttestedAt != null) {
+      if (record.claimedByUid !== identity.uid) throw new Error('INVALID_OR_EXPIRED');
+      return { status: 'SOLD_ATTESTED', alreadyClaimed: true };
+    }
+    if (record.status !== 'PREPARED' || record.expiresAt <= now ||
+        !record.operatorUid || !record.nonce) throw new Error('INVALID_OR_EXPIRED');
+    tx.update(recordRef, {
+      status: 'ENABLED', saleStatus: 'SOLD_ATTESTED',
+      saleAttestedAt: now, expiresAt: now + CODE_TTL_MS,
+      claimedByUid: identity.uid, saleAttestationMethod: 'CUSTOMER_QR_CLAIM',
+    });
+    tx.create(auditRef, { action: 'PASS_SALE_ATTESTED', targetId: id,
+      actorId: record.operatorUid, customerUid: identity.uid, organizationId: record.organizationId,
+      preparationId: record.nonce, method: 'CUSTOMER_QR_CLAIM', at: now });
+    return { status: 'SOLD_ATTESTED', alreadyClaimed: false };
+  });
+}
+
+/** Staff-only, scoped status for the exact preparation generation. */
+export async function getPreparedSaleStatus({ db, actor, physicalPassId, preparationId, now = Date.now() }) {
+  if (typeof physicalPassId !== 'string' || typeof preparationId !== 'string' ||
+      !physicalPassId || !preparationId) throw new Error('INVALID_PREPARATION');
+  const snap = await db.collection('passActivationChallenges').doc(physicalPassId).get();
+  if (!snap.exists) throw new Error('NO_PREPARATION');
+  const record = snap.data();
+  assertOperator(actor, record, 'passSale.attest');
+  if (record.nonce !== preparationId || record.operatorUid !== actor.uid && actor.isDnsAdmin !== true)
+    throw new Error('STALE_PREPARATION');
+  if (record.saleAttestedAt != null) return { status: 'SOLD_ATTESTED' };
+  if (record.status === 'PREPARED' && record.expiresAt > now) return { status: 'PENDING' };
+  return { status: 'EXPIRED' };
 }

@@ -5,7 +5,7 @@ import { requestMarketingOptIn, withdrawMarketing } from './digital-pass-marketi
 import { createHmac } from 'node:crypto';
 import { verifyPublicPass, renderPublicPassHtml } from './digital-pass-public-verify.mjs';
 import { loadDigitalPassActor } from './digital-pass-auth.mjs';
-import { prepareActivation, validateSale, reissueActivation } from './digital-pass-activation.mjs';
+import { prepareActivation, validateSale, reissueActivation, claimPreparedSale, getPreparedSaleStatus } from './digital-pass-activation.mjs';
 import { resolveSeasonPassAssignment, PILOT_SEASON, PILOT_PRODUCT } from './digital-pass-inventory-resolver.mjs';
 import { limitAttempts, registerDigitalPass, getDigitalPass, checkDigitalCredential, revokeDigitalCredential } from './digital-pass-registration.mjs';
 
@@ -55,7 +55,12 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
       const inventory = { passNumber: b.passNumber, seasonId: PILOT_SEASON, productCode: PILOT_PRODUCT };
       const path = req.path;
       let result;
-      if (path === '/v1/pass-registrations/complete') {
+      if (path === '/v1/pass-activations/claim') {
+        if (registrationEnabled !== true) return res.status(503).json({ error: 'REGISTRATION_DISABLED' });
+        await limitAttempts({ db, key: createHmac('sha256', hmacSecret).update('qr-claim:' + identity.uid).digest('hex'), max: 8 });
+        result = await claimPreparedSale({ db, identity, assignment: await resolveAssignment(inventory),
+          code: b.code, hmacSecret });
+      } else if (path === '/v1/pass-registrations/complete') {
         result = await registerDigitalPass({ db, identity, assignment: await resolveAssignment(inventory),
           code: b.code, givenName: b.givenName, familyName: b.familyName, language: b.language,
           noticeVersion, hmacSecret, validFrom, validUntil });
@@ -80,6 +85,7 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
         const actor = await loadDigitalPassActor({ db, auth, idToken: token });
         if (path === '/v1/pass-activations/prepare') result = await prepareActivation({ db, actor, ...inventory, resolveAssignment, hmacSecret });
         else if (path === '/v1/pass-activations/validate') result = await validateSale({ db, actor, physicalPassId: b.physicalPassId, preparationId: b.preparationId });
+        else if (path === '/v1/pass-activations/status') result = await getPreparedSaleStatus({ db, actor, physicalPassId: b.physicalPassId, preparationId: b.preparationId });
         else if (path === '/v1/pass-validations/check') result = await checkDigitalCredential({ db, actor, qrPayload: b.qrPayload });
         else if (path === '/v1/admin/pass-activations/reissue') {
           if (Date.now() >= validUntil) throw new Error('CANNOT_REISSUE');
@@ -95,7 +101,7 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
       if (code === 'RATE_LIMITED') return res.status(429).json({ error: code });
       if (code === 'FORBIDDEN') return res.status(403).json({ error: code });
       if (code === 'UNAUTHORIZED' || error?.code?.startsWith('auth/')) return res.status(401).json({ error: 'UNAUTHORIZED' });
-      const operational = ['CANNOT_REISSUE', 'INVALID_REISSUE', 'PASS_ALREADY_ACTIVATED', 'PREPARATION_ALREADY_EXISTS', 'SALE_ALREADY_ATTESTED', 'STALE_PREPARATION', 'INVALID_PREPARATION', 'PREPARED_BY_OTHER_OPERATOR', 'NO_PREPARATION'];
+      const operational = ['CANNOT_REISSUE', 'INVALID_REISSUE', 'PASS_ALREADY_ACTIVATED', 'PREPARATION_ALREADY_EXISTS', 'SALE_ALREADY_ATTESTED', 'STALE_PREPARATION', 'INVALID_PREPARATION', 'PREPARED_BY_OTHER_OPERATOR', 'NO_PREPARATION', 'INVALID_PREPARATION'];
       if (operational.includes(code)) return res.status(409).json({ error: code });
       // Avoid pass/email enumeration and never log requests, secrets or arbitrary error text.
       return res.status(400).json({ error: 'REQUEST_NOT_COMPLETED' });
