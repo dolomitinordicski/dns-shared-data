@@ -13,8 +13,22 @@
 - La configurazione Pages attuale su main non inietta le variabili Digital Pass. Una pubblicazione riuscita non dimostra un collegamento operativo al backend.
 - L'inventario canonico in repository è approved:false e reviewOnly:true. Non è un inventario approvato da importare automaticamente.
 
-### Verifica cloud non completata
-Le console Firebase e Google Cloud bloccano l'account info@dolomitinordicski.com richiedendo l'autenticazione a due fattori. Non sono stati verificati progetti effettivi, funzione distribuita, endpoint, regione reale, IAM, accesso al segreto, parametri effettivi, Auth, inventario Firestore, rules, backup o audit. Le impostazioni nel codice e i vecchi report staging non costituiscono evidenza dello stato cloud attuale. Lo sblocco dell'account resta un'azione personale del titolare.
+### Verifica cloud effettiva, completata dopo lo sblocco
+Audit in sola lettura il 10 novembre 2026:
+- DNS Core esiste, progetto dns-core, numero 387653285986, piano Blaze. L'account iniziale non aveva accesso al progetto; l'altro account DNS già collegato ha consentito la verifica. Non sono state accettate nuove condizioni né cambiate autorizzazioni.
+- Firebase Functions elenca una sola funzione, dnsWorkspaceAccess, in europe-west8. Cloud Run conferma il solo servizio dnsworkspaceaccess. **digitalPassApi non è distribuita su DNS Core**: non esistono parametri runtime o endpoint Digital Pass distribuiti da verificare.
+- Tra i progetti visibili al medesimo account non compare un progetto dns-pass-staging-*. Questo non prova l'assenza di ambienti non accessibili all'account.
+- Firestore (default) è Standard, modalità nativa, europe-west8. Nell'elenco delle collezioni non compaiono passInventorySnapshots né le collezioni operative Digital Pass: manca uno snapshot ufficiale disponibile al backend in questa banca dati.
+- Le regole attive sono datate 6 novembre 2026, 11:56 nell'interfaccia. Il testo pubblicato non contiene sezioni Digital Pass e termina con match /{document=**} e allow read, write: if false. Non è stato eseguito un audit generale completo delle rules; non sono state modificate.
+- Firebase Auth: provider email/password e Google attivi; email-link senza password già abilitato. dolomitinordicski.github.io è già un dominio autorizzato, insieme ai domini Firebase e localhost. Nessuna email reale inviata.
+- Il service account dns-digital-pass-runtime@dns-core.iam.gserviceaccount.com esiste, è attivo e non ha chiavi utente. Nella policy IAM visibile ha Cloud Datastore User con condizione DNSDigitalPassDefaultDB. Non compare un ruolo di lettura Firebase Auth per quel principale: il permesso firebaseauth.users.get richiesto dal controllo token revocati resta da concedere/validare prima del deploy. Il test effettivo sotto questa identità non è stato eseguito.
+- Secret Manager: DNS_PASS_HMAC_KEY esiste; versione 1 attiva. Il runtime dedicato ha Secret Manager Secret Accessor direttamente sul segreto. Il valore e la lunghezza non sono stati letti; non si può certificare la qualità della chiave dal solo metadato.
+- Backup pianificati attivi: conservazione giornaliera sette giorni, nessuna conservazione settimanale indicata; PITR disattivato. Non è stato eseguito un ripristino né verificato il contenuto di un backup.
+- Audit GCP: configurazione predefinita Data Access disattivata; anche per Firestore/Datastore API risultano deselezionati Admin Read, Data Read e Data Write. Questo riguarda Data Access, non equivale all'assenza di ogni log amministrativo. Nessun evento applicativo Digital Pass reale verificabile in assenza del backend.
+- Nella collezione accessGrants il campione aperto ha scope reportingArea e permessi degli altri tool, non i grant organization richiesti dal pass. Non attribuire implicitamente permessi Digital Pass agli operatori; l'operatore concreto del collaudo non è ancora selezionato.
+- La pagina pubblicata pass.html è raggiungibile e mostra “L'attivazione del Digital Pass sarà disponibile prossimamente”. Non è stato verificato un collegamento frontend–backend funzionante.
+
+Riferimenti per il controllo Auth: [SDK e revoca sessioni](https://firebase.google.com/docs/auth/admin/manage-sessions), [permessi Firebase Auth](https://docs.cloud.google.com/iam/docs/roles-permissions/firebaseauth). Dalla policy letta e dall'uso di verifyIdToken(token,true) si deduce il blocco di autorizzazione da risolvere; non disabilitare il controllo di revoca per aggirarlo.
 
 ## Correzioni proposte
 1. Separare DNS_PASS_SALE_CLAIM_ENABLED da DNS_PASS_REGISTRATION_ENABLED. Il primo permette la conferma vendita con email verificata anche quando non si emette alcun Digital Pass. Il valore vuoto conserva la compatibilità con il vecchio interruttore.
@@ -28,7 +42,7 @@ Lo staging C3.1 attuale è privato e accetta esclusivamente progetti, inventari 
 La candidata per un collaudo reale è una finestra strettamente controllata in DNS Core, soltanto dopo averne verificato lo stato e ottenuto l'autorizzazione specifica.
 
 ## Dati da definire e verifiche obbligatorie
-Dopo lo sblocco delle console, in sola lettura:
+Prima del rilascio, completare/ricontrollare in sola lettura le condizioni seguenti, utilizzando le evidenze sopra senza duplicare configurazioni già presenti:
 - verificare progetto DNS Core, Auth con email-link, domini autorizzati e ritorno da smartphone;
 - verificare che digitalPassApi sia Functions v2, regione effettiva, URL e impostazioni del runtime; il codice propone europe-west8 e dns-digital-pass-runtime@dns-core.iam.gserviceaccount.com;
 - verificare che il service account dedicato possa eseguire le sole operazioni necessarie, incluso il controllo dei token revocati, e leggere la specifica versione del segreto HMAC; non leggere o pubblicare il valore del segreto;
@@ -75,4 +89,6 @@ Prima di rimuovere il limite pilot, disabilitare **sia** saleClaim **sia** regis
 Disabilitare il gate Pages e ripubblicare solo previa autorizzazione. Conservare vendita, audit e credenziali già emesse; non cancellare dati reali. Eventuale revoca della singola credenziale è un'operazione autorizzata distinta.
 
 ## Validazione
-Prima apertura PR: 28 test locali superati (attivazione, gate registrazione, pilot, staging e nuova finestra controllata), con database in memoria. La CI esegue anche Auth/Functions/Firestore Emulator e i nuovi scenari claim/status; il suo risultato va verificato sul commit finale. Nessuna prova cloud o smartphone reale eseguita.
+28 test locali superati con database in memoria. Sul commit di codice 30a1290c4502f002d697a53368c6d92386a97986, tutti gli otto check Shared Data sono verdi: domain, emulator Firestore, qr-renderer, HTTP E2E ripetuto tre volte, staging-emulator e autorizzazioni Polls. Domain: 89 pass, 5 skip riservati agli emulatori, zero failure. Le tre esecuzioni HTTP e lo staging includono ora claim/status con verifica email e registrazione successiva facoltativa.
+Workspace #63 sul commit 494aae45ef3aa61f133160e69217e063eb5eacdc: tutti i cinque controlli eseguiti verdi, deploy/update saltati.
+Questo aggiornamento successivo modifica solo la documentazione. Nessuna prova smartphone reale o invocazione con tessera reale; nessun merge/deploy eseguito.
