@@ -10,7 +10,7 @@ export function pilotReleaseConfig(env,now=Date.now()) {
  const phase=env.DNS_PASS_RELEASE_PHASE;
  if(!['verify','activate','stop'].includes(phase))bad('DNS_PASS_RELEASE_PHASE');
  if(env.DNS_PASS_DEPLOY_APPROVED!=='true')bad('DNS_PASS_DEPLOY_APPROVED');
- if(phase==='verify')return {
+ if(['verify','stop'].includes(phase))return {
   DNS_PASS_REGION:'europe-west8',DNS_PASS_ALLOWED_ORIGINS:'https://dolomitinordicski.github.io',
   DNS_PASS_API_CLOSED:'true',DNS_PASS_PILOT_ENABLED:'false',
   DNS_PASS_SALE_CLAIM_ENABLED:'false',DNS_PASS_REGISTRATION_ENABLED:'false',
@@ -49,6 +49,13 @@ export async function preparePilotRelease(env) {
  const otherExport="export { pollsBridgeApi } from './polls-bridge-entry.mjs';";
  if(!entry.includes(otherExport)||!entry.includes("dns-digital-pass-runtime@dns-core.iam.gserviceaccount.com"))throw Error('ENTRYPOINT_REVIEW_REQUIRED');
  entry=entry.replace(otherExport,'').replace('maxInstances: 10','maxInstances: 1');
+ // VERIFY/STOP are private at infrastructure level and do not bind/read any secret.
+ if(config.DNS_PASS_API_CLOSED==='true') {
+  entry=`import { onRequest } from 'firebase-functions/v2/https';
+import { closedDigitalPassHandler } from './digital-pass-closed.mjs';
+export const digitalPassApi=onRequest({region:'europe-west8',serviceAccount:'dns-digital-pass-runtime@dns-core.iam.gserviceaccount.com',secrets:[],maxInstances:1,invoker:'private'},closedDigitalPassHandler(['https://dolomitinordicski.github.io']));
+`;
+ }
  const modules=new Map([['firebase-entry.mjs',entry]]);
  for(const [name,content] of modules)for(const match of content.matchAll(/from\s+['"]\.\/([^'"]+)['"]/g)){
   const dependency=match[1];
@@ -69,3 +76,4 @@ export async function preparePilotRelease(env) {
  console.log('Prepared digitalPassApi only; fixed DNS Core runtime/region, one instance maximum. No cloud changes.');
 }
 if(process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url))await preparePilotRelease(process.env);
+

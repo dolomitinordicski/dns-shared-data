@@ -9,7 +9,7 @@ const env={DNS_PASS_RELEASE_PHASE:'verify',DNS_PASS_DEPLOY_APPROVED:'true',DNS_P
  DNS_PASS_INVENTORY_REVISION:'data-entry-2026-27-'+'a'.repeat(64),DNS_PASS_PRIVACY_NOTICE_VERSION:'dns-digital-pass-2026-27-synthetic-v1',
  DNS_PASS_PRIVACY_URL:'https://example.test/pass/privacy'};
 test('activate/stop preserve operational boundaries and official dates',()=>{
- for(const phase of ['activate','stop']){
+ for(const phase of ['activate']){
   const c=pilotReleaseConfig({...env,DNS_PASS_RELEASE_PHASE:phase},now);
   assert.equal(c.DNS_PASS_PILOT_ENABLED,'true');assert.equal(c.DNS_PASS_SALE_CLAIM_ENABLED,phase==='activate'?'true':'false');
   assert.equal(c.DNS_PASS_REGISTRATION_ENABLED,c.DNS_PASS_SALE_CLAIM_ENABLED);
@@ -28,7 +28,7 @@ test('release refuses missing approval, privacy, single-card scope, revision, st
   {DNS_PASS_PRIVACY_URL:'https://example.test/privacy?token=x'}])
   assert.throws(()=>pilotReleaseConfig({...env,DNS_PASS_RELEASE_PHASE:'activate',...changes},now));
  const closed=pilotReleaseConfig({...env,DNS_PASS_RELEASE_PHASE:'stop',DNS_PASS_PILOT_UNTIL:new Date(now-1000).toISOString()},now);
- assert.equal(closed.DNS_PASS_REGISTRATION_ENABLED,'false');assert.equal(closed.DNS_PASS_PILOT_ENABLED,'true');
+ assert.equal(closed.DNS_PASS_REGISTRATION_ENABLED,'false');assert.equal(closed.DNS_PASS_API_CLOSED,'true');
 });
 test('manual workflow targets only digitalPassApi and cannot run from a PR or push',()=>{
  const flow=readFileSync('.github/workflows/deploy-digital-pass-pilot.yml','utf8');
@@ -68,3 +68,4 @@ test('closed API guard precedes runtime bootstrap and forbids all operational re
  assert.match(source,/res.status\(503\).json\(\{error:'SERVICE_UNAVAILABLE'\}\)/);
  assert.match(source,/res.status\(403\).json\(\{error:'FORBIDDEN'\}\)/);
 });
+
