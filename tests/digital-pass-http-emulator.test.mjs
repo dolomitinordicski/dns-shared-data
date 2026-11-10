@@ -147,6 +147,26 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
    const anonymous=await call('/v1/pass-validations/check',null,{qrPayload:pass.qrPayload});assert.equal(anonymous.status,401);
    return {authorized:{http:200,status:'VALID'},operatorWithoutGrant:403,anonymous:401};
   });
+  await scenario('05-qr','Verified customer QR claim automatically attests physical sale',async()=>{
+    const prepared=await prepare(6);
+    const args={physicalPassId:prepared.physicalPassId,preparationId:prepared.preparationId};
+    const status=who=>call('/v1/pass-activations/status',token(who),args);
+    const claimQr=(who,code=prepared.code)=>call('/v1/pass-activations/claim',who?token(who):null,{passNumber:'6',code});
+    assert.equal((await status('operator-a')).body.status,'PENDING');
+    assert.equal((await status('operator-b')).status,403);
+    assert.equal((await call('/v1/pass-registrations/complete',token('holder-a'),{passNumber:'6',code:prepared.code,givenName:'Synthetic',familyName:'Test',language:'it'})).status,400);
+    assert.equal((await claimQr(null)).status,401);
+    assert.equal((await claimQr('holder-a','AAAAAA')).status,400);
+    assert.equal((await claimQr('holder-a')).body.status,'SOLD_ATTESTED');
+    assert.equal((await status('operator-a')).body.status,'SOLD_ATTESTED');
+    const repeated=await claimQr('holder-a');assert.equal(repeated.status,200);assert.equal(repeated.body.alreadyClaimed,true);
+    assert.equal((await claimQr('holder-b')).status,400);
+    const completed=await claim(6,prepared);assert.equal(completed.status,200,JSON.stringify(completed));
+    assert.equal((await claim(6,prepared,'holder-b')).status,400);
+    const audit=await db.collection('passAuditEvents').where('targetId','==',prepared.physicalPassId).get();
+    assert.ok(audit.docs.some(x=>x.data().action==='PASS_SALE_ATTESTED'&&x.data().method==='CUSTOMER_QR_CLAIM'));
+    return {prepared:200,operatorStatus:'SOLD_ATTESTED',foreignOperator:403,anonymousClaim:401,invalidCode:400,customerClaim:200,registration:200,otherHolderReplay:400};
+  });
   await scenario('07','Retries, concurrent claims, expired codes and duplicate attempts',async()=>{
    const retry=await claim(1,first);assert.equal(retry.status,200);assert.equal(retry.body.alreadyRegistered,true);assert.equal(retry.body.registrationId,registration);
    const other=await claim(1,first,'holder-b');assert.equal(other.status,400);
