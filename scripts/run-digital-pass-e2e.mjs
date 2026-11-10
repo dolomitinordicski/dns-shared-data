@@ -5,6 +5,9 @@ import {readFile,writeFile,mkdir,unlink} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {dirname,resolve,join} from 'node:path';
 import {stagingInventoryDigest} from '../server/digital-pass-staging.mjs';
+import {buildDataEntryInventory} from '../server/digital-pass-data-entry-inventory.mjs';
+import {syntheticDataEntryMatrix} from '../tests/helpers/digital-pass-data-entry-fixture.mjs';
+const dataEntryRevision=buildDataEntryInventory(syntheticDataEntryMatrix()).revision;
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const staging=process.env.DNS_PASS_E2E_STAGING==='true';
 const project=staging?'demo-dns-pass-staging-c1':'demo-dns-core';
@@ -22,9 +25,11 @@ for(const name of ['.env','.env.'+project,'.env.local','.secret.local']) {
  catch(error){if(error.code!=='ENOENT')throw error}
 }
 const syntheticSecret='DNS_PASS_HMAC_KEY=synthetic-only-HMAC-key-not-production-1234567890\n';
-const config=enabled=>[
+const config=(enabled,source)=>[
  'DNS_PASS_ALLOWED_ORIGINS=http://127.0.0.1:5179',
- 'DNS_PASS_INVENTORY_REVISION='+(staging?inventory.revision:'synthetic-http-e2e'),
+ 'DNS_PASS_INVENTORY_SOURCE='+source,
+ 'DNS_PASS_DATA_ENTRY_START_NUMBER='+(source==='data-entry'?'1':''),
+ 'DNS_PASS_INVENTORY_REVISION='+(source==='data-entry'?dataEntryRevision:staging?inventory.revision:'synthetic-http-e2e'),
  'DNS_PASS_VALID_FROM='+(staging?new Date(Date.now()-60000).toISOString():'2020-01-01T00:00:00Z'),
  'DNS_PASS_VALID_UNTIL='+(staging?new Date(Date.now()+86400000).toISOString():'2030-01-01T00:00:00Z'),
  'DNS_PASS_PRIVACY_NOTICE_VERSION=synthetic-e2e-only-v1',
@@ -40,16 +45,18 @@ const modes=process.env.DNS_PASS_E2E_ONLY_MODE?[process.env.DNS_PASS_E2E_ONLY_MO
 if(modes.some(x=>!['disabled','enabled'].includes(x)))throw Error('INVALID_LOCAL_MODE');
 try {
  await writeFile(secretFile,syntheticSecret,{flag:'wx'});
- for(const mode of modes){
-  writtenEnv=config(mode==='enabled');await writeFile(envFile,writtenEnv);
+ const phases=modes.map(mode=>({mode,source:'snapshot'}));
+ if(!staging && !process.env.DNS_PASS_E2E_ONLY_MODE)phases.push({mode:'enabled',source:'data-entry'});
+ for(const {mode,source} of phases){
+  writtenEnv=config(mode==='enabled',source);await writeFile(envFile,writtenEnv);
   const env={...process.env,CI:'true',FIREBASE_CLI_DISABLE_UPDATE_CHECK:'true',
    XDG_CONFIG_HOME:join(root,'.digital-pass-e2e/config'),
    FIREBASE_FUNCTIONS_DISCOVERY_OUTPUT_PATH:'true',FUNCTIONS_DISCOVERY_TIMEOUT:'120',
-   DNS_PASS_E2E_MODE:mode,DNS_PASS_E2E_OUTPUT_DIR:output,
+   DNS_PASS_E2E_MODE:mode,DNS_PASS_E2E_INVENTORY_SOURCE:source,DNS_PASS_E2E_OUTPUT_DIR:output,
    GCLOUD_PROJECT:project,GOOGLE_CLOUD_PROJECT:project};
   for(const key of ['GOOGLE_APPLICATION_CREDENTIALS','GOOGLE_GHA_CREDS_PATH','CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE','FIREBASE_TOKEN','BREVO_API_KEY'])delete env[key];
   const command='"'+process.execPath+'" --test "'+join(root,'tests/digital-pass-http-emulator.test.mjs')+'"';
-  console.log('Starting local-only acceptance phase:',mode);
+  console.log('Starting local-only acceptance phase:',mode,source);
   running=spawn(process.execPath,[cli,'emulators:exec','--project',project,'--config','firebase.e2e.json','--only','auth,firestore,functions','--non-interactive',command],{cwd:sourceRoot,env,stdio:'inherit',windowsHide:true});
   const code=await new Promise((ok,fail)=>{running.once('exit',ok);running.once('error',fail)});
   running=null;if(code!==0)throw Error('Local E2E phase failed: '+mode+' (exit '+code+')');
