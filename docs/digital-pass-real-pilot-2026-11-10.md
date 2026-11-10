@@ -49,7 +49,7 @@ Definire una sola tessera e organizzazione, un operatore e una scadenza esplicit
 - DNS_PASS_SALE_CLAIM_ENABLED=true
 - DNS_PASS_REGISTRATION_ENABLED=false per la sola conferma vendita; true solo se si autorizza anche la registrazione facoltativa durante quella finestra.
 
-Servono inoltre i parametri ordinari verificati: HMAC, origins, inventory revision, privacy notice version e validità stagionale. Gli URL del frontend sono VITE_DNS_DIGITAL_PASS_API_BASE, VITE_DNS_PASS_ACTIVATION_ENABLED e VITE_DNS_PASS_PRIVACY_URL; Workspace #63 li controlla tramite le variabili DNS_PASS_API_BASE, DNS_PASS_PILOT_APPROVED e DNS_PASS_PRIVACY_URL con avvio manuale digital_pass_pilot=true. Il gate frontend non sostituisce il limite backend.
+Servono inoltre i parametri ordinari verificati: HMAC, origins, inventory revision, privacy notice version e validità stagionale. Gli URL del frontend sono VITE_DNS_DIGITAL_PASS_API_BASE, VITE_DNS_PASS_ACTIVATION_ENABLED e VITE_DNS_DIGITAL_PASS_PRIVACY_URL; Workspace #63 li controlla tramite le variabili DNS_PASS_API_BASE, DNS_PASS_PILOT_APPROVED e DNS_PASS_PRIVACY_URL con avvio manuale digital_pass_pilot=true. Il gate frontend non sostituisce il limite backend.
 
 **Data di validità:** il codice usa 15 novembre 2026 come inizio stagione. Il 10 novembre la conferma vendita può essere collaudata, ma una credenziale con queste date risulterà EXPIRED prima dell'inizio stagione. Non modificare in silenzio le date ufficiali. Un esito VALID oggi richiede una decisione esplicita sulla validità del collaudo oppure un test sintetico separato.
 
