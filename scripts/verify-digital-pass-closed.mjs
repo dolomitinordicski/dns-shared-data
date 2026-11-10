@@ -80,16 +80,38 @@ export async function verifyClosed({mode='metadata',read=gcloud,request=http}={}
  }
  return {...result,authenticatedSmoke:true,verifier:VERIFIER};
 }
+export async function inspectDeployAccess({read=gcloud,request=http}={}){
+ const raw=JSON.parse(read(['builds','get-default-service-account','--region='+REGION,'--format=json']));
+ const values=typeof raw==='string'?[raw]:Object.values(raw);
+ const builder=values.filter(v=>typeof v==='string').map(v=>v.split('/').pop()).find(v=>['387653285986-compute@developer.gserviceaccount.com','387653285986@cloudbuild.gserviceaccount.com'].includes(v));
+ if(!builder)fail('DEFAULT_BUILD_IDENTITY_REVIEW_REQUIRED');
+ const accessToken=read(['auth','print-access-token']);
+ const headers={Authorization:'Bearer '+accessToken,'Content-Type':'application/json'};
+ const projectPermissions=['cloudfunctions.functions.get','cloudfunctions.functions.list','cloudfunctions.functions.create','cloudfunctions.functions.update','cloudfunctions.functions.generateUploadUrl','cloudfunctions.functions.sourceCodeSet','cloudfunctions.functions.setIamPolicy','cloudfunctions.operations.get'];
+ const check=async(url,permissions,label)=>{
+  const r=await request(url,{method:'POST',headers,body:JSON.stringify({permissions})});
+  if(r.status!==200||!Array.isArray(r.body?.permissions))fail('PERMISSION_INSPECTION_UNAVAILABLE');
+  return permissions.filter(p=>!r.body.permissions.includes(p)).map(p=>label+':'+p);
+ };
+ const missing=await check('https://cloudresourcemanager.googleapis.com/v1/projects/dns-core:testIamPermissions',projectPermissions,'project');
+ missing.push(...await check('https://iam.googleapis.com/v1/projects/dns-core/serviceAccounts/'+RUNTIME+':testIamPermissions',['iam.serviceAccounts.actAs'],'runtime'));
+ // The legacy Google-owned builder cannot receive a direct user-managed policy.
+ // For a modern default Compute builder, verify attachment permission up front.
+ if(builder.endsWith('-compute@developer.gserviceaccount.com'))missing.push(...await check('https://iam.googleapis.com/v1/projects/dns-core/serviceAccounts/'+builder+':testIamPermissions',['iam.serviceAccounts.actAs'],'builder'));
+ if(missing.length){const e=Error('DEPLOY_PERMISSION_PREFLIGHT_FAILED');e.missingPermissions=missing;throw e;}
+ return {mode:'access',project:PROJECT,region:REGION,runtime:RUNTIME,defaultBuildServiceAccount:builder,requiredDeploymentPermissions:true,iamChanges:0};
+}
 async function main(){
  const args=process.argv.slice(2);
  if(args.length!==4||args[0]!=='--mode'||args[2]!=='--report')fail('EXPLICIT_MODE_AND_REPORT_REQUIRED');
- const result=await verifyClosed({mode:args[1]});
+ const result=args[1]==='access'?await inspectDeployAccess():await verifyClosed({mode:args[1]});
  await mkdir(dirname(resolve(args[3])),{recursive:true});
  await writeFile(resolve(args[3]),JSON.stringify({...result,verifiedAt:new Date().toISOString()},null,2)+'\n');
- console.log(result.authenticatedSmoke?'CLOSED_SMOKE_PASSED; no cards associated. Temporary access revocation still required.':'PRIVATE_CLOSED_METADATA_PASSED; authenticated smoke still required.');
+ console.log(args[1]==='access'?'DEPLOY_PERMISSION_PREFLIGHT_PASSED':result.authenticatedSmoke?'CLOSED_SMOKE_PASSED; no cards associated. Temporary access revocation still required.':'PRIVATE_CLOSED_METADATA_PASSED; authenticated smoke still required.');
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(error=>{
  // Do not print subprocess output, HTTP payloads, token values or stack traces.
  const code=/^[A-Z0-9_]+$/.test(error.message)?error.message:'VERIFY_CHECK_FAILED';
+ if(Array.isArray(error.missingPermissions))console.error(error.missingPermissions.filter(p=>/^(project|runtime|builder):[a-zA-Z.]+$/.test(p)).join('\n'));
  console.error(code);process.exitCode=1;
 });

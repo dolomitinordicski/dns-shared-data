@@ -1,10 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {verifyClosed,validateClosedFunction,validatePrivateService,RUNTIME,VERIFIER} from '../scripts/verify-digital-pass-closed.mjs';
+import {verifyClosed,inspectDeployAccess,validateClosedFunction,validatePrivateService,RUNTIME,VERIFIER} from '../scripts/verify-digital-pass-closed.mjs';
 const uri='https://digitalpassapi-example-oc.a.run.app';
 const fn=()=>({name:'projects/dns-core/locations/europe-west8/functions/digitalPassApi',state:'ACTIVE',environment:'GEN_2',buildConfig:{serviceAccount:'projects/dns-core/serviceAccounts/387653285986-compute@developer.gserviceaccount.com'},serviceConfig:{serviceAccountEmail:RUNTIME,maxInstanceCount:1,service:'projects/dns-core/locations/europe-west8/services/digitalpassapi',uri,environmentVariables:{DNS_PASS_API_CLOSED:'true',DNS_PASS_PILOT_ENABLED:'false',DNS_PASS_POSSESSION_CLAIM_ENABLED:'false',DNS_PASS_REGISTRATION_ENABLED:'false',DNS_PASS_ALLOWED_ORIGINS:'https://dolomitinordicski.github.io'}}});
 const run=()=>({metadata:{annotations:{}},spec:{template:{spec:{serviceAccountName:RUNTIME}}},status:{conditions:[{type:'Ready',status:'True'}]}});
+test('deployment preflight reports project, runtime and builder permission gaps in one read-only pass',async()=>{
+ const calls=[];
+ const read=args=>args[0]==='builds'?JSON.stringify({serviceAccountEmail:'387653285986-compute@developer.gserviceaccount.com'}):'synthetic-access-token';
+ const request=async(url,options)=>{calls.push({url,options});return {status:200,body:{permissions:[]}}};
+ await assert.rejects(inspectDeployAccess({read,request}),error=>{
+  assert.equal(error.message,'DEPLOY_PERMISSION_PREFLIGHT_FAILED');
+  assert.ok(error.missingPermissions.includes('project:cloudfunctions.functions.generateUploadUrl'));
+  assert.ok(error.missingPermissions.includes('runtime:iam.serviceAccounts.actAs'));
+  assert.ok(error.missingPermissions.includes('builder:iam.serviceAccounts.actAs'));return true;
+ });
+ assert.equal(calls.length,3);assert.ok(calls.every(c=>c.url.endsWith(':testIamPermissions')));
+});
+test('deployment preflight records the actual builder when all required grants are effective',async()=>{
+ const read=args=>args[0]==='builds'?JSON.stringify({serviceAccountEmail:'387653285986-compute@developer.gserviceaccount.com'}):'synthetic-access-token';
+ const request=async(_url,options)=>({status:200,body:JSON.parse(options.body)});
+ const result=await inspectDeployAccess({read,request});assert.equal(result.iamChanges,0);assert.equal(result.requiredDeploymentPermissions,true);
+});
 function fixture({functionData=fn(),service=run(),policy={bindings:[]},responseOverride,tokenEmail=VERIFIER}={}){
  const calls=[],commands=[];
  const read=args=>{commands.push(args);if(args[0]==='functions')return JSON.stringify(functionData);if(args[0]==='auth')return 'synthetic-access-token';return JSON.stringify(args[2]==='describe'?service:policy)};

@@ -118,7 +118,13 @@ jobs:
       - name: Check runtime IAM without changing it
         run: python3 scripts/check-digital-pass-runtime-iam.py
       - name: Deploy only the approved Digital Pass function
-        run: node tools/digital-pass-e2e/node_modules/firebase-tools/lib/bin/firebase.js deploy --config .digital-pass-real-pilot/firebase.json --only functions:digital-pass:digitalPassApi --project dns-core --non-interactive
+        # No IAM changes: detect the actual default builder and all deployment gaps together.
+        # This preflight intentionally executes before the Firebase upload/create request.
+        # Permission grants remain a separately approved administrator operation.
+        if: success()
+        run: |
+          node scripts/verify-digital-pass-closed.mjs --mode access --report .digital-pass-verification/access.json
+          node tools/digital-pass-e2e/node_modules/firebase-tools/lib/bin/firebase.js deploy --config .digital-pass-real-pilot/firebase.json --only functions:digital-pass:digitalPassApi --project dns-core --non-interactive
       - name: Verify closed deployment metadata without requiring an invoker
         if: inputs.phase != 'activate'
         run: node scripts/verify-digital-pass-closed.mjs --mode metadata --report .digital-pass-verification/metadata.json
