@@ -12,7 +12,7 @@ const key = defineSecret('DNS_PASS_HMAC_KEY');
 // A closed technical deployment must reject all operational routes before Auth, Firestore or inventory access.
 const apiClosed = defineString('DNS_PASS_API_CLOSED', { default:'true' });
 const origins = defineString('DNS_PASS_ALLOWED_ORIGINS');
-const revision = defineString('DNS_PASS_INVENTORY_REVISION');
+const revision = defineString('DNS_PASS_INVENTORY_REVISION', { default:'' });
 // Explicit opt-in keeps existing snapshot/emulator deployments compatible.
 const inventorySource = defineString('DNS_PASS_INVENTORY_SOURCE', { default:'snapshot' });
 const numberingStart = defineString('DNS_PASS_DATA_ENTRY_START_NUMBER', { default:'' });
@@ -20,7 +20,7 @@ const start = defineString('DNS_PASS_VALID_FROM', { default: '2026-11-15T00:00:0
 const end = defineString('DNS_PASS_VALID_UNTIL', { default: '2027-05-01T00:00:00+02:00' });
 const googleWalletIssuer = defineString('DNS_GOOGLE_WALLET_ISSUER_ID', { default: '' });
 const verificationBase = defineString('DNS_PASS_VERIFICATION_BASE', { default: '' });
-const notice = defineString('DNS_PASS_PRIVACY_NOTICE_VERSION');
+const notice = defineString('DNS_PASS_PRIVACY_NOTICE_VERSION', { default:'' });
 // Fail closed for the initial controlled deploy: never enable public registration by default.
 const registrationEnabled = defineString('DNS_PASS_REGISTRATION_ENABLED', { default: 'false' });
 // Empty claim flag preserves the reviewed legacy gate; explicit true permits
