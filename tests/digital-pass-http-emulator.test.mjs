@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
@@ -45,7 +46,7 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
    await scenario('10','Disabled registration returns 503 without authentication',async()=>{
     const r=await call('/v1/pass-registrations/complete');assert.equal(r.status,503);assert.equal(r.body.error,'REGISTRATION_DISABLED');return {http:503,error:r.body.error};
    });
-   await scenario('10-claim','Disabled sale claim is rejected; staging inventory guard remains intact',async()=>{
+   await scenario('10-claim','Disabled possession claim is rejected; staging inventory guard remains intact',async()=>{
     // Disabled phase has no seeded inventory. The staging boundary deliberately
     // rejects that missing synthetic snapshot before reaching the shared handler.
     const r=await call('/v1/pass-activations/claim');assert.equal(r.status,503);assert.equal(r.body.error,staging?'STAGING_UNAVAILABLE':'POSSESSION_CLAIM_DISABLED');return {http:503,error:r.body.error};
@@ -101,7 +102,7 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
    const r=await call('/v1/pass-activations/validate',token(who),{physicalPassId:prepared.physicalPassId,preparationId:prepared.preparationId});assert.equal(r.status,200,JSON.stringify(r));return r;
   }
   const claim=(number,prepared,who='holder-a',extra={})=>call('/v1/pass-registrations/complete',token(who),{passNumber:String(number),code:prepared.code,givenName:'Synthetic',familyName:'Test',language:'it',...extra});
-  await scenario('02-qr','Verified email claims prepared QR sale; operator polls status; registration remains optional',async()=>{
+  await scenario('02-qr','Verified email claims prepared QR handoff; operator polls status; registration remains optional',async()=>{
    const prepared=await prepare(6);
    const query={physicalPassId:prepared.physicalPassId,preparationId:prepared.preparationId};
    const pending=await call('/v1/pass-activations/status',token('operator-a'),query);
@@ -123,7 +124,7 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
    return {pending:'PENDING',verifiedEmailClaim:'POSSESSION_CONFIRMED',operatorStatus:'POSSESSION_CONFIRMED',foreignOperator:403,sameHolderRetry:200,otherHolderReplay:400,credentialsBeforeOptionalRegistration:0,credentialsAfter:1,marketingJobs:0};
   });
   let first,registration,pass;
-  await scenario('02','Prepare monouse activation code and attest sale through HTTP',async()=>{
+  await scenario('02','Prepare monouse activation code and confirm possession through HTTP',async()=>{
    const denied=await call('/v1/pass-activations/prepare',token('operator-b'),{passNumber:'1'});assert.equal(denied.status,403);
    first=await prepare(1);const stored=(await db.collection('passActivationChallenges').doc(first.physicalPassId).get()).data();
    assert.equal(stored.code,undefined);assert.match(stored.codeVerifier,/^[a-f0-9]{64}$/);
@@ -139,11 +140,11 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
   });
   await scenario('04','Recover holder pass, render and decode its QR image',async()=>{
    const list=await call('/v1/me/digital-passes',token('holder-a'));assert.equal(list.status,200);assert.ok(list.body.registrationIds.includes(registration));
-   const r=await call('/v1/me/digital-pass',token('holder-a'),{physicalPassId:registration});assert.equal(r.status,200);pass=r.body;
-   const denied=await call('/v1/me/digital-pass',token('holder-b'),{physicalPassId:registration});assert.equal(denied.status,400);
+   const r=await call('/v1/me/digital-pass/presentation',token('holder-a'),{physicalPassId:registration});assert.equal(r.status,200);pass=r.body;
+   const denied=await call('/v1/me/digital-pass/presentation',token('holder-b'),{physicalPassId:registration});assert.equal(denied.status,400);
    const req=createRequire(process.env.DNS_E2E_DEPS_ROOT?resolve(process.env.DNS_E2E_DEPS_ROOT,'package.json'):new URL('../tools/digital-pass-e2e/package.json',import.meta.url));
    const QRCode=req('qrcode');
-   const verificationUrl=functionBase+'/v/'+pass.qrPayload.slice('dns-pass:v1:'.length);
+   const verificationUrl=functionBase+'/p/'+pass.qrPayload.slice('dns-pass:v2:'.length);
    const image=await QRCode.toBuffer(verificationUrl,{width:420,margin:4});await writeFile(resolve(output,'synthetic-qr.png'),image);
    const {decodeRenderedQr}=await import('./helpers/digital-pass-rendered-qr.mjs');
    const decoded=decodeRenderedQr(image);assert.equal(decoded,verificationUrl);
@@ -157,7 +158,15 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
    const anonymous=await call('/v1/pass-validations/check',null,{qrPayload:pass.qrPayload});assert.equal(anonymous.status,401);
    return {authorized:{http:200,status:'VALID'},operatorWithoutGrant:403,anonymous:401};
   });
-  await scenario('05-qr','Verified customer QR claim automatically attests physical sale',async()=>{
+  await scenario('05-expiry','Expired dynamic QR is rejected and authenticated refresh issues a different token',async()=>{
+   const previous=pass.qrPayload, tokenValue=previous.split(':')[2];
+   await db.collection('passQrPresentations').doc(createHash('sha256').update(tokenValue).digest('hex')).update({expiresAt:Date.now()-1});
+   const expired=await call('/v1/pass-validations/check',token('operator-a'),{qrPayload:previous});assert.equal(expired.body.status,'UNKNOWN');
+   const r=await call('/v1/me/digital-pass/presentation',token('holder-a'),{physicalPassId:registration});assert.equal(r.status,200,JSON.stringify(r));pass=r.body;
+   assert.notEqual(pass.qrPayload,previous);assert.ok(pass.qrExpiresAt>Date.now());
+   return {expiredQr:'UNKNOWN',refreshed:true,syntheticOnly:true};
+  });
+  await scenario('05-qr','Verified customer QR claim automatically attests physical possession',async()=>{
     const prepared=await prepare(7);
     const args={physicalPassId:prepared.physicalPassId,preparationId:prepared.preparationId};
     const status=who=>call('/v1/pass-activations/status',token(who),args);
@@ -192,7 +201,7 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
   await scenario('08-09','Pass works without Brevo; marketing stays optional and disabled; no send jobs',async()=>{
    const r=await call('/v1/me/marketing/opt-in',token('holder-a'),{affirmative:true,language:'it'});assert.equal(r.status,503);assert.equal(r.body.error,'MARKETING_NOT_ENABLED');
    assert.equal((await db.collection('passMarketingOutbox').get()).size,0);
-   const get=await call('/v1/me/digital-pass',token('holder-a'),{physicalPassId:registration});assert.equal(get.status,200);assert.equal(get.body.status,'ACTIVE');
+   const get=await call('/v1/me/digital-pass/presentation',token('holder-a'),{physicalPassId:registration});assert.equal(get.status,200);assert.equal(get.body.status,'ACTIVE');
    return {marketingHttp:503,marketingError:'MARKETING_NOT_ENABLED',passHttp:200,passStatus:'ACTIVE',sendJobs:0,implicitConsent:false,providerCalls:0};
   });
   await scenario('06','Admin revocation immediately invalidates the QR; regular operator cannot revoke',async()=>{
@@ -200,7 +209,7 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
    const denied=await call('/v1/admin/pass-credentials/revoke',token('operator-a'),{credentialId:credential,reason:'Synthetic E2E'});assert.equal(denied.status,403);
    const revoked=await call('/v1/admin/pass-credentials/revoke',token('test-admin'),{credentialId:credential,reason:'Synthetic E2E'});assert.equal(revoked.status,200);
    const check=await call('/v1/pass-validations/check',token('operator-a'),{qrPayload:pass.qrPayload});assert.equal(check.body.status,'REVOKED');
-   const html=await fetch(functionBase+'/v/'+pass.qrPayload.slice('dns-pass:v1:'.length)).then(r=>r.text());assert.match(html,/UNGÜLTIG · NON VALIDO · INVALID/);
+   const html=await fetch(functionBase+'/p/'+pass.qrPayload.slice('dns-pass:v2:'.length)).then(r=>r.text());assert.match(html,/UNGÜLTIG · NON VALIDO · INVALID/);
    return {regularOperatorRevocation:403,adminRevocation:200,nextOperatorStatus:'REVOKED',nextPublicQrStatus:'INVALID'};
   });
   if(dataEntry)await scenario('11-data-entry','Changed order quantities cannot silently renumber printed cards',async()=>{
