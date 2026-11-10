@@ -29,6 +29,16 @@ def main():
             print("FAIL: runtime service account disabled")
             return 2
         print("PASS: runtime service account exists and is enabled")
+        auth_role = "projects/dns-core/roles/DNSDigitalPassAuthReader"
+        auth_bindings = [b for b in policy.get("bindings", []) if b.get("role") == auth_role and SA in b.get("members", [])]
+        if len(auth_bindings) != 1 or auth_bindings[0].get("condition"):
+            print("FAIL: reviewed Auth read binding is missing or conditional; no changes made")
+            return 2
+        role = run("iam", "roles", "describe", "DNSDigitalPassAuthReader")
+        if role.get("deleted") is True or set(role.get("includedPermissions", [])) != {"firebaseauth.users.get"}:
+            print("FAIL: Auth runtime role must contain only firebaseauth.users.get")
+            return 2
+        print("PASS: minimal Auth user-read role configured for revoked-token checks")
         secret = run("secrets", "get-iam-policy", "DNS_PASS_HMAC_KEY")
         permitted = [b for b in secret.get("bindings", []) if b.get("role") == "roles/secretmanager.secretAccessor" and SA in b.get("members", [])]
         if len(permitted) != 1:

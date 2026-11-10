@@ -1,0 +1,94 @@
+name: DNS Digital Pass limited pilot (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_target:
+        description: 'Type dns-core/digitalPassApi after the explicit release approval'
+        required: true
+        type: string
+      phase:
+        description: 'verify keeps claim/registration off; activate opens the bounded pilot; stop disables both'
+        required: true
+        type: choice
+        options: [verify, activate, stop]
+        default: verify
+permissions:
+  contents: read
+  checks: read
+  id-token: write
+concurrency:
+  group: dns-digital-pass-real-pilot
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main' && inputs.confirm_target == 'dns-core/digitalPassApi'
+    environment: dns-digital-pass-pilot
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DNS_PASS_RELEASE_PHASE: ${{ inputs.phase }}
+      DNS_PASS_DEPLOY_APPROVED: ${{ vars.DNS_PASS_DEPLOY_APPROVED }}
+      DNS_PASS_PRIVACY_REVIEWED: ${{ vars.DNS_PASS_PRIVACY_REVIEWED }}
+      DNS_PASS_PILOT_ORGANIZATION_ID: ${{ secrets.DNS_PASS_PILOT_ORGANIZATION_ID }}
+      DNS_PASS_PILOT_PASS_NUMBER: ${{ secrets.DNS_PASS_PILOT_PASS_NUMBER }}
+      DNS_PASS_PILOT_OPERATOR_UID: ${{ secrets.DNS_PASS_PILOT_OPERATOR_UID }}
+      DNS_PASS_PILOT_UNTIL: ${{ vars.DNS_PASS_PILOT_UNTIL }}
+      DNS_PASS_DATA_ENTRY_START_NUMBER: ${{ vars.DNS_PASS_DATA_ENTRY_START_NUMBER }}
+      DNS_PASS_INVENTORY_REVISION: ${{ vars.DNS_PASS_INVENTORY_REVISION }}
+      DNS_PASS_PRIVACY_NOTICE_VERSION: ${{ vars.DNS_PASS_PRIVACY_NOTICE_VERSION }}
+      DNS_PASS_PRIVACY_URL: ${{ vars.DNS_PASS_PRIVACY_URL }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Require passing synthetic checks on this exact commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'NODE'
+          const r=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+'/commits/'+process.env.GITHUB_SHA+'/check-runs?per_page=100',{headers:{Authorization:'Bearer '+process.env.GH_TOKEN}});
+          if(!r.ok)throw Error('CI_STATUS_UNAVAILABLE');
+          const {check_runs}=await r.json();
+          for(const name of ['domain','emulator','qr-renderer','http-e2e (1)','http-e2e (2)','http-e2e (3)','staging-emulator','pilot-release']){
+            if(check_runs.find(x=>x.name===name)?.conclusion!=='success')throw Error('SYNTHETIC_CHECK_REQUIRED: '+name);
+          }
+          NODE
+      - name: Build reviewed single-function release with closed defaults
+        run: node scripts/prepare-digital-pass-real-pilot.mjs
+      - name: Install pinned runtime and isolated Firebase CLI
+        run: |
+          npm ci --prefix .digital-pass-real-pilot/server --ignore-scripts
+          npm install --prefix tools/digital-pass-e2e --ignore-scripts --no-package-lock
+      - name: Verify single export before cloud authentication
+        run: |
+          node --input-type=module -e "const m=await import('./.digital-pass-real-pilot/server/firebase-entry.mjs');if(JSON.stringify(Object.keys(m))!==JSON.stringify(['digitalPassApi']))throw Error('UNEXPECTED_FUNCTION_EXPORT')"
+      - name: Verify deployment credential project without printing it
+        env:
+          DNS_DEPLOY_CREDENTIAL: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+        run: |
+          node --input-type=module -e "const c=JSON.parse(process.env.DNS_DEPLOY_CREDENTIAL||'{}');if(c.project_id!=='dns-core'||!c.client_email?.endsWith('@dns-core.iam.gserviceaccount.com'))throw Error('DNS_CORE_DEPLOY_CREDENTIAL_REQUIRED')"
+      - uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Check runtime IAM without changing it
+        run: python3 scripts/check-digital-pass-runtime-iam.py
+      - name: Deploy only the approved Digital Pass function
+        run: node tools/digital-pass-e2e/node_modules/firebase-tools/lib/bin/firebase.js deploy --config .digital-pass-real-pilot/firebase.json --only functions:digital-pass:digitalPassApi --project dns-core --non-interactive
+      - name: Verify identity, origin boundary and anonymous rejection
+        shell: bash
+        run: |
+          set -euo pipefail
+          ACTUAL_SA="$(gcloud functions describe digitalPassApi --gen2 --region=europe-west8 --project=dns-core --format='value(serviceConfig.serviceAccountEmail)')"
+          test "$ACTUAL_SA" = dns-digital-pass-runtime@dns-core.iam.gserviceaccount.com
+          API='https://europe-west8-dns-core.cloudfunctions.net/digitalPassApi'
+          WRONG="$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' -X POST "$API/v1/pass-activations/prepare" -H 'Origin: https://unapproved.example' -H 'Content-Type: application/json' --data '{}')"
+          test "$WRONG" = 403
+          CLOSED=503
+          if [ "$DNS_PASS_RELEASE_PHASE" = activate ]; then CLOSED=401; fi
+          for ROUTE in /v1/pass-activations/claim /v1/pass-registrations/complete; do
+            CODE="$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' -X POST "$API$ROUTE" -H 'Origin: https://dolomitinordicski.github.io' -H 'Content-Type: application/json' --data '{}')"
+            test "$CODE" = "$CLOSED"
+          done
+          echo 'Only infrastructure/auth smoke checks passed. Real operator and smartphone acceptance are still required.'
