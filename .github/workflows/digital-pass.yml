@@ -6,6 +6,8 @@ on:
     paths:
       - 'server/digital-pass-*.mjs'
       - 'server/firebase-entry.mjs'
+      - 'scripts/prepare-digital-pass-real-pilot.mjs'
+      - '.github/workflows/deploy-digital-pass-pilot.yml'
       - 'scripts/run-digital-pass-e2e.mjs'
       - 'firebase.e2e.json'
       - 'tools/digital-pass-e2e/**'
@@ -25,6 +27,8 @@ on:
       - 'tests/helpers/digital-pass-*.mjs'
       - 'src/access-control.ts'
       - 'server/firebase-entry.mjs'
+      - 'scripts/prepare-digital-pass-real-pilot.mjs'
+      - '.github/workflows/deploy-digital-pass-pilot.yml'
       - 'scripts/run-digital-pass-e2e.mjs'
       - 'firebase.e2e.json'
       - 'tools/digital-pass-e2e/**'
@@ -130,3 +134,28 @@ jobs:
           name: digital-pass-staging-emulator
           path: .digital-pass-e2e/results/
           if-no-files-found: warn
+
+  pilot-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Materialize only the real-pilot function with synthetic settings
+        run: |
+          node --input-type=module <<'NODE'
+          import {preparePilotRelease} from './scripts/prepare-digital-pass-real-pilot.mjs';
+          await preparePilotRelease({
+            DNS_PASS_RELEASE_PHASE:'verify',DNS_PASS_DEPLOY_APPROVED:'true',DNS_PASS_PRIVACY_REVIEWED:'true',
+            DNS_PASS_PILOT_ORGANIZATION_ID:'synthetic-org-a',DNS_PASS_PILOT_PASS_NUMBER:'1',DNS_PASS_PILOT_OPERATOR_UID:'synthetic-operator',
+            DNS_PASS_PILOT_UNTIL:new Date(Date.now()+3600000).toISOString(),DNS_PASS_DATA_ENTRY_START_NUMBER:'1',
+            DNS_PASS_INVENTORY_REVISION:'data-entry-2026-27-'+'a'.repeat(64),
+            DNS_PASS_PRIVACY_NOTICE_VERSION:'dns-digital-pass-2026-27-synthetic-v1',DNS_PASS_PRIVACY_URL:'https://example.test/privacy',
+          });
+          NODE
+      - run: npm ci --prefix .digital-pass-real-pilot/server --ignore-scripts
+      - name: Confirm single export without credentials or Firebase initialization
+        run: |
+          node --input-type=module -e "const m=await import('./.digital-pass-real-pilot/server/firebase-entry.mjs');if(JSON.stringify(Object.keys(m))!==JSON.stringify(['digitalPassApi']))throw Error('UNEXPECTED_FUNCTION_EXPORT')"
+      - run: python3 -m py_compile scripts/check-digital-pass-runtime-iam.py
