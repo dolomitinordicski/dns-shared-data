@@ -1,5 +1,6 @@
 /** Express-compatible HTTP adapter; usable by the existing Firebase environment.
  * Dependencies are injected so no credentials or project are selected at import time. */
+import { assertControlledPilotOpen, assertControlledPilotOperator, assertControlledPilotAssignment, assertControlledPilotNumber } from './digital-pass-controlled-pilot.mjs';
 import { getGoogleWalletLink } from './digital-pass-google-wallet.mjs';
 import { requestMarketingOptIn, withdrawMarketing } from './digital-pass-marketing.mjs';
 import { createHmac } from 'node:crypto';
@@ -9,13 +10,26 @@ import { prepareActivation, validateSale, reissueActivation, claimPreparedSale, 
 import { resolveSeasonPassAssignment, PILOT_SEASON, PILOT_PRODUCT } from './digital-pass-inventory-resolver.mjs';
 import { limitAttempts, registerDigitalPass, getDigitalPass, checkDigitalCredential, revokeDigitalCredential } from './digital-pass-registration.mjs';
 
-export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins, inventoryRevision, validFrom, validUntil, noticeVersion, registrationEnabled = false, marketingNoticeVersion = '', walletIssuerId = '', walletSigningJson = '', verificationBase = '', walletOrigins = [] }) {
+export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins, inventoryRevision, validFrom, validUntil, noticeVersion, registrationEnabled = false, saleClaimEnabled = registrationEnabled, pilot = null, marketingNoticeVersion = '', walletIssuerId = '', walletSigningJson = '', verificationBase = '', walletOrigins = [] }) {
   if (typeof hmacSecret !== 'string' || hmacSecret.length < 32 || !inventoryRevision || !noticeVersion ||
       !Array.isArray(allowedOrigins) || !allowedOrigins.length || !Number.isFinite(validFrom) || !Number.isFinite(validUntil) || validFrom >= validUntil) throw new Error('DIGITAL_PASS_CONFIGURATION_REQUIRED');
   const resolveAssignment = async input => {
+    assertControlledPilotNumber(pilot, input.passNumber);
     const snapshot = await db.collection('passInventorySnapshots').doc(inventoryRevision).get();
     if (!snapshot.exists || snapshot.data().revision !== inventoryRevision) throw new Error('INVENTORY_UNAVAILABLE');
-    return resolveSeasonPassAssignment({ ...input, snapshot: snapshot.data() });
+    const assignment = resolveSeasonPassAssignment({ ...input, snapshot: snapshot.data() });
+    assertControlledPilotAssignment(pilot, assignment);
+    return assignment;
+  };
+  const pilotPaths = new Set(['/v1/pass-activations/prepare', '/v1/pass-activations/claim',
+    '/v1/pass-activations/status', '/v1/pass-activations/validate',
+    '/v1/pass-registrations/complete', '/v1/admin/pass-activations/reissue']);
+  const pilotRecord = async (collection, id) => {
+    if (!pilot) return;
+    if (typeof id !== 'string' || !/^[a-f0-9]{64}$/.test(id)) throw Error('FORBIDDEN');
+    const record = await db.collection(collection).doc(id).get();
+    if (!record.exists) throw Error('FORBIDDEN');
+    assertControlledPilotAssignment(pilot, record.data());
   };
   return async (req, res) => {
     res.set('Cache-Control', 'no-store');
@@ -43,7 +57,10 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
     // Disable new registrations at the HTTP boundary, before any auth or database calls.
     if (req.path === '/v1/pass-registrations/complete' && registrationEnabled !== true)
       return res.status(503).json({ error: 'REGISTRATION_DISABLED' });
+    if (req.path === '/v1/pass-activations/claim' && saleClaimEnabled !== true)
+      return res.status(503).json({ error: 'SALE_CLAIM_DISABLED' });
     try {
+      if (pilotPaths.has(req.path)) assertControlledPilotOpen(pilot);
       if (!req.is('application/json') || !req.body || Buffer.byteLength(JSON.stringify(req.body)) > 8192) return res.status(400).json({ error: 'INVALID_REQUEST' });
       const match = /^Bearer (\S+)$/.exec(req.get('Authorization') || '');
       if (!match) return res.status(401).json({ error: 'UNAUTHORIZED' });
@@ -56,7 +73,6 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
       const path = req.path;
       let result;
       if (path === '/v1/pass-activations/claim') {
-        if (registrationEnabled !== true) return res.status(503).json({ error: 'REGISTRATION_DISABLED' });
         await limitAttempts({ db, key: createHmac('sha256', hmacSecret).update('qr-claim:' + identity.uid).digest('hex'), max: 8 });
         result = await claimPreparedSale({ db, identity, assignment: await resolveAssignment(inventory),
           code: b.code, hmacSecret });
@@ -83,6 +99,11 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
         result = await getDigitalPass({ db, identity, physicalPassId: b.physicalPassId });
       } else {
         const actor = await loadDigitalPassActor({ db, auth, idToken: token });
+        if (pilotPaths.has(path)) {
+          assertControlledPilotOperator(pilot, actor);
+          if (['/v1/pass-activations/status', '/v1/pass-activations/validate', '/v1/admin/pass-activations/reissue'].includes(path))
+            await pilotRecord('passActivationChallenges', b.physicalPassId);
+        }
         if (path === '/v1/pass-activations/prepare') result = await prepareActivation({ db, actor, ...inventory, resolveAssignment, hmacSecret });
         else if (path === '/v1/pass-activations/validate') result = await validateSale({ db, actor, physicalPassId: b.physicalPassId, preparationId: b.preparationId });
         else if (path === '/v1/pass-activations/status') result = await getPreparedSaleStatus({ db, actor, physicalPassId: b.physicalPassId, preparationId: b.preparationId });
@@ -91,12 +112,16 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
           if (Date.now() >= validUntil) throw new Error('CANNOT_REISSUE');
           result = await reissueActivation({ db, actor, physicalPassId: b.physicalPassId, idempotencyKey: b.idempotencyKey, reason: b.reason, hmacSecret });
         }
-        else if (path === '/v1/admin/pass-credentials/revoke') result = await revokeDigitalCredential({ db, actor, credentialId: b.credentialId, reason: b.reason });
+        else if (path === '/v1/admin/pass-credentials/revoke') {
+          await pilotRecord('digitalCredentials', b.credentialId);
+          result = await revokeDigitalCredential({ db, actor, credentialId: b.credentialId, reason: b.reason });
+        }
         else return res.status(404).json({ error: 'NOT_FOUND' });
       }
       return res.status(200).json(result);
     } catch (error) {
       const code = error?.message;
+      if (code === 'PILOT_WINDOW_CLOSED') return res.status(503).json({ error: code });
       if (code === 'GOOGLE_WALLET_NOT_CONFIGURED') return res.status(503).json({ error: code });
       if (code === 'RATE_LIMITED') return res.status(429).json({ error: code });
       if (code === 'FORBIDDEN') return res.status(403).json({ error: code });
