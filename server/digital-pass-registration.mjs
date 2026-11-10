@@ -1,3 +1,4 @@
+import {resolveDynamicQr} from './digital-pass-dynamic-qr.mjs';
 import { randomBytes, createHash, timingSafeEqual, randomUUID } from 'node:crypto';
 import { hashActivationCode } from './digital-pass-activation.mjs';
 const digest = value => createHash('sha256').update(value).digest('hex');
@@ -43,7 +44,7 @@ export async function registerDigitalPass({ db, identity, assignment, code, give
     if (!challenge.exists || typeof code !== 'string' || !/^[A-HJ-NP-Z2-9]{6}$/.test(code)) throw deny();
     const record = challenge.data();
     const verifier = hashActivationCode(code, id, hmacSecret);
-    if (record.status !== 'ENABLED' || record.expiresAt <= now || (record.claimedByUid && record.claimedByUid !== identity.uid) || record.organizationId !== assignment.organizationId || record.sourceRevision !== assignment.sourceRevision ||
+    if (record.status !== 'ENABLED' || record.possessionStatus !== 'POSSESSION_CONFIRMED' || !Number.isFinite(record.possessionConfirmedAt) || record.expiresAt <= now || (record.claimedByUid && record.claimedByUid !== identity.uid) || record.organizationId !== assignment.organizationId || record.sourceRevision !== assignment.sourceRevision ||
       typeof record.codeVerifier !== 'string' || record.codeVerifier.length !== 64 ||
       !timingSafeEqual(Buffer.from(record.codeVerifier), Buffer.from(verifier))) throw deny();
     tx.create(registrationRef, { physicalPassId: id, holderUid: identity.uid, status: 'ACTIVE',
@@ -86,8 +87,10 @@ export async function getDigitalPass({ db, identity, physicalPassId }) {
 
 export async function checkDigitalCredential({ db, actor, qrPayload, now = Date.now() }) {
   if (!actor?.uid || !(actor.isDnsAdmin === true || actor.grants?.some(g => g.permissions?.includes('passValidation.check')))) throw new Error('FORBIDDEN');
-  if (typeof qrPayload !== 'string' || !/^dns-pass:v1:[A-Za-z0-9_-]{43}$/.test(qrPayload)) return { status: 'UNKNOWN' };
-  const credentialId = digest(qrPayload.slice('dns-pass:v1:'.length));
+  if (typeof qrPayload !== 'string' || !/^dns-pass:v[12]:[A-Za-z0-9_-]{43}$/.test(qrPayload)) return { status: 'UNKNOWN' };
+  const token=qrPayload.slice('dns-pass:v1:'.length);
+  const credentialId=qrPayload.startsWith('dns-pass:v2:')?await resolveDynamicQr({db,token,now}):digest(token);
+  if(!credentialId)return {status:'UNKNOWN'};
   return db.runTransaction(async tx => {
     const credential = await tx.get(ref(db, 'digitalCredentials', credentialId));
     if (!credential.exists) return { status: 'UNKNOWN' };
@@ -116,3 +119,4 @@ export async function revokeDigitalCredential({ db, actor, credentialId, reason,
     return { status: 'REVOKED', alreadyRevoked: false };
   });
 }
+

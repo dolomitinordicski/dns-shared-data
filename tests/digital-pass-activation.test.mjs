@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateActivationCode, hashActivationCode, prepareActivation, validateSale } from '../server/digital-pass-activation.mjs';
+import { generateActivationCode, hashActivationCode, prepareActivation, confirmPossession } from '../server/digital-pass-activation.mjs';
 
 class MemoryDb {
   constructor() { this.values = new Map(); }
@@ -24,7 +24,7 @@ class MemoryDb {
 const assignment = { physicalPassId: 'season2026-dns-1234', organizationId: 'toblach',
   seasonId: '2026-27', productCode: 'sk-dns', eligibleForDnsSeasonPilot: true, sourceRevision: 'matrix-v1', printedNumber: '001234' };
 const actor = { uid: 'operatorA', grants: [
-  { organizationId: 'toblach', permissions: ['passActivation.issue', 'passSale.attest'] },
+  { organizationId: 'toblach', permissions: ['passActivation.issue', 'passPossession.attest'] },
 ] };
 const hmacSecret = 'random-server-secret-from-secret-manager-not-client';
 
@@ -46,9 +46,9 @@ test('prepare and Validate attest sale atomically, without storing plaintext', a
   await assert.rejects(prepareActivation({ db, actor, passNumber: '1234',
     seasonId: '2026-27', productCode: 'sk-dns',
     resolveAssignment: async () => assignment, hmacSecret, now: 1001 }), /PREPARATION_ALREADY_EXISTS/);
-  const first = await validateSale({ db, actor, physicalPassId: assignment.physicalPassId, preparationId: db.values.get('passActivationChallenges/' + assignment.physicalPassId)?.nonce, now: 1100 });
+  const first = await confirmPossession({ db, actor, physicalPassId: assignment.physicalPassId, preparationId: db.values.get('passActivationChallenges/' + assignment.physicalPassId)?.nonce, now: 1100 });
   assert.equal(first.alreadyValidated, false);
-  const second = await validateSale({ db, actor, physicalPassId: assignment.physicalPassId, preparationId: db.values.get('passActivationChallenges/' + assignment.physicalPassId)?.nonce, now: 1101 });
+  const second = await confirmPossession({ db, actor, physicalPassId: assignment.physicalPassId, preparationId: db.values.get('passActivationChallenges/' + assignment.physicalPassId)?.nonce, now: 1101 });
   assert.equal(second.alreadyValidated, true);
   assert.equal(db.values.get('passActivationChallenges/' + assignment.physicalPassId).status, 'ENABLED');
 });
@@ -56,7 +56,7 @@ test('prepare and Validate attest sale atomically, without storing plaintext', a
 test('wrong organization cannot issue or validate; cannot Validate expired preparation', async () => {
   const db = new MemoryDb();
   const wrong = { uid: 'other', grants: [
-    { organizationId: 'other', permissions: ['passActivation.issue', 'passSale.attest'] },
+    { organizationId: 'other', permissions: ['passActivation.issue', 'passPossession.attest'] },
   ] };
   await assert.rejects(prepareActivation({ db, actor: wrong, passNumber: '1234',
     seasonId: '2026-27', productCode: 'sk-dns',
@@ -64,8 +64,9 @@ test('wrong organization cannot issue or validate; cannot Validate expired prepa
   await prepareActivation({ db, actor, passNumber: '1234',
     seasonId: '2026-27', productCode: 'sk-dns',
     resolveAssignment: async () => assignment, hmacSecret, now: 1000 });
-  await assert.rejects(validateSale({ db, actor: wrong,
+  await assert.rejects(confirmPossession({ db, actor: wrong,
     physicalPassId: assignment.physicalPassId, preparationId: db.values.get('passActivationChallenges/' + assignment.physicalPassId)?.nonce, now: 1100 }), /FORBIDDEN/);
-  await assert.rejects(validateSale({ db, actor,
+  await assert.rejects(confirmPossession({ db, actor,
     physicalPassId: assignment.physicalPassId, preparationId: db.values.get('passActivationChallenges/' + assignment.physicalPassId)?.nonce, now: 1000 + 11 * 60 * 1000 }), /INVALID_PREPARATION/);
 });
+

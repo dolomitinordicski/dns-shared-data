@@ -1,3 +1,4 @@
+import {issueDynamicQr} from './digital-pass-dynamic-qr.mjs';
 /** Express-compatible HTTP adapter; usable by the existing Firebase environment.
  * Dependencies are injected so no credentials or project are selected at import time. */
 import { assertControlledPilotOpen, assertControlledPilotOperator, assertControlledPilotAssignment, assertControlledPilotNumber } from './digital-pass-controlled-pilot.mjs';
@@ -7,11 +8,11 @@ import { requestMarketingOptIn, withdrawMarketing } from './digital-pass-marketi
 import { createHmac } from 'node:crypto';
 import { verifyPublicPass, renderPublicPassHtml } from './digital-pass-public-verify.mjs';
 import { loadDigitalPassActor } from './digital-pass-auth.mjs';
-import { prepareActivation, validateSale, reissueActivation, claimPreparedSale, getPreparedSaleStatus } from './digital-pass-activation.mjs';
+import { prepareActivation, confirmPossession, reissueActivation, claimPreparedPossession, getPreparedPossessionStatus } from './digital-pass-activation.mjs';
 import { resolveSeasonPassAssignment, PILOT_SEASON, PILOT_PRODUCT } from './digital-pass-inventory-resolver.mjs';
 import { limitAttempts, registerDigitalPass, getDigitalPass, checkDigitalCredential, revokeDigitalCredential } from './digital-pass-registration.mjs';
 
-export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins, inventoryRevision, inventorySource = 'snapshot', dataEntryStartNumber, validFrom, validUntil, noticeVersion, registrationEnabled = false, saleClaimEnabled = registrationEnabled, pilot = null, marketingNoticeVersion = '', walletIssuerId = '', walletSigningJson = '', verificationBase = '', walletOrigins = [] }) {
+export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins, inventoryRevision, inventorySource = 'snapshot', dataEntryStartNumber, validFrom, validUntil, noticeVersion, registrationEnabled = false, possessionClaimEnabled = registrationEnabled, pilot = null, marketingNoticeVersion = '', walletIssuerId = '', walletSigningJson = '', verificationBase = '', walletOrigins = [] }) {
   if (typeof hmacSecret !== 'string' || hmacSecret.length < 32 || !inventoryRevision || !noticeVersion ||
       !Array.isArray(allowedOrigins) || !allowedOrigins.length || !Number.isFinite(validFrom) || !Number.isFinite(validUntil) || validFrom >= validUntil) throw new Error('DIGITAL_PASS_CONFIGURATION_REQUIRED');
   if (!['snapshot','data-entry'].includes(inventorySource) || (inventorySource === 'data-entry' &&
@@ -47,9 +48,9 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
     res.set('Referrer-Policy', 'no-referrer');
     res.set('X-Content-Type-Options', 'nosniff');
     // Camera QR opens a public, read-only live status page. No holder data or login.
-    if (req.method === 'GET' && typeof req.path === 'string' && req.path.startsWith('/v/') && /^[A-Za-z0-9_-]{43}$/.test(req.path.slice(3))) {
+    if (req.method === 'GET' && typeof req.path === 'string' && (req.path.startsWith('/v/') || req.path.startsWith('/p/')) && /^[A-Za-z0-9_-]{43}$/.test(req.path.slice(3))) {
       try {
-        const status = await verifyPublicPass({ db, token: req.path.slice(3) });
+        const status = await verifyPublicPass({ db, token: req.path.slice(3), dynamic:req.path.startsWith('/p/') });
         res.set('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
         return res.status(200).type('html').send(renderPublicPassHtml(status));
       } catch {
@@ -67,8 +68,8 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
     // Disable new registrations at the HTTP boundary, before any auth or database calls.
     if (req.path === '/v1/pass-registrations/complete' && registrationEnabled !== true)
       return res.status(503).json({ error: 'REGISTRATION_DISABLED' });
-    if (req.path === '/v1/pass-activations/claim' && saleClaimEnabled !== true)
-      return res.status(503).json({ error: 'SALE_CLAIM_DISABLED' });
+    if (req.path === '/v1/pass-activations/claim' && possessionClaimEnabled !== true)
+      return res.status(503).json({ error: 'POSSESSION_CLAIM_DISABLED' });
     try {
       if (pilotPaths.has(req.path)) assertControlledPilotOpen(pilot);
       if (!req.is('application/json') || !req.body || Buffer.byteLength(JSON.stringify(req.body)) > 8192) return res.status(400).json({ error: 'INVALID_REQUEST' });
@@ -84,7 +85,7 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
       let result;
       if (path === '/v1/pass-activations/claim') {
         await limitAttempts({ db, key: createHmac('sha256', hmacSecret).update('qr-claim:' + identity.uid).digest('hex'), max: 8 });
-        result = await claimPreparedSale({ db, identity, assignment: await resolveAssignment(inventory),
+        result = await claimPreparedPossession({ db, identity, assignment: await resolveAssignment(inventory),
           code: b.code, hmacSecret });
       } else if (path === '/v1/pass-registrations/complete') {
         result = await registerDigitalPass({ db, identity, assignment: await resolveAssignment(inventory),
@@ -105,6 +106,10 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
         if (identity.email_verified !== true) throw new Error('UNAUTHORIZED');
         const registrations = await db.collection('passRegistrations').where('holderUid', '==', identity.uid).get();
         result = { registrationIds: registrations.docs.filter(s => s.data().status === 'ACTIVE').map(s => s.id) };
+      } else if (path === '/v1/me/digital-pass/presentation') {
+        const pass=await getDigitalPass({db,identity,physicalPassId:b.physicalPassId});
+        const qr=await issueDynamicQr({db,identity,physicalPassId:b.physicalPassId});
+        result={...pass,...qr};
       } else if (path === '/v1/me/digital-pass') {
         result = await getDigitalPass({ db, identity, physicalPassId: b.physicalPassId });
       } else {
@@ -115,8 +120,8 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
             await pilotRecord('passActivationChallenges', b.physicalPassId);
         }
         if (path === '/v1/pass-activations/prepare') result = await prepareActivation({ db, actor, ...inventory, resolveAssignment, hmacSecret });
-        else if (path === '/v1/pass-activations/validate') result = await validateSale({ db, actor, physicalPassId: b.physicalPassId, preparationId: b.preparationId });
-        else if (path === '/v1/pass-activations/status') result = await getPreparedSaleStatus({ db, actor, physicalPassId: b.physicalPassId, preparationId: b.preparationId });
+        else if (path === '/v1/pass-activations/validate') result = await confirmPossession({ db, actor, physicalPassId: b.physicalPassId, preparationId: b.preparationId });
+        else if (path === '/v1/pass-activations/status') result = await getPreparedPossessionStatus({ db, actor, physicalPassId: b.physicalPassId, preparationId: b.preparationId });
         else if (path === '/v1/pass-validations/check') result = await checkDigitalCredential({ db, actor, qrPayload: b.qrPayload });
         else if (path === '/v1/admin/pass-activations/reissue') {
           if (Date.now() >= validUntil) throw new Error('CANNOT_REISSUE');
@@ -136,10 +141,11 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
       if (code === 'RATE_LIMITED') return res.status(429).json({ error: code });
       if (code === 'FORBIDDEN') return res.status(403).json({ error: code });
       if (code === 'UNAUTHORIZED' || error?.code?.startsWith('auth/')) return res.status(401).json({ error: 'UNAUTHORIZED' });
-      const operational = ['CANNOT_REISSUE', 'INVALID_REISSUE', 'PASS_ALREADY_ACTIVATED', 'PREPARATION_ALREADY_EXISTS', 'SALE_ALREADY_ATTESTED', 'STALE_PREPARATION', 'INVALID_PREPARATION', 'PREPARED_BY_OTHER_OPERATOR', 'NO_PREPARATION', 'INVALID_PREPARATION'];
+      const operational = ['CANNOT_REISSUE', 'INVALID_REISSUE', 'PASS_ALREADY_ACTIVATED', 'PREPARATION_ALREADY_EXISTS', 'POSSESSION_ALREADY_CONFIRMED', 'STALE_PREPARATION', 'INVALID_PREPARATION', 'PREPARED_BY_OTHER_OPERATOR', 'NO_PREPARATION', 'INVALID_PREPARATION'];
       if (operational.includes(code)) return res.status(409).json({ error: code });
       // Avoid pass/email enumeration and never log requests, secrets or arbitrary error text.
       return res.status(400).json({ error: 'REQUEST_NOT_COMPLETED' });
     }
   };
 }
+

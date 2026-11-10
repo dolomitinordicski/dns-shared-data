@@ -79,7 +79,7 @@ async function fixture() {
  const db=seed();
  db.values.set('users/operator',{active:true,globalRoles:[]});
  db.values.set('memberships/operator',{userId:'operator',organizationId:'org-a',active:true});
- db.values.set('accessGrants/operator',{userId:'operator',scopeType:'organization',scopeId:'org-a',permissions:['passActivation.issue','passSale.attest'],active:true});
+ db.values.set('accessGrants/operator',{userId:'operator',scopeType:'organization',scopeId:'org-a',permissions:['passActivation.issue','passPossession.attest'],active:true});
  const inventoryRevision=(await loadDataEntryInventory({db,startNumber:101})).revision;
  const options={db,auth:{verifyIdToken:async(uid,revoked)=>{assert.equal(revoked,true);return{uid,email:uid+'@example.test',email_verified:true}}},
  hmacSecret:'synthetic-data-entry-test-key-not-for-cloud',allowedOrigins:['https://example.test'],inventoryRevision,
@@ -94,9 +94,9 @@ test('HTTP uses Data Entry directly with organization permissions and optional r
  assert.equal(prepared.code,200);
  const body={passNumber:'110',code:prepared.data.code};
  const claim=await request(handler,'/v1/pass-activations/claim','holder',body);
- assert.equal(claim.code,200);assert.equal(claim.data.status,'SOLD_ATTESTED');
+ assert.equal(claim.code,200);assert.equal(claim.data.status,'POSSESSION_CONFIRMED');
  const status=await request(handler,'/v1/pass-activations/status','operator',{physicalPassId:prepared.data.physicalPassId,preparationId:prepared.data.preparationId});
- assert.equal(status.data.status,'SOLD_ATTESTED');
+ assert.equal(status.data.status,'POSSESSION_CONFIRMED');
  assert.equal([...db.values.keys()].filter(k=>k.startsWith('digitalCredentials/')).length,0);
  const result=await request(handler,'/v1/pass-registrations/complete','holder',{...body,givenName:'Synthetic',familyName:'Test',language:'it'});
  assert.equal(result.code,200);
@@ -121,3 +121,4 @@ test('wrong revision or missing Data Entry source never falls back to a copied s
  assert.throws(()=>createDigitalPassHandler({...options,inventorySource:'typo'}));
  assert.throws(()=>createDigitalPassHandler({...options,dataEntryStartNumber:undefined}));
 });
+

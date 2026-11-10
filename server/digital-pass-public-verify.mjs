@@ -1,10 +1,12 @@
+import {resolveDynamicQr} from './digital-pass-dynamic-qr.mjs';
 import { createHash } from 'node:crypto';
 
 // Public verification shows status only; it never exposes a holder's name, email or number.
 // QR URLs are bearer credentials: do not embed them in analytics, logs or referrers.
-export async function verifyPublicPass({ db, token, now = Date.now() }) {
+export async function verifyPublicPass({ db, token, now = Date.now(), dynamic = false }) {
   if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(token)) return 'UNKNOWN';
-  const credentialId = createHash('sha256').update(token).digest('hex');
+  const credentialId = dynamic ? await resolveDynamicQr({db,token,now}) : createHash('sha256').update(token).digest('hex');
+  if(!credentialId)return 'UNKNOWN';
   const credential = await db.collection('digitalCredentials').doc(credentialId).get();
   if (!credential.exists) return 'UNKNOWN';
   const c = credential.data();
@@ -36,3 +38,4 @@ small{color:#597274}button{font:inherit;padding:12px 22px;background:#1b494b;col
 <p class="status" role="status">${message}</p><p>DNS Saisonkarte 2026/27</p>
 <small>Online geprüft · Verificato online · Checked online</small><div><button onclick="location.reload()">Aktualisieren · Aggiorna</button></div></main></body></html>`;
 }
+
