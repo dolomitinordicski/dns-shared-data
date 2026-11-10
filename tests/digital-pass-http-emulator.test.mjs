@@ -41,8 +41,10 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
    await scenario('10','Disabled registration returns 503 without authentication',async()=>{
     const r=await call('/v1/pass-registrations/complete');assert.equal(r.status,503);assert.equal(r.body.error,'REGISTRATION_DISABLED');return {http:503,error:r.body.error};
    });
-   await scenario('10-claim','Disabled sale claim rejects before authentication',async()=>{
-    const r=await call('/v1/pass-activations/claim');assert.equal(r.status,503);assert.equal(r.body.error,'SALE_CLAIM_DISABLED');return {http:503,error:r.body.error};
+   await scenario('10-claim','Disabled sale claim is rejected; staging inventory guard remains intact',async()=>{
+    // Disabled phase has no seeded inventory. The staging boundary deliberately
+    // rejects that missing synthetic snapshot before reaching the shared handler.
+    const r=await call('/v1/pass-activations/claim');assert.equal(r.status,503);assert.equal(r.body.error,staging?'STAGING_UNAVAILABLE':'SALE_CLAIM_DISABLED');return {http:503,error:r.body.error};
    });return;
   }
   const {initializeApp,deleteApp}=await import('firebase-admin/app');
