@@ -24,7 +24,7 @@ const notice = defineString('DNS_PASS_PRIVACY_NOTICE_VERSION', { default:'' });
 // Fail closed for the initial controlled deploy: never enable public registration by default.
 const registrationEnabled = defineString('DNS_PASS_REGISTRATION_ENABLED', { default: 'false' });
 // Empty claim flag preserves the reviewed legacy gate; explicit true permits
-// verified sale confirmation while optional pass registration remains false.
+// verified physical possession while optional pass registration remains false.
 const possessionClaimEnabled = defineString('DNS_PASS_POSSESSION_CLAIM_ENABLED', { default: '' });
 const pilotEnabled = defineString('DNS_PASS_PILOT_ENABLED', { default: 'false' });
 const pilotOrganization = defineString('DNS_PASS_PILOT_ORGANIZATION_ID', { default: '' });
@@ -50,7 +50,7 @@ export const digitalPassApi = onRequest({ region, serviceAccount: DIGITAL_PASS_R
     const pilot = controlledPilotSettings({ enabled: pilotEnabled.value(),
       organizationId: pilotOrganization.value(), passNumber: pilotNumber.value(),
       operatorUid: pilotOperator.value(), until: pilotUntil.value() });
-    if (!['', 'true', 'false'].includes(possessionClaimEnabled.value())) throw Error('INVALID_SALE_CLAIM_FLAG');
+    if (!['', 'true', 'false'].includes(possessionClaimEnabled.value())) throw Error('INVALID_POSSESSION_CLAIM_FLAG');
     const app = getApps()[0] ?? initializeApp();
     const handler = createDigitalPassHandler({ db: getFirestore(app), auth: getAuth(app), hmacSecret: key.value(),
       allowedOrigins: origins.value().split(',').map(v => v.trim()).filter(Boolean), inventoryRevision: revision.value(),
