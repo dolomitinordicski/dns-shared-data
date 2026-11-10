@@ -7,7 +7,7 @@ on:
         required: true
         type: string
       phase:
-        description: 'preflight checks local code only (no cloud); verify deploys closed; activate opens bounded pilot; stop disables both'
+        description: 'preflight is local only; verify deploys all API routes closed without pass details; activate opens the bounded pilot; stop disables claims'
         required: true
         type: choice
         options: [preflight, verify, activate, stop]
@@ -68,7 +68,7 @@ jobs:
             if(check_runs.find(x=>x.name===name)?.conclusion!=='success')throw Error('SYNTHETIC_CHECK_REQUIRED: '+name);
           }
           NODE
-      - name: Build reviewed single-function release with closed defaults
+      - name: Build reviewed single-function release (verify refuses all API operations)
         run: node scripts/prepare-digital-pass-real-pilot.mjs
       - name: Install pinned runtime and isolated Firebase CLI
         run: |
