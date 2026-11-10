@@ -1,6 +1,7 @@
 /** Express-compatible HTTP adapter; usable by the existing Firebase environment.
  * Dependencies are injected so no credentials or project are selected at import time. */
 import { assertControlledPilotOpen, assertControlledPilotOperator, assertControlledPilotAssignment, assertControlledPilotNumber } from './digital-pass-controlled-pilot.mjs';
+import { loadDataEntryInventory } from './digital-pass-data-entry-inventory.mjs';
 import { getGoogleWalletLink } from './digital-pass-google-wallet.mjs';
 import { requestMarketingOptIn, withdrawMarketing } from './digital-pass-marketing.mjs';
 import { createHmac } from 'node:crypto';
@@ -10,14 +11,23 @@ import { prepareActivation, validateSale, reissueActivation, claimPreparedSale, 
 import { resolveSeasonPassAssignment, PILOT_SEASON, PILOT_PRODUCT } from './digital-pass-inventory-resolver.mjs';
 import { limitAttempts, registerDigitalPass, getDigitalPass, checkDigitalCredential, revokeDigitalCredential } from './digital-pass-registration.mjs';
 
-export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins, inventoryRevision, validFrom, validUntil, noticeVersion, registrationEnabled = false, saleClaimEnabled = registrationEnabled, pilot = null, marketingNoticeVersion = '', walletIssuerId = '', walletSigningJson = '', verificationBase = '', walletOrigins = [] }) {
+export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins, inventoryRevision, inventorySource = 'snapshot', dataEntryStartNumber, validFrom, validUntil, noticeVersion, registrationEnabled = false, saleClaimEnabled = registrationEnabled, pilot = null, marketingNoticeVersion = '', walletIssuerId = '', walletSigningJson = '', verificationBase = '', walletOrigins = [] }) {
   if (typeof hmacSecret !== 'string' || hmacSecret.length < 32 || !inventoryRevision || !noticeVersion ||
       !Array.isArray(allowedOrigins) || !allowedOrigins.length || !Number.isFinite(validFrom) || !Number.isFinite(validUntil) || validFrom >= validUntil) throw new Error('DIGITAL_PASS_CONFIGURATION_REQUIRED');
+  if (!['snapshot','data-entry'].includes(inventorySource) || (inventorySource === 'data-entry' &&
+      (!Number.isSafeInteger(dataEntryStartNumber) || dataEntryStartNumber < 1))) throw Error('DIGITAL_PASS_CONFIGURATION_REQUIRED');
   const resolveAssignment = async input => {
     assertControlledPilotNumber(pilot, input.passNumber);
-    const snapshot = await db.collection('passInventorySnapshots').doc(inventoryRevision).get();
-    if (!snapshot.exists || snapshot.data().revision !== inventoryRevision) throw new Error('INVENTORY_UNAVAILABLE');
-    const assignment = resolveSeasonPassAssignment({ ...input, snapshot: snapshot.data() });
+    let snapshot;
+    if (inventorySource === 'data-entry') {
+      snapshot = await loadDataEntryInventory({db, startNumber:dataEntryStartNumber});
+    } else {
+      const record = await db.collection('passInventorySnapshots').doc(inventoryRevision).get();
+      if (!record.exists) throw Error('INVENTORY_UNAVAILABLE');
+      snapshot = record.data();
+    }
+    if (snapshot.revision !== inventoryRevision) throw Error('INVENTORY_UNAVAILABLE');
+    const assignment = resolveSeasonPassAssignment({ ...input, snapshot });
     assertControlledPilotAssignment(pilot, assignment);
     return assignment;
   };
