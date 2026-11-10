@@ -3,6 +3,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { onRequest } from 'firebase-functions/v2/https';
 import { defineSecret, defineString } from 'firebase-functions/params';
+import { controlledPilotSettings } from './digital-pass-controlled-pilot.mjs';
 import { createDigitalPassHandler } from './digital-pass-http.mjs';
 // Dedicated runtime identity; never inherit the default Functions/Compute service account.
 const DIGITAL_PASS_RUNTIME_SA = 'dns-digital-pass-runtime@dns-core.iam.gserviceaccount.com';
@@ -16,14 +17,28 @@ const verificationBase = defineString('DNS_PASS_VERIFICATION_BASE', { default: '
 const notice = defineString('DNS_PASS_PRIVACY_NOTICE_VERSION');
 // Fail closed for the initial controlled deploy: never enable public registration by default.
 const registrationEnabled = defineString('DNS_PASS_REGISTRATION_ENABLED', { default: 'false' });
+// Empty claim flag preserves the reviewed legacy gate; explicit true permits
+// verified sale confirmation while optional pass registration remains false.
+const saleClaimEnabled = defineString('DNS_PASS_SALE_CLAIM_ENABLED', { default: '' });
+const pilotEnabled = defineString('DNS_PASS_PILOT_ENABLED', { default: 'false' });
+const pilotOrganization = defineString('DNS_PASS_PILOT_ORGANIZATION_ID', { default: '' });
+const pilotNumber = defineString('DNS_PASS_PILOT_PASS_NUMBER', { default: '' });
+const pilotOperator = defineString('DNS_PASS_PILOT_OPERATOR_UID', { default: '' });
+const pilotUntil = defineString('DNS_PASS_PILOT_UNTIL', { default: '' });
 // Region must be reviewed together with DNS Core data residency before deployment.
 const region = defineString('DNS_PASS_REGION', { default: 'europe-west8' });
 export const digitalPassApi = onRequest({ region, serviceAccount: DIGITAL_PASS_RUNTIME_SA, secrets: [key], maxInstances: 10, invoker: 'public' }, async (req, res) => {
   try {
+    const pilot = controlledPilotSettings({ enabled: pilotEnabled.value(),
+      organizationId: pilotOrganization.value(), passNumber: pilotNumber.value(),
+      operatorUid: pilotOperator.value(), until: pilotUntil.value() });
+    if (!['', 'true', 'false'].includes(saleClaimEnabled.value())) throw Error('INVALID_SALE_CLAIM_FLAG');
     const app = getApps()[0] ?? initializeApp();
     const handler = createDigitalPassHandler({ db: getFirestore(app), auth: getAuth(app), hmacSecret: key.value(),
       allowedOrigins: origins.value().split(',').map(v => v.trim()).filter(Boolean), inventoryRevision: revision.value(),
       registrationEnabled: registrationEnabled.value() === 'true',
+      saleClaimEnabled: saleClaimEnabled.value() === '' ? registrationEnabled.value() === 'true' : saleClaimEnabled.value() === 'true',
+      pilot,
       validFrom: Date.parse(start.value()), validUntil: Date.parse(end.value()), noticeVersion: notice.value(),
       walletIssuerId: googleWalletIssuer.value(), walletSigningJson: '', verificationBase: verificationBase.value(),
       walletOrigins: origins.value().split(',').map(v => v.trim()).filter(Boolean) });
