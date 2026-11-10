@@ -40,6 +40,9 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
   if(mode==='disabled'){
    await scenario('10','Disabled registration returns 503 without authentication',async()=>{
     const r=await call('/v1/pass-registrations/complete');assert.equal(r.status,503);assert.equal(r.body.error,'REGISTRATION_DISABLED');return {http:503,error:r.body.error};
+   });
+   await scenario('10-claim','Disabled sale claim rejects before authentication',async()=>{
+    const r=await call('/v1/pass-activations/claim');assert.equal(r.status,503);assert.equal(r.body.error,'SALE_CLAIM_DISABLED');return {http:503,error:r.body.error};
    });return;
   }
   const {initializeApp,deleteApp}=await import('firebase-admin/app');
@@ -86,6 +89,27 @@ test('real HTTP journey through Auth, Functions and Firestore Emulators only',{s
    const r=await call('/v1/pass-activations/validate',token(who),{physicalPassId:prepared.physicalPassId,preparationId:prepared.preparationId});assert.equal(r.status,200,JSON.stringify(r));return r;
   }
   const claim=(number,prepared,who='holder-a',extra={})=>call('/v1/pass-registrations/complete',token(who),{passNumber:String(number),code:prepared.code,givenName:'Synthetic',familyName:'Test',language:'it',...extra});
+  await scenario('02-qr','Verified email claims prepared QR sale; operator polls status; registration remains optional',async()=>{
+   const prepared=await prepare(6);
+   const query={physicalPassId:prepared.physicalPassId,preparationId:prepared.preparationId};
+   const pending=await call('/v1/pass-activations/status',token('operator-a'),query);
+   assert.equal(pending.status,200);assert.equal(pending.body.status,'PENDING');
+   assert.equal((await call('/v1/pass-activations/status',token('operator-b'),query)).status,403);
+   const body={passNumber:'6',code:prepared.code};
+   const sold=await call('/v1/pass-activations/claim',token('holder-a'),body);
+   assert.equal(sold.status,200,JSON.stringify(sold));assert.equal(sold.body.status,'SOLD_ATTESTED');
+   const status=await call('/v1/pass-activations/status',token('operator-a'),query);
+   assert.equal(status.status,200);assert.equal(status.body.status,'SOLD_ATTESTED');
+   const retry=await call('/v1/pass-activations/claim',token('holder-a'),body);
+   assert.equal(retry.status,200);assert.equal(retry.body.alreadyClaimed,true);
+   assert.equal((await call('/v1/pass-activations/claim',token('holder-b'),body)).status,400);
+   assert.equal((await db.collection('passRegistrations').doc(prepared.physicalPassId).get()).exists,false);
+   assert.equal((await db.collection('digitalCredentials').where('physicalPassId','==',prepared.physicalPassId).get()).size,0);
+   assert.equal((await db.collection('passMarketingOutbox').get()).size,0);
+   const registered=await claim(6,prepared);assert.equal(registered.status,200,JSON.stringify(registered));
+   assert.equal((await db.collection('digitalCredentials').where('physicalPassId','==',prepared.physicalPassId).get()).size,1);
+   return {pending:'PENDING',verifiedEmailClaim:'SOLD_ATTESTED',operatorStatus:'SOLD_ATTESTED',foreignOperator:403,sameHolderRetry:200,otherHolderReplay:400,credentialsBeforeOptionalRegistration:0,credentialsAfter:1,marketingJobs:0};
+  });
   let first,registration,pass;
   await scenario('02','Prepare monouse activation code and attest sale through HTTP',async()=>{
    const denied=await call('/v1/pass-activations/prepare',token('operator-b'),{passNumber:'1'});assert.equal(denied.status,403);
