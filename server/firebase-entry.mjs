@@ -28,6 +28,7 @@ const registrationEnabled = defineString('DNS_PASS_REGISTRATION_ENABLED', { defa
 const saleClaimEnabled = defineString('DNS_PASS_SALE_CLAIM_ENABLED', { default: '' });
 const pilotEnabled = defineString('DNS_PASS_PILOT_ENABLED', { default: 'false' });
 const pilotOrganization = defineString('DNS_PASS_PILOT_ORGANIZATION_ID', { default: '' });
+const pilotScope = defineString('DNS_PASS_PILOT_SCOPE', { default: 'single-card' });
 const pilotNumber = defineString('DNS_PASS_PILOT_PASS_NUMBER', { default: '' });
 const pilotOperator = defineString('DNS_PASS_PILOT_OPERATOR_UID', { default: '' });
 const pilotUntil = defineString('DNS_PASS_PILOT_UNTIL', { default: '' });
@@ -48,7 +49,7 @@ export const digitalPassApi = onRequest({ region, serviceAccount: DIGITAL_PASS_R
       return res.status(503).json({error:'SERVICE_UNAVAILABLE'});
     }
     const pilot = controlledPilotSettings({ enabled: pilotEnabled.value(),
-      organizationId: pilotOrganization.value(), passNumber: pilotNumber.value(),
+      organizationId: pilotOrganization.value(), scope: pilotScope.value(), passNumber: pilotNumber.value(),
       operatorUid: pilotOperator.value(), until: pilotUntil.value() });
     if (!['', 'true', 'false'].includes(saleClaimEnabled.value())) throw Error('INVALID_SALE_CLAIM_FLAG');
     const app = getApps()[0] ?? initializeApp();
