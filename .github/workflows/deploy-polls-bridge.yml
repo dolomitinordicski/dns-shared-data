@@ -52,7 +52,7 @@ jobs:
           credentials_json: ${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}
       - name: Deploy only pollsBridgeApi in dns-core
         run: npx firebase deploy --only functions:digital-pass:pollsBridgeApi --project dns-core --non-interactive
-      - uses: google-github-actions/setup-gcloud@v2
+      - uses: google-github-actions/setup-gcloud@v3
       - name: Verify deployed identity and fail-closed API responses
         shell: bash
         run: |
