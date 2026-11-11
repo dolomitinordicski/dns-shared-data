@@ -23,6 +23,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - run: npm ci --no-audit --no-fund
+      - run: npm install --no-package-lock --no-save --no-audit --no-fund
       - name: Verify strict read grants and public DTO
         run: npm run test:analytics:rules
