@@ -50,3 +50,16 @@ test('missing area-specific tariffs do not block other available public tariffs'
   const r = selectPublishedWidgetPrices([network('wk-dns', 65)], '2026-27', 'osttirol', '2026-11-11');
   assert.deepEqual(r.items.map(x => x.productCode), ['wk-dns']);
 });
+
+test('conflict diagnostics identify valid periods and candidate records without settlement values', () => {
+  const first = { ...network('sk-dns', 135), id: 'presale-2026', salesPeriod: 'presale', settlementUnitPrice: 100 };
+  const second = { ...network('sk-dns', 145), id: 'regular-2026', salesPeriod: 'regular', settlementUnitPrice: 110 };
+  assert.throws(
+    () => selectPublishedWidgetPrices([first, second], '2026-27', null, '2026-11-11'),
+    error => {
+      const message = (error as Error).message;
+      return message.includes('presale-2026') && message.includes('regular-2026')
+        && message.includes('validFrom') && !message.includes('settlement');
+    },
+  );
+});
