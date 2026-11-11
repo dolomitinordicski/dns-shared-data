@@ -363,10 +363,12 @@ service cloud.firestore {
       allow list, write: if false;
     }
 
-    // Published aggregate Analytics read model. Exact-document reads only:
-    // no collection listing, no client writes, no raw operational rows.
+    // Legacy full Analytics baseline contains per-area and partner facts.
+    // It is NOT the external public DTO; restrict to active DNS Admin.
+    // Externally approved KPIs are served from analyticsPartnerPublic.
     match /analyticsPublicSnapshots/{seasonId} {
-      allow get: if resource.data.id == seasonId
+      allow get: if isAdmin()
+                 && resource.data.id == seasonId
                  && resource.data.seasonId == seasonId
                  && resource.data.publicationStatus == 'published';
       allow list, write: if false;
