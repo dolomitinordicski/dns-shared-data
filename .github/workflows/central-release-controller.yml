@@ -44,7 +44,7 @@ jobs:
           RELEASE_TARGET: ${{ inputs.target }}
           RELEASE_SHA: ${{ inputs.source_sha }}
         run: node scripts/central-release/verify.mjs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: verified-central-release-plan
           path: central-release-plan.json

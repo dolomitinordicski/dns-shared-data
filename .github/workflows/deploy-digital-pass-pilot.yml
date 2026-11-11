@@ -130,7 +130,7 @@ jobs:
         run: node scripts/verify-digital-pass-closed.mjs --mode metadata --report .digital-pass-verification/metadata.json
       - name: Upload closed metadata evidence
         if: success() && inputs.phase != 'activate'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: digital-pass-closed-metadata
           path: .digital-pass-verification/metadata.json
@@ -177,7 +177,7 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
       - name: Test the existing private closed revision without redeployment
         run: node scripts/verify-digital-pass-closed.mjs --mode smoke --report .digital-pass-verification/smoke.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: digital-pass-closed-smoke
           path: .digital-pass-verification/smoke.json

@@ -102,7 +102,7 @@ jobs:
       - run: npm install --prefix tools/digital-pass-e2e --ignore-scripts --no-package-lock
       - name: Synthetic Auth + Functions + Firestore HTTP acceptance
         run: npm run test:digital-pass:e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: digital-pass-http-e2e-${{ matrix.repetition }}
@@ -130,7 +130,7 @@ jobs:
         run: npm run test:digital-pass:e2e
         env:
           DNS_PASS_E2E_STAGING: 'true'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: digital-pass-staging-emulator

@@ -14,7 +14,7 @@ jobs:
           node-version: '22'
       - run: npm install --no-package-lock
       - run: npm run inspect:loipen:network -- loipen-network.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: dns-loipen-network-inspection
