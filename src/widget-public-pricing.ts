@@ -26,7 +26,19 @@ export function selectPublishedWidgetPrices(
     const scoped = !dnsNetworkProduct && areaId && eligible.some(r => r.scopeType === 'reportingArea')
       ? eligible.filter(r => r.scopeType === 'reportingArea') : eligible.filter(r => r.scopeType === 'network');
     // Price period must be explicit and unambiguous; never silently choose presale vs regular.
-    if (scoped.length > 1) throw new Error('Ambiguous public price: ' + (areaId ?? 'all') + '/' + productCode + '/' + date);
+    if (scoped.length > 1) {
+      // Identifiers and customer-facing prices only; no private settlement or partner data.
+      const candidates = scoped.map(r => ({
+        id: r.id,
+        amount: r.unitPrice,
+        period: r.salesPeriod ?? null,
+        validFrom: r.validFrom ?? null,
+        validTo: r.validTo ?? null,
+        scopeType: r.scopeType,
+      }));
+      throw new Error('Ambiguous public price: ' + (areaId ?? 'all') + '/' + productCode + '/' + date
+        + ' candidates=' + JSON.stringify(candidates));
+    }
     if (scoped.length === 1) {
       const r = scoped[0];
       items.push({ productCode, currency: 'EUR', amount: r.unitPrice,
