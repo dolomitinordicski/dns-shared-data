@@ -37,6 +37,7 @@ export function pilotReleaseConfig(env,now=Date.now()) {
   DNS_PASS_INVENTORY_REVISION:env.DNS_PASS_INVENTORY_REVISION,
   DNS_PASS_VALID_FROM:'2026-11-15T00:00:00+01:00',DNS_PASS_VALID_UNTIL:'2027-05-01T00:00:00+02:00',
   DNS_PASS_PRIVACY_NOTICE_VERSION:env.DNS_PASS_PRIVACY_NOTICE_VERSION,
+  DNS_PASS_MARKETING_NOTICE_VERSION:'',
   DNS_PASS_PILOT_ENABLED:'true',DNS_PASS_PILOT_ORGANIZATION_ID:env.DNS_PASS_PILOT_ORGANIZATION_ID,
   DNS_PASS_PILOT_SCOPE:scope,DNS_PASS_PILOT_PASS_NUMBER:env.DNS_PASS_PILOT_PASS_NUMBER||'',DNS_PASS_PILOT_OPERATOR_UID:env.DNS_PASS_PILOT_OPERATOR_UID,
   DNS_PASS_PILOT_UNTIL:env.DNS_PASS_PILOT_UNTIL,
@@ -78,4 +79,3 @@ export const digitalPassApi=onRequest({region:'europe-west8',serviceAccount:'dns
  console.log('Prepared digitalPassApi only; fixed DNS Core runtime/region, one instance maximum. No cloud changes.');
 }
 if(process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url))await preparePilotRelease(process.env);
-

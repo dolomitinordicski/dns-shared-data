@@ -4,6 +4,7 @@
  * and canonical number resolution. No browser/client imports.
  */
 import { randomInt, createHmac, randomUUID } from 'node:crypto';
+import {activationRetention, auditRetention} from './digital-pass-retention.mjs';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export const CODE_LENGTH = 6;
@@ -66,7 +67,11 @@ export async function prepareActivation({
   const ref = db.collection('passActivationChallenges').doc(id);
   const auditRef = db.collection('passAuditEvents').doc(randomUUID());
   await db.runTransaction(async tx => {
-    const snap = await tx.get(ref);
+    const [snap, registration] = await Promise.all([
+      tx.get(ref), tx.get(db.collection('passRegistrations').doc(id)),
+    ]);
+    // The one-card guard survives TTL deletion of the short-lived challenge.
+    if (registration.exists) throw new Error('PASS_ALREADY_ACTIVATED');
     if (snap.exists) {
       const value = snap.data();
       if (value.status === 'ENABLED' || value.status === 'CONSUMED' || value.status === 'CLAIM_PENDING') {
@@ -93,9 +98,10 @@ export async function prepareActivation({
       nonce,
       sourceRevision: assignment.sourceRevision,
       printedNumber: assignment.printedNumber,
+      ...activationRetention(now + 10 * 60 * 1000),
     });
     tx.create(auditRef, { action: 'PASS_ACTIVATION_PREPARED', targetId: id,
-      actorId: actor.uid, organizationId: assignment.organizationId, at: now });
+      actorId: actor.uid, organizationId: assignment.organizationId, at: now, ...auditRetention(now) });
   });
   return { physicalPassId: id, preparationId: nonce, code, expiresAt: now + 10 * 60 * 1000 };
 }
@@ -123,9 +129,10 @@ export async function confirmPossession({
       possessionStatus: 'POSSESSION_CONFIRMED',
       possessionConfirmedAt: now,
       expiresAt: now + CODE_TTL_MS,
+      ...activationRetention(now + CODE_TTL_MS),
     });
     tx.create(auditRef, { action: 'PASS_POSSESSION_CONFIRMED', targetId: physicalPassId,
-      actorId: actor.uid, organizationId: record.organizationId, at: now });
+      actorId: actor.uid, organizationId: record.organizationId, at: now, ...auditRetention(now) });
     return { status: 'POSSESSION_CONFIRMED', alreadyValidated: false };
   });
 }
@@ -151,9 +158,9 @@ export async function reissueActivation({ db, actor, physicalPassId, idempotency
         !['ENABLED','EXPIRED'].includes(record.status)) throw new Error('CANNOT_REISSUE');
     while (verifier === record.codeVerifier) { code = generateActivationCode(); verifier = hashActivationCode(code, physicalPassId, hmacSecret); }
     tx.update(ref, { codeVerifier: verifier, status: 'ENABLED', nonce, expiresAt: now + CODE_TTL_MS,
-      lastReissueKey: idempotencyKey, reissuedAt: now, reissuedBy: actor.uid });
+      lastReissueKey: idempotencyKey, reissuedAt: now, reissuedBy: actor.uid, ...activationRetention(now + CODE_TTL_MS) });
     tx.create(auditRef, { action: 'PASS_ACTIVATION_REISSUED', targetId: physicalPassId,
-      actorId: actor.uid, organizationId: record.organizationId, reason: reason.trim(), at: now });
+      actorId: actor.uid, organizationId: record.organizationId, reason: reason.trim(), at: now, ...auditRetention(now) });
     return { physicalPassId, preparationId: nonce, code, expiresAt: now + CODE_TTL_MS, alreadyReissued: false };
   });
 }
@@ -200,10 +207,11 @@ export async function claimPreparedPossession({
       status: 'ENABLED', possessionStatus: 'POSSESSION_CONFIRMED',
       possessionConfirmedAt: now, expiresAt: now + CODE_TTL_MS,
       claimedByUid: identity.uid, possessionMethod: 'CUSTOMER_QR_CLAIM',
+      ...activationRetention(now + CODE_TTL_MS),
     });
     tx.create(auditRef, { action: 'PASS_POSSESSION_CONFIRMED', targetId: id,
       actorId: record.operatorUid, customerUid: identity.uid, organizationId: record.organizationId,
-      preparationId: record.nonce, method: 'CUSTOMER_QR_CLAIM', at: now });
+      preparationId: record.nonce, method: 'CUSTOMER_QR_CLAIM', at: now, ...auditRetention(now) });
     return { status: 'POSSESSION_CONFIRMED', alreadyClaimed: false };
   });
 }
@@ -222,4 +230,3 @@ export async function getPreparedPossessionStatus({ db, actor, physicalPassId, p
   if (record.status === 'PREPARED' && record.expiresAt > now) return { status: 'PENDING' };
   return { status: 'EXPIRED' };
 }
-

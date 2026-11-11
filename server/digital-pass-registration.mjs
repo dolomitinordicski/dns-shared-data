@@ -1,4 +1,5 @@
 import {resolveDynamicQr} from './digital-pass-dynamic-qr.mjs';
+import {passDataRetention, transientRetention, activationRetention, auditRetention} from './digital-pass-retention.mjs';
 import { randomBytes, createHash, timingSafeEqual, randomUUID } from 'node:crypto';
 import { hashActivationCode } from './digital-pass-activation.mjs';
 const digest = value => createHash('sha256').update(value).digest('hex');
@@ -12,7 +13,7 @@ export async function limitAttempts({ db, key, now = Date.now(), max = 10, windo
     const s = await tx.get(target); const old = s.exists ? s.data() : {};
     const current = old.until > now ? old : { count: 0, until: now + windowMs };
     if (current.count >= max) return false;
-    tx.set(target, { count: current.count + 1, until: current.until }); return true;
+    tx.set(target, { count: current.count + 1, until: current.until, ...transientRetention(current.until) }); return true;
   });
   if (!allowed) throw new Error('RATE_LIMITED');
 }
@@ -48,22 +49,22 @@ export async function registerDigitalPass({ db, identity, assignment, code, give
       typeof record.codeVerifier !== 'string' || record.codeVerifier.length !== 64 ||
       !timingSafeEqual(Buffer.from(record.codeVerifier), Buffer.from(verifier))) throw deny();
     tx.create(registrationRef, { physicalPassId: id, holderUid: identity.uid, status: 'ACTIVE',
-      credentialId, organizationId: assignment.organizationId, seasonId: assignment.seasonId, completedAt: now });
+      credentialId, organizationId: assignment.organizationId, seasonId: assignment.seasonId, completedAt: now, ...passDataRetention() });
     tx.set(ref(db, 'passHolders', identity.uid), { givenName: givenName.trim(), familyName: familyName.trim(),
-      verifiedEmail: identity.email, language, emailVerifiedAt: now });
+      verifiedEmail: identity.email, language, emailVerifiedAt: now, ...passDataRetention() });
     tx.create(ref(db, 'digitalCredentials', credentialId), { physicalPassId: id, holderUid: identity.uid,
       status: 'ACTIVE', seasonId: assignment.seasonId, productCode: assignment.productCode, printedNumber: assignment.printedNumber,
-      organizationId: assignment.organizationId, issuedAt: now, validFrom, validUntil });
+      organizationId: assignment.organizationId, issuedAt: now, validFrom, validUntil, ...passDataRetention() });
     // Private holder-only payload: QR is high-entropy, opaque, revocable. Never logged or in audit/analytics.
-    tx.create(ref(db, 'passCredentialPayloads', credentialId), { holderUid: identity.uid, token });
-    tx.update(challengeRef, { status: 'CONSUMED', consumedAt: now });
+    tx.create(ref(db, 'passCredentialPayloads', credentialId), { holderUid: identity.uid, token, ...passDataRetention() });
+    tx.update(challengeRef, { status: 'CONSUMED', consumedAt: now, ...activationRetention(now) });
     // Compatible with the existing Brevo adapter (#168); service verification is never marketing consent.
     const affirmative = false; // Marketing opt-in is recorded only by requestMarketingOptIn.
     tx.create(ref(db, 'consentEvents', randomUUID()), { holderId: identity.uid, purpose: 'DNS_MARKETING',
       affirmative, status: affirmative ? 'PENDING_DOUBLE_OPT_IN' : 'NOT_REQUESTED',
-      noticeVersion, consentedAt: now, source: 'digital-pass', at: now });
+      noticeVersion, consentedAt: now, source: 'digital-pass', at: now, ...passDataRetention() });
     tx.create(ref(db, 'passAuditEvents', randomUUID()), { action: 'DIGITAL_PASS_ISSUED', targetId: credentialId,
-      actorId: identity.uid, actorType: 'holder', organizationId: assignment.organizationId, at: now });
+      actorId: identity.uid, actorType: 'holder', organizationId: assignment.organizationId, at: now, ...auditRetention(now) });
     return { registrationId: id, alreadyRegistered: false };
   });
   return result;
@@ -103,7 +104,7 @@ export async function checkDigitalCredential({ db, actor, qrPayload, now = Date.
     else if (now >= c.validUntil) status = 'EXPIRED';
     else status = 'VALID';
     tx.create(ref(db, 'passAuditEvents', randomUUID()), { action: 'CREDENTIAL_VALIDATED', targetId: credentialId,
-      actorId: actor.uid, result: status, at: now });
+      actorId: actor.uid, result: status, at: now, ...auditRetention(now) });
     return { status, seasonId: c.seasonId, productCode: c.productCode };
   });
 }
@@ -116,7 +117,7 @@ export async function revokeDigitalCredential({ db, actor, credentialId, reason,
     if (!s.exists) throw new Error('NOT_FOUND');
     if (s.data().status === 'REVOKED') return { status: 'REVOKED', alreadyRevoked: true };
     tx.update(target, { status: 'REVOKED', revokedAt: now });
-    tx.create(ref(db, 'passAuditEvents', randomUUID()), { action: 'DIGITAL_PASS_REVOKED', targetId: credentialId, actorId: actor.uid, reason, at: now });
+    tx.create(ref(db, 'passAuditEvents', randomUUID()), { action: 'DIGITAL_PASS_REVOKED', targetId: credentialId, actorId: actor.uid, reason, at: now, ...auditRetention(now) });
     return { status: 'REVOKED', alreadyRevoked: false };
   });
 }

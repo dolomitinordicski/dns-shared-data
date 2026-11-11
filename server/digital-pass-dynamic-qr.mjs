@@ -1,4 +1,5 @@
 import {randomBytes,createHash} from 'node:crypto';
+import {transientRetention} from './digital-pass-retention.mjs';
 export const PRESENTATION_TTL_MS=90000;
 const hash=value=>createHash('sha256').update(value).digest('hex');
 /** Short-lived bearer presentation. No identity or card number is encoded in the QR. */
@@ -11,7 +12,7 @@ export async function issueDynamicQr({db,identity,physicalPassId,now=Date.now()}
   const c=await tx.get(db.collection('digitalCredentials').doc(r.data().credentialId));
   if(!c.exists||c.data().holderUid!==identity.uid||c.data().status!=='ACTIVE'||c.data().physicalPassId!==physicalPassId)throw Error('NOT_FOUND');
   const expiresAt=now+PRESENTATION_TTL_MS;
-  tx.create(db.collection('passQrPresentations').doc(id),{credentialId:r.data().credentialId,issuedAt:now,expiresAt});
+  tx.create(db.collection('passQrPresentations').doc(id),{credentialId:r.data().credentialId,issuedAt:now,expiresAt,...transientRetention(expiresAt)});
   return {qrPayload:'dns-pass:v2:'+token,qrExpiresAt:expiresAt};
  });
 }
