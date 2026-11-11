@@ -45,7 +45,7 @@ test('preflight is local-only and never enters deploy job or requests runtime se
  assert.match(preflight,/node --test tests\/digital-pass-pilot-release.test.mjs/);
  assert.doesNotMatch(preflight,/environment:|secrets\.|google-github-actions|firebase.js deploy|gcloud /);
  assert.match(flow,/inputs.phase != 'preflight'/);
- assert.match(flow,/options: \[preflight, verify, activate, stop\]/);
+ assert.match(flow,/options: \[preflight, verify, smoke, activate, stop\]/);
 });
 test('release errors identify which approval flag is missing',()=>{
  assert.throws(()=>pilotReleaseConfig({...env,DNS_PASS_DEPLOY_APPROVED:''},now),/DNS_PASS_DEPLOY_APPROVED/);
@@ -68,4 +68,3 @@ test('closed API guard precedes runtime bootstrap and forbids all operational re
  assert.match(source,/res.status\(503\).json\(\{error:'SERVICE_UNAVAILABLE'\}\)/);
  assert.match(source,/res.status\(403\).json\(\{error:'FORBIDDEN'\}\)/);
 });
-

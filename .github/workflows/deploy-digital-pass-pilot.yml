@@ -7,10 +7,10 @@ on:
         required: true
         type: string
       phase:
-        description: 'preflight is local only; verify deploys all API routes closed without pass details; activate opens the bounded pilot; stop disables claims'
+        description: 'preflight is local only; verify deploys closed; smoke tests the existing private service without redeploy; activate opens the bounded pilot; stop disables claims'
         required: true
         type: choice
-        options: [preflight, verify, activate, stop]
+        options: [preflight, verify, smoke, activate, stop]
         default: preflight
 permissions:
   contents: read
@@ -35,13 +35,14 @@ jobs:
       - name: Report scope
         run: echo 'Preflight only; no environment secrets, Firebase authentication, IAM checks or deployment.'
   deploy:
-    if: github.ref == 'refs/heads/main' && inputs.phase != 'preflight' && inputs.confirm_target == 'dns-core/digitalPassApi'
+    if: github.ref == 'refs/heads/main' && inputs.phase != 'preflight' && inputs.phase != 'smoke' && inputs.confirm_target == 'dns-core/digitalPassApi'
     environment: dns-digital-pass-pilot
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
       DNS_PASS_RELEASE_PHASE: ${{ inputs.phase }}
       DNS_PASS_DEPLOY_APPROVED: ${{ vars.DNS_PASS_DEPLOY_APPROVED }}
+      DNS_PASS_ACTIVATE_APPROVED: ${{ vars.DNS_PASS_ACTIVATE_APPROVED }}
       DNS_PASS_PRIVACY_REVIEWED: ${{ vars.DNS_PASS_PRIVACY_REVIEWED }}
       DNS_PASS_PILOT_ORGANIZATION_ID: ${{ secrets.DNS_PASS_PILOT_ORGANIZATION_ID }}
       DNS_PASS_PILOT_SCOPE: ${{ vars.DNS_PASS_PILOT_SCOPE }}
@@ -61,6 +62,10 @@ jobs:
         run: |
           if [ "$DNS_PASS_DEPLOY_APPROVED" != true ]; then
             echo '::error::Set DNS_PASS_DEPLOY_APPROVED=true in dns-digital-pass-pilot only after explicit release authorization. No cloud calls were made.'
+            exit 1
+          fi
+          if [ "$DNS_PASS_RELEASE_PHASE" = activate ] && [ "$DNS_PASS_ACTIVATE_APPROVED" != true ]; then
+            echo '::error::ACTIVATE requires a new, separate approval after completed VERIFY.'
             exit 1
           fi
       - name: Require passing synthetic checks on this exact commit
@@ -113,8 +118,24 @@ jobs:
       - name: Check runtime IAM without changing it
         run: python3 scripts/check-digital-pass-runtime-iam.py
       - name: Deploy only the approved Digital Pass function
-        run: node tools/digital-pass-e2e/node_modules/firebase-tools/lib/bin/firebase.js deploy --config .digital-pass-real-pilot/firebase.json --only functions:digital-pass:digitalPassApi --project dns-core --non-interactive
-      - name: Verify identity, origin boundary and anonymous rejection
+        # No IAM changes: detect the actual default builder and all deployment gaps together.
+        # This preflight intentionally executes before the Firebase upload/create request.
+        # Permission grants remain a separately approved administrator operation.
+        if: success()
+        run: |
+          node scripts/verify-digital-pass-closed.mjs --mode access --report .digital-pass-verification/access.json
+          node tools/digital-pass-e2e/node_modules/firebase-tools/lib/bin/firebase.js deploy --config .digital-pass-real-pilot/firebase.json --only functions:digital-pass:digitalPassApi --project dns-core --non-interactive
+      - name: Verify closed deployment metadata without requiring an invoker
+        if: inputs.phase != 'activate'
+        run: node scripts/verify-digital-pass-closed.mjs --mode metadata --report .digital-pass-verification/metadata.json
+      - name: Upload closed metadata evidence
+        if: success() && inputs.phase != 'activate'
+        uses: actions/upload-artifact@v4
+        with:
+          name: digital-pass-closed-metadata
+          path: .digital-pass-verification/metadata.json
+      - name: Verify active infrastructure boundary
+        if: inputs.phase == 'activate'
         shell: bash
         run: |
           set -euo pipefail
@@ -123,20 +144,42 @@ jobs:
           SERVICE_URL="$(gcloud functions describe digitalPassApi --gen2 --region=europe-west8 --project=dns-core --format='value(serviceConfig.uri)')"
           API="$SERVICE_URL"
           AUTH=()
-          if [ "$DNS_PASS_RELEASE_PHASE" != activate ]; then
-            PUBLIC="$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' "$API")"
-            case "$PUBLIC" in 401|403) ;; *) echo '::error::Closed service is publicly invokable'; exit 1;; esac
-            TOKEN="$(gcloud auth print-identity-token --audiences="$SERVICE_URL")"
-            echo "::add-mask::$TOKEN"
-            AUTH=(-H "Authorization: Bearer $TOKEN")
-          fi
           WRONG="$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' "${AUTH[@]}" -X POST "$API/v1/pass-activations/prepare" -H 'Origin: https://unapproved.example' -H 'Content-Type: application/json' --data '{}')"
           test "$WRONG" = 403
-          CLOSED=503
-          if [ "$DNS_PASS_RELEASE_PHASE" = activate ]; then CLOSED=401; fi
+          CLOSED=401
           for ROUTE in /v1/pass-activations/claim /v1/pass-registrations/complete; do
             CODE="$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' "${AUTH[@]}" -X POST "$API$ROUTE" -H 'Origin: https://dolomitinordicski.github.io' -H 'Content-Type: application/json' --data '{}')"
             test "$CODE" = "$CLOSED"
           done
           echo 'Only infrastructure/auth smoke checks passed. Real operator and smartphone acceptance are still required.'
 
+
+  smoke:
+    if: github.ref == 'refs/heads/main' && inputs.phase == 'smoke' && inputs.confirm_target == 'dns-core/digitalPassApi'
+    environment: dns-digital-pass-pilot
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Require separate approval for authenticated closed smoke
+        env:
+          DNS_PASS_VERIFY_APPROVED: ${{ vars.DNS_PASS_VERIFY_APPROVED }}
+        run: |
+          test "$DNS_PASS_VERIFY_APPROVED" = true || { echo '::error::Closed smoke requires explicit authorization'; exit 1; }
+      - uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DNS_CORE }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Test the existing private closed revision without redeployment
+        run: node scripts/verify-digital-pass-closed.mjs --mode smoke --report .digital-pass-verification/smoke.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digital-pass-closed-smoke
+          path: .digital-pass-verification/smoke.json
+      - name: Report remaining completion gate
+        run: echo 'Authenticated closed smoke passed; revoke temporary access before declaring VERIFY complete. ACTIVATE remains separately gated.'

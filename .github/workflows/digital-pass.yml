@@ -7,6 +7,7 @@ on:
       - 'server/digital-pass-*.mjs'
       - 'server/firebase-entry.mjs'
       - 'scripts/prepare-digital-pass-real-pilot.mjs'
+      - 'scripts/verify-digital-pass-closed.mjs'
       - '.github/workflows/deploy-digital-pass-pilot.yml'
       - 'scripts/run-digital-pass-e2e.mjs'
       - 'firebase.e2e.json'
@@ -28,6 +29,7 @@ on:
       - 'src/access-control.ts'
       - 'server/firebase-entry.mjs'
       - 'scripts/prepare-digital-pass-real-pilot.mjs'
+      - 'scripts/verify-digital-pass-closed.mjs'
       - '.github/workflows/deploy-digital-pass-pilot.yml'
       - 'scripts/run-digital-pass-e2e.mjs'
       - 'firebase.e2e.json'
@@ -159,4 +161,3 @@ jobs:
         run: |
           node --input-type=module -e "const m=await import('./.digital-pass-real-pilot/server/firebase-entry.mjs');if(JSON.stringify(Object.keys(m))!==JSON.stringify(['digitalPassApi']))throw Error('UNEXPECTED_FUNCTION_EXPORT');const e=m.digitalPassApi.__endpoint;if(e.secretEnvironmentVariables?.length||e.httpsTrigger.invoker?.includes('public'))throw Error('VERIFY_MUST_BE_PRIVATE_WITHOUT_SECRETS')"
       - run: python3 -m py_compile scripts/check-digital-pass-runtime-iam.py
-
