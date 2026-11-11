@@ -70,3 +70,20 @@ test('missing regular DNS seasonal price cannot fall back to discounted presale'
   const r = selectPublishedWidgetPrices([p], '2026-27', null, '2026-11-11');
   assert.deepEqual(r.items, []);
 });
+
+test('area season pass displays its own regular list price even during presale', () => {
+  const records = [
+    { ...network('sk-dns', 145), id: 'dns-regular' },
+    { ...network('sk-dns', 135), id: 'dns-presale', salesPeriod: 'presale' },
+    { ...network('sk-dns', 110), id: 'area-regular', productCode: 'sk-area', scopeType: 'reportingArea', scopeId: 'osttirol', salesPeriod: 'regular', validFrom: '2026-12-06' },
+    { ...network('sk-dns', 100), id: 'area-presale', productCode: 'sk-area', scopeType: 'reportingArea', scopeId: 'osttirol', salesPeriod: 'presale', validTo: '2026-12-05' },
+  ];
+  const prices = selectPublishedWidgetPrices(records, '2026-27', 'osttirol', '2026-11-11');
+  assert.equal(prices.items.find(p => p.productCode === 'sk-area')?.amount, 110);
+  assert.equal(prices.items.find(p => p.productCode === 'sk-dns')?.amount, 145);
+});
+test('area season pass never substitutes a presale tariff when regular is missing', () => {
+  const p = { ...network('sk-dns', 100), productCode: 'sk-area', scopeType: 'reportingArea', scopeId: 'osttirol', salesPeriod: 'presale' };
+  const r = selectPublishedWidgetPrices([p], '2026-27', 'osttirol', '2026-11-11');
+  assert.equal(r.items.some(p => p.productCode === 'sk-area'), false);
+});
