@@ -69,6 +69,7 @@ jobs:
             exit 1
           fi
       - name: Require passing synthetic checks on this exact commit
+        if: inputs.phase != 'stop'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -97,6 +98,9 @@ jobs:
             await sleep(15000);
           }
           NODE
+      - name: Validate emergency stop locally without waiting for unrelated commit checks
+        if: inputs.phase == 'stop'
+        run: node --test tests/digital-pass-pilot-release.test.mjs
       - name: Build reviewed single-function release (verify refuses all API operations)
         run: node scripts/prepare-digital-pass-real-pilot.mjs
       - name: Install pinned runtime and isolated Firebase CLI
@@ -124,7 +128,7 @@ jobs:
         if: success()
         run: |
           node scripts/verify-digital-pass-closed.mjs --mode access --report .digital-pass-verification/access.json
-          node tools/digital-pass-e2e/node_modules/firebase-tools/lib/bin/firebase.js deploy --config .digital-pass-real-pilot/firebase.json --only functions:digital-pass:digitalPassApi --project dns-core --non-interactive
+          node scripts/deploy-digital-pass-pilot.mjs
       - name: Verify closed deployment metadata without requiring an invoker
         if: inputs.phase != 'activate'
         run: node scripts/verify-digital-pass-closed.mjs --mode metadata --report .digital-pass-verification/metadata.json

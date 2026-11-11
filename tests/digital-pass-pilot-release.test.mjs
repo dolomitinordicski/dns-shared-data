@@ -33,7 +33,9 @@ test('release refuses missing approval, privacy, single-card scope, revision, st
 test('manual workflow targets only digitalPassApi and cannot run from a PR or push',()=>{
  const flow=readFileSync('.github/workflows/deploy-digital-pass-pilot.yml','utf8');
  assert.match(flow,/workflow_dispatch:/);assert.doesNotMatch(flow,/^  (push|pull_request):/m);
- assert.match(flow,/functions:digital-pass:digitalPassApi/);assert.match(flow,/refs\/heads\/main/);
+ assert.match(flow,/node scripts\/deploy-digital-pass-pilot.mjs/);assert.match(flow,/refs\/heads\/main/);
+ const deploy=readFileSync('scripts/deploy-digital-pass-pilot.mjs','utf8');
+ assert.match(deploy,/'--only','functions:digital-pass:digitalPassApi'/);
  assert.match(flow,/dns-digital-pass-pilot/);assert.doesNotMatch(flow,/secrets versions access/);
 });
 
@@ -60,6 +62,16 @@ test('verify requires deployment approval but no real pass, privacy approval, re
  assert.equal(config.DNS_PASS_REGISTRATION_ENABLED,'false');
  for(const name of ['DNS_PASS_PILOT_PASS_NUMBER','DNS_PASS_PILOT_ORGANIZATION_ID','DNS_PASS_PILOT_OPERATOR_UID','DNS_PASS_INVENTORY_REVISION','DNS_PASS_PRIVACY_NOTICE_VERSION'])assert.equal(Object.hasOwn(config,name),false,name);
  assert.throws(()=>pilotReleaseConfig({DNS_PASS_RELEASE_PHASE:'verify'},now),/DNS_PASS_DEPLOY_APPROVED/);
+});
+
+test('stop stays private and closed without expired pilot settings or unrelated commit checks',()=>{
+ const config=pilotReleaseConfig({DNS_PASS_RELEASE_PHASE:'stop',DNS_PASS_DEPLOY_APPROVED:'true'},now);
+ assert.equal(config.DNS_PASS_API_CLOSED,'true');
+ assert.equal(config.DNS_PASS_PILOT_ENABLED,'false');
+ assert.equal(config.DNS_PASS_REGISTRATION_ENABLED,'false');
+ const flow=readFileSync('.github/workflows/deploy-digital-pass-pilot.yml','utf8');
+ assert.match(flow,/Require passing synthetic checks on this exact commit\n        if: inputs.phase != 'stop'/);
+ assert.match(flow,/Validate emergency stop locally without waiting for unrelated commit checks/);
 });
 test('closed API guard precedes runtime bootstrap and forbids all operational requests',()=>{
  const source=readFileSync('server/firebase-entry.mjs','utf8');
