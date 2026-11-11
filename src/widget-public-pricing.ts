@@ -21,7 +21,9 @@ export function selectPublishedWidgetPrices(
           || areaId !== null && r.scopeType === 'reportingArea' && r.scopeId === areaId)
       && (!r.validFrom || r.validFrom.slice(0, 10) <= date)
       && (!r.validTo || r.validTo.slice(0, 10) >= date));
-    const scoped = areaId && eligible.some(r => r.scopeType === 'reportingArea')
+    // DNS-wide weekly and season passes never accept regional overrides.
+    const dnsNetworkProduct = productCode === 'wk-dns' || productCode === 'sk-dns';
+    const scoped = !dnsNetworkProduct && areaId && eligible.some(r => r.scopeType === 'reportingArea')
       ? eligible.filter(r => r.scopeType === 'reportingArea') : eligible.filter(r => r.scopeType === 'network');
     // Price period must be explicit and unambiguous; never silently choose presale vs regular.
     if (scoped.length > 1) throw new Error('Ambiguous public price: ' + (areaId ?? 'all') + '/' + productCode + '/' + date);
