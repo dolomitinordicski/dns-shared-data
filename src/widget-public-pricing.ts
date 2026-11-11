@@ -8,7 +8,7 @@ type PriceRecord = Pick<TicketPricingConfig, 'id' | 'seasonId' | 'productCode' |
 export function selectPublishedWidgetPrices(
   records: readonly PriceRecord[], seasonId: string, areaId: string | null, date: string,
 ): DNSPublicWidgetSnapshot['pricing'] {
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)) throw new Error('Widget prices require an ISO calendar date');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Widget prices require an ISO calendar date');
   const products = PUBLIC_PRODUCTS.filter(code => areaId !== null || code.endsWith('-dns'));
   const items: DNSPublicWidgetSnapshot['pricing']['items'][number][] = [];
   for (const productCode of products) {
