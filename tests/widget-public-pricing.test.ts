@@ -19,13 +19,14 @@ test('area overrides network defaults and never exports settlement amounts', () 
   assert.equal(r.items.find(x => x.productCode === 'day')?.amount, 17);
   assert.equal(JSON.stringify(r).includes('settlement'), false);
 });
-test('date validity controls presale versus regular without guessing', () => {
+test('DNS season pass always shows regular list price during and after presale', () => {
   const entries = [
     { ...network('sk-dns', 135), id: 'presale', salesPeriod: 'presale', validTo: '2026-12-05' },
     { ...network('sk-dns', 145), id: 'regular', validFrom: '2026-12-06' }
   ];
-  assert.equal(selectPublishedWidgetPrices(entries, '2026-27', null, '2026-11-11').items[0].amount, 135);
+  assert.equal(selectPublishedWidgetPrices(entries, '2026-27', null, '2026-11-11').items[0].amount, 145);
   assert.equal(selectPublishedWidgetPrices(entries, '2026-27', null, '2026-12-06').items[0].amount, 145);
+  assert.equal(selectPublishedWidgetPrices(entries, '2026-27', 'osttirol', '2026-11-11').items.find(x => x.productCode === 'sk-dns')?.amount, 145);
 });
 test('ambiguous overlapping prices fail closed', () => {
   assert.throws(() => selectPublishedWidgetPrices([network('wk-dns', 65), network('wk-dns', 60)], '2026-27', null, '2026-11-11'), /Ambiguous/);
@@ -49,4 +50,23 @@ test('DNS weekly and seasonal prices cannot be overridden by reporting areas', (
 test('missing area-specific tariffs do not block other available public tariffs', () => {
   const r = selectPublishedWidgetPrices([network('wk-dns', 65)], '2026-27', 'osttirol', '2026-11-11');
   assert.deepEqual(r.items.map(x => x.productCode), ['wk-dns']);
+});
+
+test('conflict diagnostics identify valid periods and candidate records without settlement values', () => {
+  const first = { ...network('sk-dns', 145), id: 'regular-2026-a', salesPeriod: 'regular', settlementUnitPrice: 100 };
+  const second = { ...network('sk-dns', 150), id: 'regular-2026-b', salesPeriod: 'regular', settlementUnitPrice: 110 };
+  assert.throws(
+    () => selectPublishedWidgetPrices([first, second], '2026-27', null, '2026-11-11'),
+    error => {
+      const message = (error as Error).message;
+      return message.includes('regular-2026-a') && message.includes('regular-2026-b')
+        && message.includes('validFrom') && !message.includes('settlement');
+    },
+  );
+});
+
+test('missing regular DNS seasonal price cannot fall back to discounted presale', () => {
+  const p = { ...network('sk-dns', 135), id: 'presale-only', salesPeriod: 'presale' };
+  const r = selectPublishedWidgetPrices([p], '2026-27', null, '2026-11-11');
+  assert.deepEqual(r.items, []);
 });

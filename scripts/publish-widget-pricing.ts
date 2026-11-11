@@ -18,6 +18,7 @@ const source = await db.collection('ticketPricingConfigs').where('seasonId', '==
 const rows = source.docs.map(doc => ({ id: doc.id, ...doc.data() } as TicketPricingConfig));
 const areas = [null, ...REPORTING_AREAS.filter(a => a.active).map(a => a.id)];
 const plans = [];
+const conflicts: { documentId: string; reason: string }[] = [];
 for (const areaId of areas) {
   const id = seasonId + '__' + (areaId ?? 'all');
   const ref = db.collection('widgetPublicSnapshots').doc(id);
@@ -28,7 +29,13 @@ for (const areaId of areas) {
   const snapshot = current.data()!.snapshot;
   if (snapshot.seasonId !== seasonId || snapshot.areaId !== areaId)
     throw new Error('Existing public widget scope mismatch: ' + id);
-  const pricing = selectPublishedWidgetPrices(rows, seasonId, areaId, date);
+  let pricing;
+  try {
+    pricing = selectPublishedWidgetPrices(rows, seasonId, areaId, date);
+  } catch (error) {
+    conflicts.push({ documentId: id, reason: error instanceof Error ? error.message : String(error) });
+    continue;
+  }
   if (!pricing.items.length) {
     console.log(JSON.stringify({ id, result: 'no-public-official-prices', write: false }));
     continue; // Never overwrite previously published prices with an empty response.
@@ -37,8 +44,13 @@ for (const areaId of areas) {
 }
 console.log(JSON.stringify({ mode: apply ? 'apply' : 'dry-run', date, seasonId,
   sourceRows: rows.length, snapshotsWithPrices: plans.length,
-  plans: plans.map(p => ({ id: p.id, prices: p.pricing.items })) }, null, 2));
-if (!apply) process.exit(0);
+  conflicts, plans: plans.map(p => ({ id: p.id, prices: p.pricing.items })) }, null, 2));
+if (!apply) {
+  // Successful read-only diagnostic, even if individual tariffs need correction.
+  if (conflicts.length) console.warn('Dry-run only: conflicting tariffs require Data Entry review before publishing.');
+  process.exit(0);
+}
+if (conflicts.length) throw new Error('Publishing blocked: ' + conflicts.length + ' unresolved tariff conflicts (see dry-run report).');
 
 for (const plan of plans) {
   await db.runTransaction(async tx => {
