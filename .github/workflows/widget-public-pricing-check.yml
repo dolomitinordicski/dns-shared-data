@@ -1,0 +1,29 @@
+name: DNS public widget pricing tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/widget-public-pricing.ts'
+      - 'tests/widget-public-pricing.test.ts'
+      - 'scripts/publish-widget-pricing.ts'
+      - 'package.json'
+  pull_request:
+    paths:
+      - 'src/widget-public-pricing.ts'
+      - 'tests/widget-public-pricing.test.ts'
+      - 'scripts/publish-widget-pricing.ts'
+      - 'package.json'
+permissions:
+  contents: read
+jobs:
+  public-widget-pricing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-package-lock
+      - run: npm run test:widget:pricing
+      - run: npm run typecheck
