@@ -60,7 +60,8 @@
     "test:partners:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/partner-access-rules.test.mjs\"",
     "test:partner-provisioning": "node tests/partner-activation-policy.test.mjs && node tests/partner-provisioning.test.mjs",
     "test:flyer-availability:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/flyer-availability-rules.test.mjs\"",
-    "test:print:preflight": "tsx --test tests/print-preflight.test.ts"
+    "test:print:preflight": "tsx --test tests/print-preflight.test.ts",
+    "test:analytics:rules": "firebase emulators:exec --config firebase.emulator.json --only firestore --project demo-dns-core \"node tests/analytics-publication-rules.test.mjs\""
   },
   "devDependencies": {
     "firebase-admin": "^14.5.0",
