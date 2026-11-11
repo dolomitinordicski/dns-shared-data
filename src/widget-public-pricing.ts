@@ -12,9 +12,9 @@ export function selectPublishedWidgetPrices(
   const products = PUBLIC_PRODUCTS.filter(code => areaId !== null || code.endsWith('-dns'));
   const items: DNSPublicWidgetSnapshot['pricing']['items'][number][] = [];
   for (const productCode of products) {
-    // Public DNS season-pass widgets advertise the regular list price even
-    // during presale. Other products continue to use date-effective prices.
-    const showRegularSeasonPrice = productCode === 'sk-dns';
+    // Public season passes (network and area) always display the regular list
+    // price, including during presale. Other passes use date-effective prices.
+    const showRegularSeasonPrice = productCode === 'sk-dns' || productCode === 'sk-area';
     const eligible = records.filter(r => r.seasonId === seasonId
       && r.active === true && r.productCode === productCode
       && r.salesChannel === 'official' && r.currency === 'EUR'
@@ -29,7 +29,7 @@ export function selectPublishedWidgetPrices(
     const dnsNetworkProduct = productCode === 'wk-dns' || productCode === 'sk-dns';
     const scoped = !dnsNetworkProduct && areaId && eligible.some(r => r.scopeType === 'reportingArea')
       ? eligible.filter(r => r.scopeType === 'reportingArea') : eligible.filter(r => r.scopeType === 'network');
-    // Price period must be explicit and unambiguous; never silently choose presale vs regular.
+    // Never arbitrarily choose between overlapping prices of the same product and period.
     if (scoped.length > 1) {
       // Identifiers and customer-facing prices only; no private settlement or partner data.
       const candidates = scoped.map(r => ({
