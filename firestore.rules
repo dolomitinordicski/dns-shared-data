@@ -1469,6 +1469,14 @@ service cloud.firestore {
       );
     }
 
+    // DNS Partner Hub membership registry — trusted-server only.
+    // Client SDKs may not read or mutate membership-to-establishment mappings.
+    // Firebase Admin performs verification and provisioning with audited
+    // server identity; no unverified account may enumerate partners.
+    match /partnerHubMemberships/{membershipId} {
+      allow get, list, create, update, delete: if false;
+    }
+
     match /partnerEstablishments/{establishmentId} {
       allow get, list: if canReadPartnerEstablishment(resource.data);
       allow create, update, delete: if false;
