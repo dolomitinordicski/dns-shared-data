@@ -1,0 +1,41 @@
+name: DNS public widget pricing publication
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Dry-run reads prices without writing; apply requires release approval.'
+        required: true
+        type: choice
+        options: [dry-run, apply]
+        default: dry-run
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ inputs.mode == 'apply' && 'dns-release-approval' || 'dns-production-auto' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-package-lock
+      - run: npm run test:widget:pricing
+      - name: Authenticate DNS-approved publisher identity
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.DNS_GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.DNS_LOIPEN_ARCHIVE_SERVICE_ACCOUNT }}
+      - name: Preview or publish official DNS customer prices
+        env:
+          GOOGLE_CLOUD_PROJECT: dns-core
+          DNS_WIDGET_PRICING_APPROVED: ${{ inputs.mode == 'apply' && 'true' || 'false' }}
+        run: |
+          if [ "${{ inputs.mode }}" = "apply" ]; then
+            npm run publish:widget:pricing -- --apply
+          else
+            npm run publish:widget:pricing
+          fi
