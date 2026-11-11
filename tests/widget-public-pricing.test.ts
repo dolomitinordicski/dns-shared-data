@@ -1,0 +1,37 @@
+import { test } from 'node:test';
+import { strict as assert } from 'node:assert';
+import { selectPublishedWidgetPrices } from '../src/widget-public-pricing.js';
+
+const base = { seasonId: '2026-27', salesChannel: 'official', currency: 'EUR', active: true,
+  validFrom: '2026-10-01', validTo: '2027-05-01', salesPeriod: 'regular' } as const;
+const network = (productCode: 'wk-dns' | 'sk-dns' | 'day', unitPrice: number) =>
+  ({ ...base, id: productCode, productCode, unitPrice, scopeType: 'network' as const, scopeId: 'dolomiti-nordicski' });
+test('network pricing only exposes network DNS products', () => {
+  const r = selectPublishedWidgetPrices([network('wk-dns', 65), network('sk-dns', 145), network('day', 13)], '2026-27', null, '2026-11-11');
+  assert.deepEqual(r.items.map(x => x.productCode), ['wk-dns', 'sk-dns']);
+});
+test('area overrides network defaults and never exports settlement amounts', () => {
+  const r = selectPublishedWidgetPrices([
+    network('day', 12),
+    { ...network('day', 17), id: 'area-day', scopeType: 'reportingArea', scopeId: 'osttirol' },
+    { ...network('day', 50), id: 'org-day', scopeType: 'organization', scopeId: 'private-hotel' },
+  ], '2026-27', 'osttirol', '2026-11-11');
+  assert.equal(r.items.find(x => x.productCode === 'day')?.amount, 17);
+  assert.equal(JSON.stringify(r).includes('settlement'), false);
+});
+test('date validity controls presale versus regular without guessing', () => {
+  const entries = [
+    { ...network('sk-dns', 135), id: 'presale', salesPeriod: 'presale', validTo: '2026-12-05' },
+    { ...network('sk-dns', 145), id: 'regular', validFrom: '2026-12-06' }
+  ];
+  assert.equal(selectPublishedWidgetPrices(entries, '2026-27', null, '2026-11-11').items[0].amount, 135);
+  assert.equal(selectPublishedWidgetPrices(entries, '2026-27', null, '2026-12-06').items[0].amount, 145);
+});
+test('ambiguous overlapping prices fail closed', () => {
+  assert.throws(() => selectPublishedWidgetPrices([network('wk-dns', 65), network('wk-dns', 60)], '2026-27', null, '2026-11-11'), /Ambiguous/);
+});
+test('inactive and non-official channels never publish', () => {
+  const r = selectPublishedWidgetPrices([{ ...network('wk-dns', 65), active: false }, { ...network('sk-dns', 150), salesChannel: 'track' }], '2026-27', null, '2026-11-11');
+  assert.equal(r.status, 'unavailable');
+  assert.deepEqual(r.items, []);
+});
