@@ -12,15 +12,19 @@ export function selectPublishedWidgetPrices(
   const products = PUBLIC_PRODUCTS.filter(code => areaId !== null || code.endsWith('-dns'));
   const items: DNSPublicWidgetSnapshot['pricing']['items'][number][] = [];
   for (const productCode of products) {
+    // Public DNS season-pass widgets advertise the regular list price even
+    // during presale. Other products continue to use date-effective prices.
+    const showRegularSeasonPrice = productCode === 'sk-dns';
     const eligible = records.filter(r => r.seasonId === seasonId
       && r.active === true && r.productCode === productCode
       && r.salesChannel === 'official' && r.currency === 'EUR'
+      && (!showRegularSeasonPrice || r.salesPeriod === 'regular')
       && Number.isFinite(r.unitPrice) && r.unitPrice >= 0
       && r.scopeType !== 'organization'
       && (r.scopeType === 'network' && r.scopeId === 'dolomiti-nordicski'
           || areaId !== null && r.scopeType === 'reportingArea' && r.scopeId === areaId)
-      && (!r.validFrom || r.validFrom.slice(0, 10) <= date)
-      && (!r.validTo || r.validTo.slice(0, 10) >= date));
+      && (showRegularSeasonPrice || !r.validFrom || r.validFrom.slice(0, 10) <= date)
+      && (showRegularSeasonPrice || !r.validTo || r.validTo.slice(0, 10) >= date));
     // DNS-wide weekly and season passes never accept regional overrides.
     const dnsNetworkProduct = productCode === 'wk-dns' || productCode === 'sk-dns';
     const scoped = !dnsNetworkProduct && areaId && eligible.some(r => r.scopeType === 'reportingArea')
@@ -42,8 +46,8 @@ export function selectPublishedWidgetPrices(
     if (scoped.length === 1) {
       const r = scoped[0];
       items.push({ productCode, currency: 'EUR', amount: r.unitPrice,
-        ...(r.validFrom ? { validFrom: r.validFrom } : {}),
-        ...(r.validTo ? { validTo: r.validTo } : {}) });
+        ...(!showRegularSeasonPrice && r.validFrom ? { validFrom: r.validFrom } : {}),
+        ...(!showRegularSeasonPrice && r.validTo ? { validTo: r.validTo } : {}) });
     }
   }
   return { status: items.length ? 'available' : 'unavailable', updatedAt: new Date(date + 'T12:00:00Z').toISOString(), items };
