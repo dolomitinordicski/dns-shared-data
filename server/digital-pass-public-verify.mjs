@@ -15,12 +15,14 @@ export async function verifyPublicPass({ db, token, now = Date.now(), dynamic = 
       registration.data().status !== 'ACTIVE' || registration.data().credentialId !== credentialId) return 'REVOKED';
   if (c.productCode !== 'sk-dns' || c.seasonId !== '2026-27' ||
       !Number.isFinite(c.validFrom) || !Number.isFinite(c.validUntil)) return 'UNKNOWN';
-  if (now < c.validFrom || now >= c.validUntil) return 'EXPIRED';
+  if (now < c.validFrom) return 'NOT_YET_VALID';
+  if (now >= c.validUntil) return 'EXPIRED';
   return 'VALID';
 }
 export function renderPublicPassHtml(status) {
   const states = {
     VALID: ['GÜLTIG · VALIDO · VALID', '#11764c', '✓'],
+    NOT_YET_VALID: ['NOCH NICHT GÜLTIG · NON ANCORA VALIDO · NOT YET VALID', '#915d18', '!'],
     EXPIRED: ['ABGELAUFEN · SCADUTO · EXPIRED', '#915d18', '!'],
     REVOKED: ['UNGÜLTIG · NON VALIDO · INVALID', '#ad3434', '×'],
     UNKNOWN: ['NICHT BESTÄTIGT · NON VERIFICATO · UNVERIFIED', '#ad3434', '?']
@@ -38,4 +40,3 @@ small{color:#597274}button{font:inherit;padding:12px 22px;background:#1b494b;col
 <p class="status" role="status">${message}</p><p>DNS Saisonkarte 2026/27</p>
 <small>Online geprüft · Verificato online · Checked online</small><div><button onclick="location.reload()">Aktualisieren · Aggiorna</button></div></main></body></html>`;
 }
-

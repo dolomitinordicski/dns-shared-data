@@ -99,7 +99,8 @@ export async function checkDigitalCredential({ db, actor, qrPayload, now = Date.
     let status = 'UNKNOWN';
     if (c.status !== 'ACTIVE' || !registration.exists || registration.data().status !== 'ACTIVE' || registration.data().credentialId !== credentialId) status = 'REVOKED';
     else if (!Number.isFinite(c.validFrom) || !Number.isFinite(c.validUntil) || c.seasonId !== '2026-27' || c.productCode !== 'sk-dns') status = 'UNKNOWN';
-    else if (now < c.validFrom || now >= c.validUntil) status = 'EXPIRED';
+    else if (now < c.validFrom) status = 'NOT_YET_VALID';
+    else if (now >= c.validUntil) status = 'EXPIRED';
     else status = 'VALID';
     tx.create(ref(db, 'passAuditEvents', randomUUID()), { action: 'CREDENTIAL_VALIDATED', targetId: credentialId,
       actorId: actor.uid, result: status, at: now });
@@ -119,4 +120,3 @@ export async function revokeDigitalCredential({ db, actor, credentialId, reason,
     return { status: 'REVOKED', alreadyRevoked: false };
   });
 }
-
