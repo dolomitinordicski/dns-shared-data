@@ -35,3 +35,18 @@ test('inactive and non-official channels never publish', () => {
   assert.equal(r.status, 'unavailable');
   assert.deepEqual(r.items, []);
 });
+
+test('DNS weekly and seasonal prices cannot be overridden by reporting areas', () => {
+  const r = selectPublishedWidgetPrices([
+    network('wk-dns', 65),
+    network('sk-dns', 135),
+    { ...network('wk-dns', 99), id: 'area-wk-dns', scopeType: 'reportingArea', scopeId: 'osttirol' },
+    { ...network('sk-dns', 199), id: 'area-sk-dns', scopeType: 'reportingArea', scopeId: 'osttirol' },
+  ], '2026-27', 'osttirol', '2026-11-11');
+  assert.equal(r.items.find(x => x.productCode === 'wk-dns')?.amount, 65);
+  assert.equal(r.items.find(x => x.productCode === 'sk-dns')?.amount, 135);
+});
+test('missing area-specific tariffs do not block other available public tariffs', () => {
+  const r = selectPublishedWidgetPrices([network('wk-dns', 65)], '2026-27', 'osttirol', '2026-11-11');
+  assert.deepEqual(r.items.map(x => x.productCode), ['wk-dns']);
+});
