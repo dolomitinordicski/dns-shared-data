@@ -12,24 +12,22 @@ export function selectPublishedWidgetPrices(
   const products = PUBLIC_PRODUCTS.filter(code => areaId !== null || code.endsWith('-dns'));
   const items: DNSPublicWidgetSnapshot['pricing']['items'][number][] = [];
   for (const productCode of products) {
-    // Public DNS season-pass widgets advertise the regular list price even
-    // during presale. Other products continue to use date-effective prices.
-    const showRegularSeasonPrice = productCode === 'sk-dns';
+    // Public widgets always display official regular list prices for ALL
+    // ticket types. Presale entries and their validity dates do not influence
+    // advertised list prices; Data Entry remains the source of truth.
     const eligible = records.filter(r => r.seasonId === seasonId
       && r.active === true && r.productCode === productCode
-      && r.salesChannel === 'official' && r.currency === 'EUR'
-      && (!showRegularSeasonPrice || r.salesPeriod === 'regular')
+      && r.salesChannel === 'official' && r.salesPeriod === 'regular'
+      && r.currency === 'EUR'
       && Number.isFinite(r.unitPrice) && r.unitPrice >= 0
       && r.scopeType !== 'organization'
       && (r.scopeType === 'network' && r.scopeId === 'dolomiti-nordicski'
-          || areaId !== null && r.scopeType === 'reportingArea' && r.scopeId === areaId)
-      && (showRegularSeasonPrice || !r.validFrom || r.validFrom.slice(0, 10) <= date)
-      && (showRegularSeasonPrice || !r.validTo || r.validTo.slice(0, 10) >= date));
+          || areaId !== null && r.scopeType === 'reportingArea' && r.scopeId === areaId));
     // DNS-wide weekly and season passes never accept regional overrides.
     const dnsNetworkProduct = productCode === 'wk-dns' || productCode === 'sk-dns';
     const scoped = !dnsNetworkProduct && areaId && eligible.some(r => r.scopeType === 'reportingArea')
       ? eligible.filter(r => r.scopeType === 'reportingArea') : eligible.filter(r => r.scopeType === 'network');
-    // Price period must be explicit and unambiguous; never silently choose presale vs regular.
+    // Never arbitrarily choose between overlapping prices of the same product and period.
     if (scoped.length > 1) {
       // Identifiers and customer-facing prices only; no private settlement or partner data.
       const candidates = scoped.map(r => ({
@@ -45,9 +43,7 @@ export function selectPublishedWidgetPrices(
     }
     if (scoped.length === 1) {
       const r = scoped[0];
-      items.push({ productCode, currency: 'EUR', amount: r.unitPrice,
-        ...(!showRegularSeasonPrice && r.validFrom ? { validFrom: r.validFrom } : {}),
-        ...(!showRegularSeasonPrice && r.validTo ? { validTo: r.validTo } : {}) });
+      items.push({ productCode, currency: 'EUR', amount: r.unitPrice });
     }
   }
   return { status: items.length ? 'available' : 'unavailable', updatedAt: new Date(date + 'T12:00:00Z').toISOString(), items };
