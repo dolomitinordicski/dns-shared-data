@@ -17,7 +17,7 @@ const email=arg('email')?.toLowerCase();
 const establishmentId=arg('establishment');
 const apply=process.argv.includes('--apply');
 const project=process.env.GOOGLE_CLOUD_PROJECT??process.env.GCLOUD_PROJECT??process.env.FIREBASE_PROJECT_ID;
-if(!email||!establishmentId||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)
+if(!email||!establishmentId||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   ||!/^[a-zA-Z0-9][a-zA-Z0-9_-]{2,127}$/.test(establishmentId)){
   throw Error('Usage: --email=verified@domain --establishment=existing-id [--apply --confirm-project=dns-core]');
 }
