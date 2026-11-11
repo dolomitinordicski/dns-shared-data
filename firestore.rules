@@ -345,6 +345,23 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Public partner showcase: independently approved aggregate DTO only.
+    // Documents are written by a trusted Admin publication process, never by browsers.
+    // No listing or mutation is allowed by any client.
+    match /analyticsPartnerPublic/{seasonId} {
+      allow get: if resource.data.id == seasonId
+                 && resource.data.seasonId == seasonId
+                 && resource.data.publicationStatus == 'published'
+                 && resource.data.schemaVersion == 1
+                 && resource.data.keys().hasOnly([
+                   'id', 'seasonId', 'publicationStatus', 'schemaVersion',
+                   'totalTickets', 'totalRevenue', 'publishedAt'
+                 ])
+                 && resource.data.totalTickets is number
+                 && resource.data.totalRevenue is number;
+      allow list, write: if false;
+    }
+
     // Published aggregate Analytics read model. Exact-document reads only:
     // no collection listing, no client writes, no raw operational rows.
     match /analyticsPublicSnapshots/{seasonId} {
