@@ -59,8 +59,9 @@ export async function verifyClosed({mode='metadata',read=gcloud,request=http}={}
  const projectPolicy=JSON.parse(read(['projects','get-iam-policy',PROJECT,'--format=json']));
  if((projectPolicy.bindings||[]).some(b=>(b.members||[]).some(m=>['allUsers','allAuthenticatedUsers'].includes(m))))fail('PROJECT_PUBLIC_BINDING_REVIEW_REQUIRED');
  const anonymous=await request(target.uri,{method:'GET'});
- if(![401,403].includes(anonymous.status))fail('ANONYMOUS_ACCESS_NOT_REJECTED');
- const result={mode,project:PROJECT,region:REGION,function:'digitalPassApi',service:target.service,runtime:RUNTIME,buildServiceAccount:target.buildServiceAccount,closed:true,anonymousRejected:true,authenticatedSmoke:false,cardAssociations:0};
+ const anonymousStatus=Number.isInteger(anonymous?.status)?anonymous.status:0;
+ if(![401,403].includes(anonymousStatus))fail(`ANONYMOUS_ACCESS_NOT_REJECTED_HTTP_${anonymousStatus}`);
+ const result={mode,project:PROJECT,region:REGION,function:'digitalPassApi',service:target.service,runtime:RUNTIME,buildServiceAccount:target.buildServiceAccount,closed:true,anonymousRejected:true,anonymousStatus,authenticatedSmoke:false,cardAssociations:0};
  if(mode==='metadata')return result;
  // Metadata reads use the existing deploy credential; HTTP requests use a separate,
  // keyless verifier identity. Only getOpenIdToken on this fixed SA is needed.
