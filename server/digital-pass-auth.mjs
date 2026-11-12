@@ -11,8 +11,8 @@ export async function loadDigitalPassActor({ db, auth, idToken, now = Date.now()
   if (!profile.exists || profile.data().active !== true) throw new Error('FORBIDDEN');
   const date = new Date(now).toISOString().slice(0, 10);
   const active = value => value.active === true &&
-    (!value.validFrom || /^\\d{4}-\\d{2}-\\d{2}$/.test(value.validFrom) && value.validFrom <= date) &&
-    (!value.validTo || /^\\d{4}-\\d{2}-\\d{2}$/.test(value.validTo) && value.validTo >= date);
+    (!value.validFrom || /^\d{4}-\d{2}-\d{2}$/.test(value.validFrom) && value.validFrom <= date) &&
+    (!value.validTo || /^\d{4}-\d{2}-\d{2}$/.test(value.validTo) && value.validTo >= date);
   const organizations = new Set(memberships.docs.map(s => s.data())
     .filter(m => m.userId === uid && active(m) && typeof m.organizationId === 'string' && m.organizationId)
     .map(m => m.organizationId));
