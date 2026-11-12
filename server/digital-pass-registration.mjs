@@ -96,6 +96,11 @@ export async function checkDigitalCredential({ db, actor, qrPayload, now = Date.
     const credential = await tx.get(ref(db, 'digitalCredentials', credentialId));
     if (!credential.exists) return { status: 'UNKNOWN' };
     const c = credential.data();
+    // Keep credential existence opaque across organizations; a scanner's grant
+    // must match the exact inventory organization before status or audit access.
+    if (actor.isDnsAdmin !== true && !actor.grants?.some(g =>
+      g.organizationId === c.organizationId && g.permissions?.includes('passValidation.check')))
+      return { status: 'UNKNOWN' };
     const registration = await tx.get(ref(db, 'passRegistrations', c.physicalPassId));
     let status = 'UNKNOWN';
     if (c.status !== 'ACTIVE' || !registration.exists || registration.data().status !== 'ACTIVE' || registration.data().credentialId !== credentialId) status = 'REVOKED';
@@ -104,7 +109,7 @@ export async function checkDigitalCredential({ db, actor, qrPayload, now = Date.
     else if (now >= c.validUntil) status = 'EXPIRED';
     else status = 'VALID';
     tx.create(ref(db, 'passAuditEvents', randomUUID()), { action: 'CREDENTIAL_VALIDATED', targetId: credentialId,
-      actorId: actor.uid, result: status, at: now, ...auditRetention(now) });
+      actorId: actor.uid, organizationId: c.organizationId, result: status, at: now, ...auditRetention(now) });
     return { status, seasonId: c.seasonId, productCode: c.productCode };
   });
 }
