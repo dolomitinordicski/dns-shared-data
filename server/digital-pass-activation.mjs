@@ -5,7 +5,7 @@
  */
 import { randomInt, createHmac, randomUUID } from 'node:crypto';
 import {activationRetention, auditRetention} from './digital-pass-retention.mjs';
-import {isDigitalPassProduct} from './digital-pass-inventory-resolver.mjs';
+import {getDigitalPassProduct} from './digital-pass-product-registry.mjs';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export const CODE_LENGTH = 6;
@@ -39,9 +39,12 @@ function assertOperator(actor, assignment, requiredPermission) {
 }
 
 function requireAssignment(assignment) {
-  if (!assignment || assignment.seasonId !== '2026-27' || !isDigitalPassProduct(assignment.productCode) || !assignment.sourceRevision || !assignment.physicalPassId || !assignment.organizationId ||
-      !assignment.seasonId ||
-      !(assignment.eligibleForDigitalPass === true || (assignment.productCode === 'sk-dns' && assignment.eligibleForDnsSeasonPilot === true))) {
+  const definition = getDigitalPassProduct(assignment?.productCode, assignment?.seasonId);
+  if (!assignment || assignment.seasonId !== '2026-27' || !definition ||
+      assignment.passDesign !== definition.passDesign || !assignment.sourceRevision ||
+      !assignment.physicalPassId || !assignment.organizationId ||
+      !(assignment.eligibleForDigitalPass === true ||
+        (definition.pilotEligibility.dnsSeason === true && assignment.eligibleForDnsSeasonPilot === true))) {
     throw new Error('NOT_ELIGIBLE');
   }
 }
@@ -90,6 +93,7 @@ export async function prepareActivation({
       organizationId: assignment.organizationId,
       seasonId: assignment.seasonId,
       productCode: assignment.productCode,
+      passDesign: assignment.passDesign,
       codeVerifier: hashActivationCode(code, id, hmacSecret),
       status: 'PREPARED',
       createdAt: now,
@@ -155,7 +159,7 @@ export async function reissueActivation({ db, actor, physicalPassId, idempotency
     if (!snap.exists) throw new Error('NO_PREPARATION');
     const record = snap.data();
     if (record.lastReissueKey === idempotencyKey) return { physicalPassId, alreadyReissued: true, status: record.status };
-    if (record.possessionConfirmedAt == null || registration.exists || record.seasonId !== '2026-27' || !isDigitalPassProduct(record.productCode) ||
+    if (record.possessionConfirmedAt == null || registration.exists || record.seasonId !== '2026-27' || !getDigitalPassProduct(record.productCode, record.seasonId) ||
         !['ENABLED','EXPIRED'].includes(record.status)) throw new Error('CANNOT_REISSUE');
     while (verifier === record.codeVerifier) { code = generateActivationCode(); verifier = hashActivationCode(code, physicalPassId, hmacSecret); }
     tx.update(ref, { codeVerifier: verifier, status: 'ENABLED', nonce, expiresAt: now + CODE_TTL_MS,
@@ -189,6 +193,7 @@ export async function claimPreparedPossession({
     if (record.qrClaimEnabled !== true || record.organizationId !== assignment.organizationId ||
         record.sourceRevision !== assignment.sourceRevision ||
         record.seasonId !== assignment.seasonId || record.productCode !== assignment.productCode ||
+        record.passDesign !== assignment.passDesign ||
         typeof record.codeVerifier !== 'string' || record.codeVerifier.length !== 64)
       throw new Error('INVALID_OR_EXPIRED');
     const expected = hashActivationCode(code, id, hmacSecret);
