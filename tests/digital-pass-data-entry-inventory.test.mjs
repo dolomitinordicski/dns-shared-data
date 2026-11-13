@@ -133,16 +133,28 @@ test('HTTP infers instructor product from Data Entry and completes one registrat
   {id:'2026-27__ticket__org-a__instructor',ticketOrderId:'2026-27__ticket__org-a',seasonId:'2026-27',organizationId:'org-a',catalogItemId:'instructor',quantity:1},
  );
  const {db,handler}=await fixture(data);
- const prepared=await request(handler,'/v1/pass-activations/prepare','operator',{passNumber:'114',productCode:'sk-dns'});
+ const prepared=await request(handler,'/v1/pass-activations/prepare','operator',{passNumber:'114',productCode:'sk-dns',passDesign:'dns-seasonal'});
  assert.equal(prepared.code,200);
  const challenge=db.values.get('passActivationChallenges/'+prepared.data.physicalPassId);
  assert.equal(challenge.productCode,'sk-instructor');
+ assert.equal(challenge.passDesign,'dns-ski-instructor');
  assert.equal(challenge.organizationId,'org-a');
- assert.equal((await request(handler,'/v1/pass-activations/claim','holder',{passNumber:'114',code:prepared.data.code})).code,200);
+ assert.equal((await request(handler,'/v1/pass-activations/claim','holder',{
+  passNumber:'114',code:prepared.data.code,productCode:'sk-dns',passDesign:'dns-seasonal'
+ })).code,200);
  assert.equal((await request(handler,'/v1/pass-registrations/complete','holder',{
-  passNumber:'114',code:prepared.data.code,givenName:'Synthetic',familyName:'Instructor',language:'it'
+  passNumber:'114',code:prepared.data.code,givenName:'Synthetic',familyName:'Instructor',language:'it',productCode:'sk-dns',passDesign:'dns-seasonal'
  })).code,200);
  const credential=[...db.values.entries()].find(([key])=>key.startsWith('digitalCredentials/'))?.[1];
  assert.equal(credential.productCode,'sk-instructor');
+ assert.equal(credential.passDesign,'dns-ski-instructor');
  assert.equal(credential.organizationId,'org-a');
+ const pass=await request(handler,'/v1/me/digital-pass','holder',{
+  physicalPassId:prepared.data.physicalPassId,productCode:'sk-dns',passDesign:'dns-seasonal',organizationId:'forged'
+ });
+ assert.equal(pass.code,200);
+ assert.equal(pass.data.productCode,'sk-instructor');
+ assert.equal(pass.data.passDesign,'dns-ski-instructor');
+ assert.equal(pass.data.organizationId,'org-a');
+ assert.equal(pass.data.walletMetadata.logoText,'DNS LANGLAUFLEHRER');
 });
