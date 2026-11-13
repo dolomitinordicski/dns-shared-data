@@ -1,13 +1,12 @@
 /** Private server adapter. Source rows come from the existing Data Entry numbering
  * export; the approval/revision must be administered by DNS, never by the browser. */
 import { createHash } from 'node:crypto';
+import { getDigitalPassProduct } from './digital-pass-product-registry.mjs';
 export const PILOT_SEASON = '2026-27';
-export const PILOT_PRODUCT = 'sk-dns';
-export const DIGITAL_PASS_PRODUCTS = Object.freeze(['sk-dns', 'sk-instructor']);
-export const isDigitalPassProduct = productCode => DIGITAL_PASS_PRODUCTS.includes(productCode);
 
 export function resolveSeasonPassAssignment({ passNumber, seasonId, productCode, snapshot }) {
-  if (seasonId !== PILOT_SEASON || !isDigitalPassProduct(productCode)) throw new Error('NOT_ELIGIBLE');
+  const definition = getDigitalPassProduct(productCode, seasonId);
+  if (!definition || seasonId !== PILOT_SEASON) throw new Error('NOT_ELIGIBLE');
   if (!snapshot || snapshot.approved !== true || snapshot.seasonId !== seasonId)
     throw new Error('UNAPPROVED_NUMBERING_SNAPSHOT');
   if (typeof snapshot.revision !== 'string' || !snapshot.revision) throw new Error('MISSING_NUMBERING_REVISION');
@@ -28,7 +27,8 @@ export function resolveSeasonPassAssignment({ passNumber, seasonId, productCode,
   return {
     physicalPassId: createHash('sha256').update(`dns-physical-pass:v1\0${seasonId}\0${productCode}\0${normalized}`).digest('hex'),
     printedNumber: normalized, organizationId: row.organizationId, seasonId, productCode,
-    eligibleForDigitalPass: true, eligibleForDnsSeasonPilot: productCode === PILOT_PRODUCT, sourceRevision: snapshot.revision,
+    passDesign: definition.passDesign, walletMetadata: definition.wallet,
+    eligibleForDigitalPass: true, eligibleForDnsSeasonPilot: definition.pilotEligibility.dnsSeason === true, sourceRevision: snapshot.revision,
   };
 }
 
@@ -49,6 +49,6 @@ export function resolveDigitalPassAssignment({ passNumber, seasonId, snapshot })
     r.from > 0 && r.to >= r.from && r.from <= number && number <= r.to);
   if (matches.length !== 1) throw new Error(matches.length ? 'AMBIGUOUS_PASS_NUMBER' : 'PASS_NOT_IN_MATRIX');
   const productCode = matches[0].itemCode ?? matches[0].productCode;
-  if (!isDigitalPassProduct(productCode)) throw new Error('NOT_ELIGIBLE');
+  if (!getDigitalPassProduct(productCode, seasonId)) throw new Error('NOT_ELIGIBLE');
   return resolveSeasonPassAssignment({ passNumber, seasonId, productCode, snapshot });
 }
