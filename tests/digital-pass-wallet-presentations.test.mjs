@@ -20,3 +20,15 @@ test('rejects unapproved formats, wrong season and arbitrary QR hosts',()=>{
  assert.throws(()=>createWalletPresentation({...args,qrToken:'019621'}),/INVALID_QR_TOKEN/);
  assert.throws(()=>googleGenericObject(createWalletPresentation(args),{}),/GOOGLE_ISSUER_NOT_CONFIGURED/);
 });
+
+
+test('ski instructor passes receive their own Wallet identity and class', () => {
+ const instructor={...credential,productCode:'sk-instructor',printedNumber:'024306'};
+ const p=createWalletPresentation({...args,credential:instructor});
+ const apple=applePassFields(p);
+ const google=googleGenericObject(p,{issuerId:'123456789'});
+ assert.equal(apple.description,'DNS Ski Instructor Pass 2026/27');
+ assert.equal(apple.generic.primaryFields[0].label,'LANGAUFLEHRER · MAESTRO DI SCI');
+ assert.equal(google.classId,'123456789.dns-ski-instructor-2026-27');
+ assert.equal(google.textModulesData[0].body,'Ski Instructor');
+});
