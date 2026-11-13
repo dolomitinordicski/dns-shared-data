@@ -41,12 +41,13 @@ function assertOperator(actor, assignment, requiredPermission) {
 function requireAssignment(assignment) {
   const definition = getDigitalPassProduct(assignment?.productCode, assignment?.seasonId);
   if (!assignment || !definition ||
-      assignment.passDesign !== definition.passDesign || !assignment.sourceRevision ||
-      !assignment.physicalPassId || !assignment.organizationId ||
+      assignment.passDesign != null && assignment.passDesign !== definition.passDesign ||
+      !assignment.sourceRevision || !assignment.physicalPassId || !assignment.organizationId ||
       !(assignment.eligibleForDigitalPass === true ||
         (definition.pilotEligibility.dnsSeason === true && assignment.eligibleForDnsSeasonPilot === true))) {
     throw new Error('NOT_ELIGIBLE');
   }
+  return { ...assignment, passDesign: definition.passDesign, walletMetadata: { ...definition.wallet } };
 }
 
 /**
@@ -60,8 +61,7 @@ export async function prepareActivation({
   now = Date.now(),
 }) {
   if (typeof resolveAssignment !== 'function') throw new Error('NO_INVENTORY_RESOLVER');
-  const assignment = await resolveAssignment({ passNumber, seasonId, productCode });
-  requireAssignment(assignment);
+  const assignment = requireAssignment(await resolveAssignment({ passNumber, seasonId, productCode }));
   assertOperator(actor, assignment, 'passActivation.issue');
   // Separate authorization confirms physical possession; no commercial attestation.
   assertOperator(actor, assignment, 'passPossession.attest');
@@ -180,7 +180,7 @@ export async function claimPreparedPossession({
   db, identity, assignment, code, hmacSecret, now = Date.now(),
 }) {
   if (!identity?.uid || identity.email_verified !== true) throw new Error('UNAUTHORIZED');
-  requireAssignment(assignment);
+  assignment = requireAssignment(assignment);
   if (typeof code !== 'string' || !/^[A-HJ-NP-Z2-9]{6}$/.test(code))
     throw new Error('INVALID_OR_EXPIRED');
   const id = assignment.physicalPassId;
