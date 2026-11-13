@@ -29,7 +29,7 @@ export async function registerDigitalPass({ db, identity, assignment, code, give
     typeof noticeVersion !== 'string' || !noticeVersion || noticeVersion.length > 100) throw new Error('INVALID_REGISTRATION');
   if (!Number.isFinite(validFrom) || !Number.isFinite(validUntil) || validFrom >= validUntil || now >= validUntil) throw new Error('INVALID_VALIDITY');
   const definition = getDigitalPassProduct(assignment?.productCode, assignment?.seasonId);
-  if (!assignment || assignment.seasonId !== '2026-27' || !definition ||
+  if (!assignment || !definition ||
       assignment.passDesign !== definition.passDesign) throw deny();
   const id = assignment.physicalPassId;
   await limitAttempts({ db, key: 'claim:' + identity.uid, now, max: 10 });
@@ -115,7 +115,7 @@ export async function checkDigitalCredential({ db, actor, qrPayload, now = Date.
     const registration = await tx.get(ref(db, 'passRegistrations', c.physicalPassId));
     let status = 'UNKNOWN';
     if (c.status !== 'ACTIVE' || !registration.exists || registration.data().status !== 'ACTIVE' || registration.data().credentialId !== credentialId) status = 'REVOKED';
-    else if (!Number.isFinite(c.validFrom) || !Number.isFinite(c.validUntil) || c.seasonId !== '2026-27' || !getDigitalPassProduct(c.productCode, c.seasonId)) status = 'UNKNOWN';
+    else if (!Number.isFinite(c.validFrom) || !Number.isFinite(c.validUntil) || !getDigitalPassProduct(c.productCode, c.seasonId)) status = 'UNKNOWN';
     else if (now < c.validFrom) status = 'NOT_YET_VALID';
     else if (now >= c.validUntil) status = 'EXPIRED';
     else status = 'VALID';
