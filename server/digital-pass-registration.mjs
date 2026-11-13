@@ -65,7 +65,7 @@ export async function registerDigitalPass({ db, identity, assignment, code, give
       organizationId: assignment.organizationId, issuedAt: now, validFrom, validUntil, ...passDataRetention() });
     // Private holder-only payload: QR is high-entropy, opaque, revocable. Never logged or in audit/analytics.
     tx.create(ref(db, 'passCredentialPayloads', credentialId), { holderUid: identity.uid, token, ...passDataRetention() });
-    tx.update(challengeRef, { status: 'CONSUMED', consumedAt: now, ...activationRetention(now) });
+    tx.update(challengeRef, { status: 'CONSUMED', consumedAt: now, passDesign: assignment.passDesign, ...activationRetention(now) });
     // Compatible with the existing Brevo adapter (#168); service verification is never marketing consent.
     const affirmative = false; // Marketing opt-in is recorded only by requestMarketingOptIn.
     tx.create(ref(db, 'consentEvents', randomUUID()), { holderId: identity.uid, purpose: 'DNS_MARKETING',
