@@ -26,3 +26,10 @@ test('public page is minimal, animated and excludes sensitive identity',()=>{
  assert.match(page,/animation:pulse/);
  assert.doesNotMatch(page,/holderName|email|printedNumber|credentialId|physicalPassId/);
 });
+
+
+test('ski instructor credentials follow the same official season validity checks', async () => {
+  const instructor = { ...valid, productCode:'sk-instructor' };
+  assert.equal(await verifyPublicPass({db:db(instructor,registered),token,now:99}),'NOT_YET_VALID');
+  assert.equal(await verifyPublicPass({db:db(instructor,registered),token,now:100}),'VALID');
+});
