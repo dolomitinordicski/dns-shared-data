@@ -6,7 +6,7 @@ export const PILOT_SEASON = '2026-27';
 
 export function resolveSeasonPassAssignment({ passNumber, seasonId, productCode, snapshot }) {
   const definition = getDigitalPassProduct(productCode, seasonId);
-  if (!definition || seasonId !== PILOT_SEASON) throw new Error('NOT_ELIGIBLE');
+  if (!definition) throw new Error('NOT_ELIGIBLE');
   if (!snapshot || snapshot.approved !== true || snapshot.seasonId !== seasonId)
     throw new Error('UNAPPROVED_NUMBERING_SNAPSHOT');
   if (typeof snapshot.revision !== 'string' || !snapshot.revision) throw new Error('MISSING_NUMBERING_REVISION');
@@ -37,7 +37,7 @@ export function resolveSeasonPassAssignment({ passNumber, seasonId, productCode,
  * Product type is inferred server-side from the printed number; callers cannot
  * relabel an instructor pass as a seasonal pass (or vice versa). */
 export function resolveDigitalPassAssignment({ passNumber, seasonId, snapshot }) {
-  if (seasonId !== PILOT_SEASON) throw new Error('NOT_ELIGIBLE');
+  if (typeof seasonId !== 'string') throw new Error('NOT_ELIGIBLE');
   if (!snapshot || snapshot.approved !== true || snapshot.seasonId !== seasonId)
     throw new Error('UNAPPROVED_NUMBERING_SNAPSHOT');
   if (typeof snapshot.revision !== 'string' || !snapshot.revision) throw new Error('MISSING_NUMBERING_REVISION');
