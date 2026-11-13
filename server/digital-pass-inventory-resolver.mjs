@@ -41,7 +41,7 @@ export function resolveDigitalPassAssignment({ passNumber, seasonId, snapshot })
   if (!snapshot || snapshot.approved !== true || snapshot.seasonId !== seasonId)
     throw new Error('UNAPPROVED_NUMBERING_SNAPSHOT');
   if (typeof snapshot.revision !== 'string' || !snapshot.revision) throw new Error('MISSING_NUMBERING_REVISION');
-  if (typeof passNumber !== 'string' || !/^\\d{1,12}$/.test(passNumber.trim())) throw new Error('INVALID_PASS_NUMBER');
+  if (typeof passNumber !== 'string' || !/^[0-9]{1,12}$/.test(passNumber.trim())) throw new Error('INVALID_PASS_NUMBER');
   const number = Number(passNumber.trim());
   if (!Number.isSafeInteger(number) || number < 1) throw new Error('INVALID_PASS_NUMBER');
   if (!Array.isArray(snapshot.rows)) throw new Error('INVALID_NUMBERING_SNAPSHOT');
