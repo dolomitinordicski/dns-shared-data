@@ -9,8 +9,8 @@ function check({ credentialId, credential, holderName, verificationBase }) {
   const definition = getDigitalPassProduct(credential?.productCode, credential?.seasonId);
   if (typeof credentialId !== 'string' || !/^[a-f0-9]{64}$/.test(credentialId) ||
     credential?.status !== 'ACTIVE' || !definition ||
-    credential?.passDesign != null && credential.passDesign !== definition.passDesign ||
-    !/^\\d{6}$/.test(credential.printedNumber || '') ||
+    (credential?.passDesign != null && credential.passDesign !== definition.passDesign) ||
+    !/^\d{6}$/.test(credential.printedNumber || '') ||
     typeof holderName !== 'string' || !holderName.trim() || holderName.length > 201 ||
     !Number.isFinite(credential.validFrom) || !Number.isFinite(credential.validUntil) ||
     credential.validFrom >= credential.validUntil)
@@ -21,13 +21,19 @@ function check({ credentialId, credential, holderName, verificationBase }) {
     throw new Error('INVALID_VERIFICATION_BASE');
   return definition;
 }
+function definitionForPresentation(presentation) {
+  const definition = getDigitalPassProduct(presentation?.productCode, presentation?.seasonId);
+  if (!definition || (presentation?.passDesign != null && presentation.passDesign !== definition.passDesign))
+    throw new Error('WALLET_PASS_NOT_ELIGIBLE');
+  return definition;
+}
 export function createWalletPresentation({ credentialId, credential, holderName, qrToken, verificationBase }) {
   const definition = check({ credentialId, credential, holderName, verificationBase });
   if (typeof qrToken !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(qrToken)) throw new Error('INVALID_QR_TOKEN');
   const barcodeUrl = new URL('v/' + qrToken, verificationBase).toString();
   return Object.freeze({
     credentialId, serial: credential.printedNumber, holderName: holderName.trim(),
-    productCode: definition.productCode, passDesign: definition.passDesign,
+    productCode: definition.productCode, seasonId: credential.seasonId, passDesign: definition.passDesign,
     walletMetadata: { ...definition.wallet },
     validFrom: new Date(credential.validFrom).toISOString(),
     validUntil: new Date(credential.validUntil).toISOString(),
@@ -35,7 +41,7 @@ export function createWalletPresentation({ credentialId, credential, holderName,
   });
 }
 export function applePassFields(presentation) {
-  const wallet = presentation.walletMetadata;
+  const wallet = definitionForPresentation(presentation).wallet;
   return {
     formatVersion: 1,
     organizationName: 'Dolomiti NordicSki',
@@ -55,9 +61,9 @@ export function applePassFields(presentation) {
   };
 }
 export function googleGenericObject(presentation, { issuerId, classSuffix } = {}) {
-  const wallet = presentation.walletMetadata;
+  const wallet = definitionForPresentation(presentation).wallet;
   classSuffix ??= wallet.classSuffix;
-  if (typeof issuerId !== 'string' || !/^\\d{6,20}$/.test(issuerId) ||
+  if (typeof issuerId !== 'string' || !/^\d{6,20}$/.test(issuerId) ||
     !/^[a-zA-Z0-9._-]{1,64}$/.test(classSuffix)) throw new Error('GOOGLE_ISSUER_NOT_CONFIGURED');
   return {
     id: issuerId + '.' + presentation.credentialId,
