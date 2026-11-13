@@ -70,3 +70,17 @@ test('wrong organization cannot issue or validate; cannot Validate expired prepa
     physicalPassId: assignment.physicalPassId, preparationId: db.values.get('passActivationChallenges/' + assignment.physicalPassId)?.nonce, now: 1000 + 11 * 60 * 1000 }), /INVALID_PREPARATION/);
 });
 
+
+
+test('instructor matrix assignments can be prepared without seasonal-pass privilege leakage', async () => {
+  const db = new MemoryDb();
+  const instructor = { ...assignment, physicalPassId:'ski-instructor-pass-1234',
+    organizationId:'ski-school', productCode:'sk-instructor', eligibleForDnsSeasonPilot:false,
+    eligibleForDigitalPass:true };
+  const prepared = await prepareActivation({ db, actor:{uid:'instructor-operator',grants:[
+    {organizationId:'ski-school',permissions:['passActivation.issue','passPossession.attest']},
+  ]}, passNumber:'1234', seasonId:'2026-27', productCode:'sk-instructor',
+  resolveAssignment:async()=>instructor, hmacSecret, now:2000 });
+  assert.equal(db.values.get('passActivationChallenges/'+instructor.physicalPassId).productCode,'sk-instructor');
+  assert.equal(prepared.physicalPassId,instructor.physicalPassId);
+});
