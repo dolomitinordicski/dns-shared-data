@@ -20,6 +20,7 @@ Consumer applications should reference the shared assets instead of keeping inde
 ## Logo vettoriale per sfondi chiari
 
 - `logo-print-vector.svg` — nuovo logo DNS su fondo bianco/chiaro, con trasparenza e tracciati originali Adobe Illustrator provenienti dal master SVG di Flyer Studio. Le geometrie non sono state modificate.
-- Colori Foundation: `#AAD0D1` (DOLOMITI e scie), `#417483` (NORDICSKI), `#0D4D5E` (sciatore).
+- Colori: `#AAD0D1` per DOLOMITI e le scie, `#417483` per NORDICSKI, `#0D4D5E` per le gambe e il busto dello sciatore.
 - Non sostituisce `logo-web.png` né la versione negativa destinata agli sfondi scuri. Usare solamente su superfici chiare.
-- Gli applicativi possono distribuirne una copia locale byte-identica per garantire print/export e consultazione offline: SHA Git blob `b485a821ff77de98889f71f642a1047905fcbcde`.
+- Varianti vettoriali: `logo-farbe-2025.svg`, `logo-grau-2025.svg` e `logo-white-neg.svg` (negativo bianco integrale per sfondi colorati/scuri).
+- Gli applicativi possono distribuirne una copia locale byte-identica per garantire print/export e consultazione offline: SHA Git blob `90436a2460e252e3d6c51a677d2e3cee98881142`.
