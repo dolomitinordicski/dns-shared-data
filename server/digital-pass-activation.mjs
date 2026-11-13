@@ -193,7 +193,7 @@ export async function claimPreparedPossession({
     if (record.qrClaimEnabled !== true || record.organizationId !== assignment.organizationId ||
         record.sourceRevision !== assignment.sourceRevision ||
         record.seasonId !== assignment.seasonId || record.productCode !== assignment.productCode ||
-        record.passDesign !== assignment.passDesign ||
+        (record.passDesign != null && record.passDesign !== assignment.passDesign) ||
         typeof record.codeVerifier !== 'string' || record.codeVerifier.length !== 64)
       throw new Error('INVALID_OR_EXPIRED');
     const expected = hashActivationCode(code, id, hmacSecret);
@@ -212,7 +212,7 @@ export async function claimPreparedPossession({
     tx.update(recordRef, {
       status: 'ENABLED', possessionStatus: 'POSSESSION_CONFIRMED',
       possessionConfirmedAt: now, expiresAt: now + CODE_TTL_MS,
-      claimedByUid: identity.uid, possessionMethod: 'CUSTOMER_QR_CLAIM',
+      claimedByUid: identity.uid, possessionMethod: 'CUSTOMER_QR_CLAIM', passDesign: assignment.passDesign,
       ...activationRetention(now + CODE_TTL_MS),
     });
     tx.create(auditRef, { action: 'PASS_POSSESSION_CONFIRMED', targetId: id,
