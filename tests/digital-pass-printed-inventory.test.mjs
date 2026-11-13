@@ -46,5 +46,5 @@ test('Digital Pass infers seasonal and ski instructor product from the exact mat
   assert.notEqual(instructor.physicalPassId,seasonal.physicalPassId);
   assert.throws(()=>resolveDigitalPassAssignment({passNumber:'01120',seasonId:'2026-27',snapshot:approved}),/NOT_ELIGIBLE/);
   assert.throws(()=>resolveSeasonPassAssignment({passNumber:'01100',seasonId:'2026-27',productCode:'sk-dns',snapshot:approved}),/NOT_ELIGIBLE/);
-  assert.throws(()=>resolveDigitalPassAssignment({passNumber:'01100',seasonId:'2026-27',snapshot:{...approved,rows:[...approved.rows,approved.rows[0]]}}),/AMBIGUOUS_PASS_NUMBER/);
+  assert.throws(()=>resolveDigitalPassAssignment({passNumber:'01100',seasonId:'2026-27',snapshot:{...approved,rows:[...approved.rows,approved.rows[1]]}}),/AMBIGUOUS_PASS_NUMBER/);
 });
