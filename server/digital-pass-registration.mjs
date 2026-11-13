@@ -2,6 +2,7 @@ import {resolveDynamicQr} from './digital-pass-dynamic-qr.mjs';
 import {passDataRetention, transientRetention, activationRetention, auditRetention} from './digital-pass-retention.mjs';
 import { randomBytes, createHash, timingSafeEqual, randomUUID } from 'node:crypto';
 import { hashActivationCode } from './digital-pass-activation.mjs';
+import { isDigitalPassProduct } from './digital-pass-inventory-resolver.mjs';
 const digest = value => createHash('sha256').update(value).digest('hex');
 const ref = (db, collection, id) => db.collection(collection).doc(id);
 const deny = () => new Error('INVALID_OR_EXPIRED_ACTIVATION');
@@ -27,7 +28,7 @@ export async function registerDigitalPass({ db, identity, assignment, code, give
   if (!['de', 'it', 'en'].includes(language) || ![givenName, familyName].every(v => typeof v === 'string' && v.trim().length > 0 && v.length <= 100) ||
     typeof noticeVersion !== 'string' || !noticeVersion || noticeVersion.length > 100) throw new Error('INVALID_REGISTRATION');
   if (!Number.isFinite(validFrom) || !Number.isFinite(validUntil) || validFrom >= validUntil || now >= validUntil) throw new Error('INVALID_VALIDITY');
-  if (!assignment || assignment.seasonId !== '2026-27' || assignment.productCode !== 'sk-dns') throw deny();
+  if (!assignment || assignment.seasonId !== '2026-27' || !isDigitalPassProduct(assignment.productCode)) throw deny();
   const id = assignment.physicalPassId;
   await limitAttempts({ db, key: 'claim:' + identity.uid, now, max: 10 });
   await limitAttempts({ db, key: 'pass:' + id, now, max: 5 });
@@ -104,7 +105,7 @@ export async function checkDigitalCredential({ db, actor, qrPayload, now = Date.
     const registration = await tx.get(ref(db, 'passRegistrations', c.physicalPassId));
     let status = 'UNKNOWN';
     if (c.status !== 'ACTIVE' || !registration.exists || registration.data().status !== 'ACTIVE' || registration.data().credentialId !== credentialId) status = 'REVOKED';
-    else if (!Number.isFinite(c.validFrom) || !Number.isFinite(c.validUntil) || c.seasonId !== '2026-27' || c.productCode !== 'sk-dns') status = 'UNKNOWN';
+    else if (!Number.isFinite(c.validFrom) || !Number.isFinite(c.validUntil) || c.seasonId !== '2026-27' || !isDigitalPassProduct(c.productCode)) status = 'UNKNOWN';
     else if (now < c.validFrom) status = 'NOT_YET_VALID';
     else if (now >= c.validUntil) status = 'EXPIRED';
     else status = 'VALID';
