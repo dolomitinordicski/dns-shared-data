@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { generateKeyPairSync, createVerify } from 'node:crypto';
 import { signGoogleWalletSaveUrl, getGoogleWalletLink } from '../server/digital-pass-google-wallet.mjs';
 const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048, publicKeyEncoding: {type:'spki',format:'pem'}, privateKeyEncoding: {type:'pkcs8',format:'pem'} });
-const presentation={credentialId:'a'.repeat(64),serial:'019621',holderName:'Example',validFrom:new Date(1790000000000).toISOString(),validUntil:new Date(1800000000000).toISOString(),barcodeUrl:'https://pass.dolomitinordicski.com/v/'+'b'.repeat(43)};
+const presentation={credentialId:'a'.repeat(64),serial:'019621',holderName:'Example',productCode:'sk-dns',seasonId:'2026-27',passDesign:'dns-seasonal',validFrom:new Date(1790000000000).toISOString(),validUntil:new Date(1800000000000).toISOString(),barcodeUrl:'https://pass.dolomitinordicski.com/v/'+'b'.repeat(43)};
 test('Google Save JWT is correctly RS256 signed with QR URL and issuer',()=>{
  const url=signGoogleWalletSaveUrl({presentation,issuerId:'123456789',serviceAccount:{client_email:'issuer@example.iam.gserviceaccount.com',private_key:privateKey},origins:['https://dolomitinordicski.github.io']});
  assert.ok(url.startsWith('https://pay.google.com/gp/v/save/'));
