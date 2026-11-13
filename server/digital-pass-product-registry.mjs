@@ -46,6 +46,7 @@ export const DIGITAL_PASS_PRODUCT_REGISTRY = Object.freeze({
 
 export function getDigitalPassProduct(productCode, seasonId) {
   if (typeof productCode !== 'string' || typeof seasonId !== 'string') return null;
+  if (!Object.hasOwn(DIGITAL_PASS_PRODUCT_REGISTRY, productCode)) return null;
   const definition = DIGITAL_PASS_PRODUCT_REGISTRY[productCode];
-  return definition?.enabledSeasons.includes(seasonId) ? definition : null;
+  return definition.enabledSeasons.includes(seasonId) ? definition : null;
 }
