@@ -75,15 +75,15 @@ async function request(handler,path,uid,body) {
  const res={set(){return this},status(code){this.code=code;return this},json(data){this.data=data;return this}};
  await handler(req,res);return res;
 }
-async function fixture() {
- const db=seed();
+async function fixture(data=matrix()) {
+ const db=seed(data);
  db.values.set('users/operator',{active:true,globalRoles:[]});
  db.values.set('memberships/operator',{userId:'operator',organizationId:'org-a',active:true});
  db.values.set('accessGrants/operator',{userId:'operator',scopeType:'organization',scopeId:'org-a',permissions:['passActivation.issue','passPossession.attest'],active:true});
- const inventoryRevision=(await loadDataEntryInventory({db,startNumber:101})).revision;
+ const inventoryRevision=(await loadDataEntryInventory({db,startNumber:data.startNumber})).revision;
  const options={db,auth:{verifyIdToken:async(uid,revoked)=>{assert.equal(revoked,true);return{uid,email:uid+'@example.test',email_verified:true}}},
  hmacSecret:'synthetic-data-entry-test-key-not-for-cloud',allowedOrigins:['https://example.test'],inventoryRevision,
- inventorySource:'data-entry',dataEntryStartNumber:101,validFrom:Date.now()-10000,validUntil:Date.now()+86400000,
+ inventorySource:'data-entry',dataEntryStartNumber:data.startNumber,validFrom:Date.now()-10000,validUntil:Date.now()+86400000,
  noticeVersion:'synthetic-privacy',registrationEnabled:true};
  return{db,options,handler:createDigitalPassHandler(options)};
 }
@@ -122,3 +122,39 @@ test('wrong revision or missing Data Entry source never falls back to a copied s
  assert.throws(()=>createDigitalPassHandler({...options,dataEntryStartNumber:undefined}));
 });
 
+
+
+test('HTTP infers instructor product from Data Entry and completes one registration',async()=>{
+ const data=matrix();
+ data.items.push({id:'instructor',code:'sk-instructor',category:'ticket',displayOrder:25});
+ data.form.catalogItemIds.push('instructor');
+ data.lines.push(
+  {id:'2026-27__ticket__org-b__instructor',ticketOrderId:'2026-27__ticket__org-b',seasonId:'2026-27',organizationId:'org-b',catalogItemId:'instructor',quantity:2},
+  {id:'2026-27__ticket__org-a__instructor',ticketOrderId:'2026-27__ticket__org-a',seasonId:'2026-27',organizationId:'org-a',catalogItemId:'instructor',quantity:1},
+ );
+ const {db,handler}=await fixture(data);
+ const prepared=await request(handler,'/v1/pass-activations/prepare','operator',{passNumber:'114',productCode:'sk-dns',passDesign:'dns-seasonal'});
+ assert.equal(prepared.code,200);
+ const challenge=db.values.get('passActivationChallenges/'+prepared.data.physicalPassId);
+ assert.equal(challenge.productCode,'sk-instructor');
+ assert.equal(challenge.passDesign,'dns-ski-instructor');
+ assert.equal(challenge.organizationId,'org-a');
+ assert.equal((await request(handler,'/v1/pass-activations/claim','holder',{
+  passNumber:'114',code:prepared.data.code,productCode:'sk-dns',passDesign:'dns-seasonal'
+ })).code,200);
+ assert.equal((await request(handler,'/v1/pass-registrations/complete','holder',{
+  passNumber:'114',code:prepared.data.code,givenName:'Synthetic',familyName:'Instructor',language:'it',productCode:'sk-dns',passDesign:'dns-seasonal'
+ })).code,200);
+ const credential=[...db.values.entries()].find(([key])=>key.startsWith('digitalCredentials/'))?.[1];
+ assert.equal(credential.productCode,'sk-instructor');
+ assert.equal(credential.passDesign,'dns-ski-instructor');
+ assert.equal(credential.organizationId,'org-a');
+ const pass=await request(handler,'/v1/me/digital-pass','holder',{
+  physicalPassId:prepared.data.physicalPassId,productCode:'sk-dns',passDesign:'dns-seasonal',organizationId:'forged'
+ });
+ assert.equal(pass.code,200);
+ assert.equal(pass.data.productCode,'sk-instructor');
+ assert.equal(pass.data.passDesign,'dns-ski-instructor');
+ assert.equal(pass.data.organizationId,'org-a');
+ assert.equal(pass.data.walletMetadata.logoText,'DNS LANGLAUFLEHRER');
+});

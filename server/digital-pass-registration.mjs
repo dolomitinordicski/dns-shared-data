@@ -2,6 +2,7 @@ import {resolveDynamicQr} from './digital-pass-dynamic-qr.mjs';
 import {passDataRetention, transientRetention, activationRetention, auditRetention} from './digital-pass-retention.mjs';
 import { randomBytes, createHash, timingSafeEqual, randomUUID } from 'node:crypto';
 import { hashActivationCode } from './digital-pass-activation.mjs';
+import { getDigitalPassProduct } from './digital-pass-product-registry.mjs';
 const digest = value => createHash('sha256').update(value).digest('hex');
 const ref = (db, collection, id) => db.collection(collection).doc(id);
 const deny = () => new Error('INVALID_OR_EXPIRED_ACTIVATION');
@@ -27,7 +28,10 @@ export async function registerDigitalPass({ db, identity, assignment, code, give
   if (!['de', 'it', 'en'].includes(language) || ![givenName, familyName].every(v => typeof v === 'string' && v.trim().length > 0 && v.length <= 100) ||
     typeof noticeVersion !== 'string' || !noticeVersion || noticeVersion.length > 100) throw new Error('INVALID_REGISTRATION');
   if (!Number.isFinite(validFrom) || !Number.isFinite(validUntil) || validFrom >= validUntil || now >= validUntil) throw new Error('INVALID_VALIDITY');
-  if (!assignment || assignment.seasonId !== '2026-27' || assignment.productCode !== 'sk-dns') throw deny();
+  const definition = getDigitalPassProduct(assignment?.productCode, assignment?.seasonId);
+  if (!assignment || !definition ||
+      assignment.passDesign != null && assignment.passDesign !== definition.passDesign) throw deny();
+  assignment = { ...assignment, passDesign: definition.passDesign, walletMetadata: { ...definition.wallet } };
   const id = assignment.physicalPassId;
   await limitAttempts({ db, key: 'claim:' + identity.uid, now, max: 10 });
   await limitAttempts({ db, key: 'pass:' + id, now, max: 5 });
@@ -45,19 +49,24 @@ export async function registerDigitalPass({ db, identity, assignment, code, give
     if (!challenge.exists || typeof code !== 'string' || !/^[A-HJ-NP-Z2-9]{6}$/.test(code)) throw deny();
     const record = challenge.data();
     const verifier = hashActivationCode(code, id, hmacSecret);
-    if (record.status !== 'ENABLED' || record.possessionStatus !== 'POSSESSION_CONFIRMED' || !Number.isFinite(record.possessionConfirmedAt) || record.expiresAt <= now || (record.claimedByUid && record.claimedByUid !== identity.uid) || record.organizationId !== assignment.organizationId || record.sourceRevision !== assignment.sourceRevision ||
+    if (record.status !== 'ENABLED' || record.possessionStatus !== 'POSSESSION_CONFIRMED' || !Number.isFinite(record.possessionConfirmedAt) || record.expiresAt <= now || (record.claimedByUid && record.claimedByUid !== identity.uid) || record.organizationId !== assignment.organizationId || record.productCode !== assignment.productCode ||
+      (record.passDesign != null && record.passDesign !== assignment.passDesign) ||
+      record.sourceRevision !== assignment.sourceRevision ||
       typeof record.codeVerifier !== 'string' || record.codeVerifier.length !== 64 ||
       !timingSafeEqual(Buffer.from(record.codeVerifier), Buffer.from(verifier))) throw deny();
     tx.create(registrationRef, { physicalPassId: id, holderUid: identity.uid, status: 'ACTIVE',
-      credentialId, organizationId: assignment.organizationId, seasonId: assignment.seasonId, completedAt: now, ...passDataRetention() });
+      credentialId, organizationId: assignment.organizationId, seasonId: assignment.seasonId,
+      productCode: assignment.productCode, passDesign: assignment.passDesign,
+      completedAt: now, ...passDataRetention() });
     tx.set(ref(db, 'passHolders', identity.uid), { givenName: givenName.trim(), familyName: familyName.trim(),
       verifiedEmail: identity.email, language, emailVerifiedAt: now, ...passDataRetention() });
     tx.create(ref(db, 'digitalCredentials', credentialId), { physicalPassId: id, holderUid: identity.uid,
-      status: 'ACTIVE', seasonId: assignment.seasonId, productCode: assignment.productCode, printedNumber: assignment.printedNumber,
+      status: 'ACTIVE', seasonId: assignment.seasonId, productCode: assignment.productCode,
+      passDesign: assignment.passDesign, printedNumber: assignment.printedNumber,
       organizationId: assignment.organizationId, issuedAt: now, validFrom, validUntil, ...passDataRetention() });
     // Private holder-only payload: QR is high-entropy, opaque, revocable. Never logged or in audit/analytics.
     tx.create(ref(db, 'passCredentialPayloads', credentialId), { holderUid: identity.uid, token, ...passDataRetention() });
-    tx.update(challengeRef, { status: 'CONSUMED', consumedAt: now, ...activationRetention(now) });
+    tx.update(challengeRef, { status: 'CONSUMED', consumedAt: now, passDesign: assignment.passDesign, ...activationRetention(now) });
     // Compatible with the existing Brevo adapter (#168); service verification is never marketing consent.
     const affirmative = false; // Marketing opt-in is recorded only by requestMarketingOptIn.
     tx.create(ref(db, 'consentEvents', randomUUID()), { holderId: identity.uid, purpose: 'DNS_MARKETING',
@@ -81,8 +90,11 @@ export async function getDigitalPass({ db, identity, physicalPassId }) {
   ]);
   if (!credential.exists || !holder.exists || !payload.exists) throw new Error('NOT_FOUND');
   const c = credential.data(), h = holder.data();
+  const definition = getDigitalPassProduct(c.productCode, c.seasonId);
+  if (!definition || (c.passDesign != null && c.passDesign !== definition.passDesign)) throw new Error('NOT_FOUND');
   return { holderName: h.givenName + ' ' + h.familyName, printedNumber: c.printedNumber,
-    productCode: c.productCode, seasonId: c.seasonId, status: c.status,
+    productCode: c.productCode, passDesign: definition.passDesign, organizationId: c.organizationId,
+    walletMetadata: { ...definition.wallet }, seasonId: c.seasonId, status: c.status,
     validFrom: c.validFrom, validUntil: c.validUntil, qrPayload: 'dns-pass:v1:' + payload.data().token };
 }
 
@@ -104,7 +116,7 @@ export async function checkDigitalCredential({ db, actor, qrPayload, now = Date.
     const registration = await tx.get(ref(db, 'passRegistrations', c.physicalPassId));
     let status = 'UNKNOWN';
     if (c.status !== 'ACTIVE' || !registration.exists || registration.data().status !== 'ACTIVE' || registration.data().credentialId !== credentialId) status = 'REVOKED';
-    else if (!Number.isFinite(c.validFrom) || !Number.isFinite(c.validUntil) || c.seasonId !== '2026-27' || c.productCode !== 'sk-dns') status = 'UNKNOWN';
+    else if (!Number.isFinite(c.validFrom) || !Number.isFinite(c.validUntil) || !getDigitalPassProduct(c.productCode, c.seasonId)) status = 'UNKNOWN';
     else if (now < c.validFrom) status = 'NOT_YET_VALID';
     else if (now >= c.validUntil) status = 'EXPIRED';
     else status = 'VALID';

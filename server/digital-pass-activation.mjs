@@ -5,6 +5,7 @@
  */
 import { randomInt, createHmac, randomUUID } from 'node:crypto';
 import {activationRetention, auditRetention} from './digital-pass-retention.mjs';
+import {getDigitalPassProduct} from './digital-pass-product-registry.mjs';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export const CODE_LENGTH = 6;
@@ -38,11 +39,15 @@ function assertOperator(actor, assignment, requiredPermission) {
 }
 
 function requireAssignment(assignment) {
-  if (!assignment || assignment.seasonId !== '2026-27' || assignment.productCode !== 'sk-dns' || !assignment.sourceRevision || !assignment.physicalPassId || !assignment.organizationId ||
-      !assignment.seasonId || !assignment.productCode ||
-      assignment.eligibleForDnsSeasonPilot !== true) {
+  const definition = getDigitalPassProduct(assignment?.productCode, assignment?.seasonId);
+  if (!assignment || !definition ||
+      assignment.passDesign != null && assignment.passDesign !== definition.passDesign ||
+      !assignment.sourceRevision || !assignment.physicalPassId || !assignment.organizationId ||
+      !(assignment.eligibleForDigitalPass === true ||
+        (definition.pilotEligibility.dnsSeason === true && assignment.eligibleForDnsSeasonPilot === true))) {
     throw new Error('NOT_ELIGIBLE');
   }
+  return { ...assignment, passDesign: definition.passDesign, walletMetadata: { ...definition.wallet } };
 }
 
 /**
@@ -56,8 +61,7 @@ export async function prepareActivation({
   now = Date.now(),
 }) {
   if (typeof resolveAssignment !== 'function') throw new Error('NO_INVENTORY_RESOLVER');
-  const assignment = await resolveAssignment({ passNumber, seasonId, productCode });
-  requireAssignment(assignment);
+  const assignment = requireAssignment(await resolveAssignment({ passNumber, seasonId, productCode }));
   assertOperator(actor, assignment, 'passActivation.issue');
   // Separate authorization confirms physical possession; no commercial attestation.
   assertOperator(actor, assignment, 'passPossession.attest');
@@ -89,6 +93,7 @@ export async function prepareActivation({
       organizationId: assignment.organizationId,
       seasonId: assignment.seasonId,
       productCode: assignment.productCode,
+      passDesign: assignment.passDesign,
       codeVerifier: hashActivationCode(code, id, hmacSecret),
       status: 'PREPARED',
       createdAt: now,
@@ -154,7 +159,7 @@ export async function reissueActivation({ db, actor, physicalPassId, idempotency
     if (!snap.exists) throw new Error('NO_PREPARATION');
     const record = snap.data();
     if (record.lastReissueKey === idempotencyKey) return { physicalPassId, alreadyReissued: true, status: record.status };
-    if (record.possessionConfirmedAt == null || registration.exists || record.seasonId !== '2026-27' || record.productCode !== 'sk-dns' ||
+    if (record.possessionConfirmedAt == null || registration.exists || !getDigitalPassProduct(record.productCode, record.seasonId) ||
         !['ENABLED','EXPIRED'].includes(record.status)) throw new Error('CANNOT_REISSUE');
     while (verifier === record.codeVerifier) { code = generateActivationCode(); verifier = hashActivationCode(code, physicalPassId, hmacSecret); }
     tx.update(ref, { codeVerifier: verifier, status: 'ENABLED', nonce, expiresAt: now + CODE_TTL_MS,
@@ -175,7 +180,7 @@ export async function claimPreparedPossession({
   db, identity, assignment, code, hmacSecret, now = Date.now(),
 }) {
   if (!identity?.uid || identity.email_verified !== true) throw new Error('UNAUTHORIZED');
-  requireAssignment(assignment);
+  assignment = requireAssignment(assignment);
   if (typeof code !== 'string' || !/^[A-HJ-NP-Z2-9]{6}$/.test(code))
     throw new Error('INVALID_OR_EXPIRED');
   const id = assignment.physicalPassId;
@@ -188,6 +193,7 @@ export async function claimPreparedPossession({
     if (record.qrClaimEnabled !== true || record.organizationId !== assignment.organizationId ||
         record.sourceRevision !== assignment.sourceRevision ||
         record.seasonId !== assignment.seasonId || record.productCode !== assignment.productCode ||
+        (record.passDesign != null && record.passDesign !== assignment.passDesign) ||
         typeof record.codeVerifier !== 'string' || record.codeVerifier.length !== 64)
       throw new Error('INVALID_OR_EXPIRED');
     const expected = hashActivationCode(code, id, hmacSecret);
@@ -206,7 +212,7 @@ export async function claimPreparedPossession({
     tx.update(recordRef, {
       status: 'ENABLED', possessionStatus: 'POSSESSION_CONFIRMED',
       possessionConfirmedAt: now, expiresAt: now + CODE_TTL_MS,
-      claimedByUid: identity.uid, possessionMethod: 'CUSTOMER_QR_CLAIM',
+      claimedByUid: identity.uid, possessionMethod: 'CUSTOMER_QR_CLAIM', passDesign: assignment.passDesign,
       ...activationRetention(now + CODE_TTL_MS),
     });
     tx.create(auditRef, { action: 'PASS_POSSESSION_CONFIRMED', targetId: id,
