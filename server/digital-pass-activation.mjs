@@ -40,7 +40,7 @@ function assertOperator(actor, assignment, requiredPermission) {
 
 function requireAssignment(assignment) {
   const definition = getDigitalPassProduct(assignment?.productCode, assignment?.seasonId);
-  if (!assignment || assignment.seasonId !== '2026-27' || !definition ||
+  if (!assignment || !definition ||
       assignment.passDesign !== definition.passDesign || !assignment.sourceRevision ||
       !assignment.physicalPassId || !assignment.organizationId ||
       !(assignment.eligibleForDigitalPass === true ||
@@ -159,7 +159,7 @@ export async function reissueActivation({ db, actor, physicalPassId, idempotency
     if (!snap.exists) throw new Error('NO_PREPARATION');
     const record = snap.data();
     if (record.lastReissueKey === idempotencyKey) return { physicalPassId, alreadyReissued: true, status: record.status };
-    if (record.possessionConfirmedAt == null || registration.exists || record.seasonId !== '2026-27' || !getDigitalPassProduct(record.productCode, record.seasonId) ||
+    if (record.possessionConfirmedAt == null || registration.exists || !getDigitalPassProduct(record.productCode, record.seasonId) ||
         !['ENABLED','EXPIRED'].includes(record.status)) throw new Error('CANNOT_REISSUE');
     while (verifier === record.codeVerifier) { code = generateActivationCode(); verifier = hashActivationCode(code, physicalPassId, hmacSecret); }
     tx.update(ref, { codeVerifier: verifier, status: 'ENABLED', nonce, expiresAt: now + CODE_TTL_MS,
