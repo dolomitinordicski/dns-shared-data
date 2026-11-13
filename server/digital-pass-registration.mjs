@@ -30,7 +30,8 @@ export async function registerDigitalPass({ db, identity, assignment, code, give
   if (!Number.isFinite(validFrom) || !Number.isFinite(validUntil) || validFrom >= validUntil || now >= validUntil) throw new Error('INVALID_VALIDITY');
   const definition = getDigitalPassProduct(assignment?.productCode, assignment?.seasonId);
   if (!assignment || !definition ||
-      assignment.passDesign !== definition.passDesign) throw deny();
+      assignment.passDesign != null && assignment.passDesign !== definition.passDesign) throw deny();
+  assignment = { ...assignment, passDesign: definition.passDesign, walletMetadata: { ...definition.wallet } };
   const id = assignment.physicalPassId;
   await limitAttempts({ db, key: 'claim:' + identity.uid, now, max: 10 });
   await limitAttempts({ db, key: 'pass:' + id, now, max: 5 });
