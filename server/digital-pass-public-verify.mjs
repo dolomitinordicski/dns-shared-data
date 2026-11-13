@@ -14,7 +14,7 @@ export async function verifyPublicPass({ db, token, now = Date.now(), dynamic = 
   const registration = await db.collection('passRegistrations').doc(c.physicalPassId).get();
   if (c.status !== 'ACTIVE' || !registration.exists ||
       registration.data().status !== 'ACTIVE' || registration.data().credentialId !== credentialId) return 'REVOKED';
-  if (!getDigitalPassProduct(c.productCode, c.seasonId) || c.seasonId !== '2026-27' ||
+  if (!getDigitalPassProduct(c.productCode, c.seasonId) ||
       !Number.isFinite(c.validFrom) || !Number.isFinite(c.validUntil)) return 'UNKNOWN';
   if (now < c.validFrom) return 'NOT_YET_VALID';
   if (now >= c.validUntil) return 'EXPIRED';
