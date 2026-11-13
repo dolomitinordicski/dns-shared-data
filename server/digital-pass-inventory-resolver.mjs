@@ -3,9 +3,11 @@
 import { createHash } from 'node:crypto';
 export const PILOT_SEASON = '2026-27';
 export const PILOT_PRODUCT = 'sk-dns';
+export const DIGITAL_PASS_PRODUCTS = Object.freeze(['sk-dns', 'sk-instructor']);
+export const isDigitalPassProduct = productCode => DIGITAL_PASS_PRODUCTS.includes(productCode);
 
 export function resolveSeasonPassAssignment({ passNumber, seasonId, productCode, snapshot }) {
-  if (seasonId !== PILOT_SEASON || productCode !== PILOT_PRODUCT) throw new Error('NOT_ELIGIBLE');
+  if (seasonId !== PILOT_SEASON || !isDigitalPassProduct(productCode)) throw new Error('NOT_ELIGIBLE');
   if (!snapshot || snapshot.approved !== true || snapshot.seasonId !== seasonId)
     throw new Error('UNAPPROVED_NUMBERING_SNAPSHOT');
   if (typeof snapshot.revision !== 'string' || !snapshot.revision) throw new Error('MISSING_NUMBERING_REVISION');
@@ -19,13 +21,34 @@ export function resolveSeasonPassAssignment({ passNumber, seasonId, productCode,
     r.from > 0 && r.to >= r.from && r.from <= number && number <= r.to);
   if (matches.length !== 1) throw new Error(matches.length ? 'AMBIGUOUS_PASS_NUMBER' : 'PASS_NOT_IN_MATRIX');
   const row = matches[0];
-  if ((row.itemCode ?? row.productCode) !== PILOT_PRODUCT ||
+  if ((row.itemCode ?? row.productCode) !== productCode ||
       typeof row.organizationId !== 'string' || !row.organizationId ||
       row.seasonId && row.seasonId !== seasonId) throw new Error('NOT_ELIGIBLE');
   const normalized = String(number).padStart(6, '0');
   return {
     physicalPassId: createHash('sha256').update(`dns-physical-pass:v1\0${seasonId}\0${productCode}\0${normalized}`).digest('hex'),
     printedNumber: normalized, organizationId: row.organizationId, seasonId, productCode,
-    eligibleForDnsSeasonPilot: true, sourceRevision: snapshot.revision,
+    eligibleForDigitalPass: true, eligibleForDnsSeasonPilot: productCode === PILOT_PRODUCT, sourceRevision: snapshot.revision,
   };
+}
+
+
+/** Resolve supported Digital Pass products from the authoritative matrix row.
+ * Product type is inferred server-side from the printed number; callers cannot
+ * relabel an instructor pass as a seasonal pass (or vice versa). */
+export function resolveDigitalPassAssignment({ passNumber, seasonId, snapshot }) {
+  if (seasonId !== PILOT_SEASON) throw new Error('NOT_ELIGIBLE');
+  if (!snapshot || snapshot.approved !== true || snapshot.seasonId !== seasonId)
+    throw new Error('UNAPPROVED_NUMBERING_SNAPSHOT');
+  if (typeof snapshot.revision !== 'string' || !snapshot.revision) throw new Error('MISSING_NUMBERING_REVISION');
+  if (typeof passNumber !== 'string' || !/^\\d{1,12}$/.test(passNumber.trim())) throw new Error('INVALID_PASS_NUMBER');
+  const number = Number(passNumber.trim());
+  if (!Number.isSafeInteger(number) || number < 1) throw new Error('INVALID_PASS_NUMBER');
+  if (!Array.isArray(snapshot.rows)) throw new Error('INVALID_NUMBERING_SNAPSHOT');
+  const matches = snapshot.rows.filter(r => Number.isSafeInteger(r.from) && Number.isSafeInteger(r.to) &&
+    r.from > 0 && r.to >= r.from && r.from <= number && number <= r.to);
+  if (matches.length !== 1) throw new Error(matches.length ? 'AMBIGUOUS_PASS_NUMBER' : 'PASS_NOT_IN_MATRIX');
+  const productCode = matches[0].itemCode ?? matches[0].productCode;
+  if (!isDigitalPassProduct(productCode)) throw new Error('NOT_ELIGIBLE');
+  return resolveSeasonPassAssignment({ passNumber, seasonId, productCode, snapshot });
 }
