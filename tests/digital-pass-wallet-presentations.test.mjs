@@ -11,6 +11,8 @@ test('Apple and Google share same HTTPS scan URL',()=>{
  assert.equal(google.id,'123456789.'+credentialId);
  assert.equal(apple.generic.auxiliaryFields[0].value,'019621');
  assert.equal(p.barcodeUrl,'https://pass.dolomitinordicski.com/v/'+qrToken);
+ assert.equal(p.passDesign,'dns-seasonal');
+ assert.equal(p.productCode,'sk-dns');
 });
 test('rejects unapproved formats, wrong season and arbitrary QR hosts',()=>{
  for(const change of [{status:'REVOKED'},{seasonId:'2025-26'},{productCode:'sk-area'}]){
@@ -28,7 +30,11 @@ test('ski instructor passes receive their own Wallet identity and class', () => 
  const apple=applePassFields(p);
  const google=googleGenericObject(p,{issuerId:'123456789'});
  assert.equal(apple.description,'DNS Ski Instructor Pass 2026/27');
- assert.equal(apple.generic.primaryFields[0].label,'LANGAUFLEHRER · MAESTRO DI SCI');
+ assert.equal(apple.generic.primaryFields[0].label,'LANGLAUFLEHRER · MAESTRO DI SCI · SKI INSTRUCTOR');
  assert.equal(google.classId,'123456789.dns-ski-instructor-2026-27');
  assert.equal(google.textModulesData[0].body,'Ski Instructor');
+ assert.equal(p.passDesign,'dns-ski-instructor');
+ assert.equal(p.productCode,'sk-instructor');
+ assert.equal(Object.hasOwn(google,'hexBackgroundColor'),false);
+ assert.throws(()=>createWalletPresentation({...args,credential:{...instructor,passDesign:'dns-seasonal'}}),/WALLET_PASS_NOT_ELIGIBLE/);
 });
