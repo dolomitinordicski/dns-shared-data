@@ -9,7 +9,7 @@ import { createHmac } from 'node:crypto';
 import { verifyPublicPass, renderPublicPassHtml } from './digital-pass-public-verify.mjs';
 import { loadDigitalPassActor } from './digital-pass-auth.mjs';
 import { prepareActivation, confirmPossession, reissueActivation, claimPreparedPossession, getPreparedPossessionStatus } from './digital-pass-activation.mjs';
-import { resolveSeasonPassAssignment, PILOT_SEASON, PILOT_PRODUCT } from './digital-pass-inventory-resolver.mjs';
+import { resolveDigitalPassAssignment, PILOT_SEASON } from './digital-pass-inventory-resolver.mjs';
 import { limitAttempts, registerDigitalPass, getDigitalPass, checkDigitalCredential, revokeDigitalCredential } from './digital-pass-registration.mjs';
 
 export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins, inventoryRevision, inventorySource = 'snapshot', dataEntryStartNumber, validFrom, validUntil, noticeVersion, registrationEnabled = false, possessionClaimEnabled = registrationEnabled, pilot = null, marketingNoticeVersion = '', walletIssuerId = '', walletSigningJson = '', verificationBase = '', walletOrigins = [] }) {
@@ -28,7 +28,7 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
       snapshot = record.data();
     }
     if (snapshot.revision !== inventoryRevision) throw Error('INVENTORY_UNAVAILABLE');
-    const assignment = resolveSeasonPassAssignment({ ...input, snapshot });
+    const assignment = resolveDigitalPassAssignment({ passNumber: input.passNumber, seasonId: input.seasonId, snapshot });
     assertControlledPilotAssignment(pilot, assignment);
     return assignment;
   };
@@ -80,7 +80,7 @@ export function createDigitalPassHandler({ db, auth, hmacSecret, allowedOrigins,
       const identity = await auth.verifyIdToken(token, true);
       await limitAttempts({ db, key: createHmac('sha256', hmacSecret).update('request:' + identity.uid).digest('hex'), max: 30 });
       const b = req.body;
-      const inventory = { passNumber: b.passNumber, seasonId: PILOT_SEASON, productCode: PILOT_PRODUCT };
+      const inventory = { passNumber: b.passNumber, seasonId: PILOT_SEASON };
       const path = req.path;
       let result;
       if (path === '/v1/pass-activations/claim') {
