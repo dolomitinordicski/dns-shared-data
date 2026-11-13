@@ -22,7 +22,7 @@ class MemoryDb {
   }
 }
 const assignment = { physicalPassId: 'season2026-dns-1234', organizationId: 'toblach',
-  seasonId: '2026-27', productCode: 'sk-dns', eligibleForDnsSeasonPilot: true, sourceRevision: 'matrix-v1', printedNumber: '001234' };
+  seasonId: '2026-27', productCode: 'sk-dns', passDesign:'dns-seasonal', eligibleForDnsSeasonPilot: true, sourceRevision: 'matrix-v1', printedNumber: '001234' };
 const actor = { uid: 'operatorA', grants: [
   { organizationId: 'toblach', permissions: ['passActivation.issue', 'passPossession.attest'] },
 ] };
