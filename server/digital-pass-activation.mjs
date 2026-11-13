@@ -5,6 +5,7 @@
  */
 import { randomInt, createHmac, randomUUID } from 'node:crypto';
 import {activationRetention, auditRetention} from './digital-pass-retention.mjs';
+import {isDigitalPassProduct} from './digital-pass-inventory-resolver.mjs';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export const CODE_LENGTH = 6;
@@ -38,9 +39,9 @@ function assertOperator(actor, assignment, requiredPermission) {
 }
 
 function requireAssignment(assignment) {
-  if (!assignment || assignment.seasonId !== '2026-27' || assignment.productCode !== 'sk-dns' || !assignment.sourceRevision || !assignment.physicalPassId || !assignment.organizationId ||
-      !assignment.seasonId || !assignment.productCode ||
-      assignment.eligibleForDnsSeasonPilot !== true) {
+  if (!assignment || assignment.seasonId !== '2026-27' || !isDigitalPassProduct(assignment.productCode) || !assignment.sourceRevision || !assignment.physicalPassId || !assignment.organizationId ||
+      !assignment.seasonId ||
+      !(assignment.eligibleForDigitalPass === true || (assignment.productCode === 'sk-dns' && assignment.eligibleForDnsSeasonPilot === true))) {
     throw new Error('NOT_ELIGIBLE');
   }
 }
@@ -154,7 +155,7 @@ export async function reissueActivation({ db, actor, physicalPassId, idempotency
     if (!snap.exists) throw new Error('NO_PREPARATION');
     const record = snap.data();
     if (record.lastReissueKey === idempotencyKey) return { physicalPassId, alreadyReissued: true, status: record.status };
-    if (record.possessionConfirmedAt == null || registration.exists || record.seasonId !== '2026-27' || record.productCode !== 'sk-dns' ||
+    if (record.possessionConfirmedAt == null || registration.exists || record.seasonId !== '2026-27' || !isDigitalPassProduct(record.productCode) ||
         !['ENABLED','EXPIRED'].includes(record.status)) throw new Error('CANNOT_REISSUE');
     while (verifier === record.codeVerifier) { code = generateActivationCode(); verifier = hashActivationCode(code, physicalPassId, hmacSecret); }
     tx.update(ref, { codeVerifier: verifier, status: 'ENABLED', nonce, expiresAt: now + CODE_TTL_MS,
